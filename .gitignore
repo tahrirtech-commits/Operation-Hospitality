@@ -1,0 +1,16 @@
+# Apps Script local project mapping
+.clasp.json
+
+# clasp authentication
+.clasprc.json
+
+# macOS
+.DS_Store
+
+# Node
+node_modules/
+
+# Logs / temporary files
+*.log
+*.tmp
+*.bak
