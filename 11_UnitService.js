@@ -47,20 +47,15 @@
  */
 
 const UnitService = (() => {
+  const ENTITY_TYPE = "UNIT";
 
-  const ENTITY_TYPE =
-    'UNIT';
-
-  const DEFAULT_STATUS =
-    CONFIG.DEFAULTS.UNIT_STATUS || 'ACTIVE';
-
+  const DEFAULT_STATUS = CONFIG.DEFAULTS.UNIT_STATUS || "ACTIVE";
 
   /**
    * ==========================================================
    * INTERNAL HELPERS
    * ==========================================================
    */
-
 
   /**
    * ----------------------------------------------------------
@@ -69,15 +64,12 @@ const UnitService = (() => {
    */
 
   function timestamp() {
-
     return Utilities.formatDate(
       new Date(),
       CONFIG.TIMEZONE,
-      CONFIG.DATE_FORMATS.DATETIME
+      CONFIG.DATE_FORMATS.DATETIME,
     );
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -88,104 +80,34 @@ const UnitService = (() => {
    */
 
   function normalizeUnit(data) {
+    const unit = Object.assign({}, data || {});
 
-    const unit =
-      Object.assign(
-        {},
-        data || {}
-      );
-
-
-    if (
-      unit.property_id !== undefined &&
-      unit.property_id !== null
-    ) {
-
-      unit.property_id =
-        String(
-          unit.property_id
-        ).trim();
-
+    if (unit.property_id !== undefined && unit.property_id !== null) {
+      unit.property_id = String(unit.property_id).trim();
     }
 
-
-    if (
-      unit.unit_code !== undefined &&
-      unit.unit_code !== null
-    ) {
-
-      unit.unit_code =
-        String(
-          unit.unit_code
-        )
-          .trim()
-          .toUpperCase();
-
+    if (unit.unit_code !== undefined && unit.unit_code !== null) {
+      unit.unit_code = String(unit.unit_code).trim().toUpperCase();
     }
 
-
-    if (
-      unit.unit_name !== undefined &&
-      unit.unit_name !== null
-    ) {
-
-      unit.unit_name =
-        String(
-          unit.unit_name
-        ).trim();
-
+    if (unit.unit_name !== undefined && unit.unit_name !== null) {
+      unit.unit_name = String(unit.unit_name).trim();
     }
 
-
-    if (
-      unit.unit_type !== undefined &&
-      unit.unit_type !== null
-    ) {
-
-      unit.unit_type =
-        String(
-          unit.unit_type
-        )
-          .trim()
-          .toUpperCase();
-
+    if (unit.unit_type !== undefined && unit.unit_type !== null) {
+      unit.unit_type = String(unit.unit_type).trim().toUpperCase();
     }
 
-
-    if (
-      unit.status !== undefined &&
-      unit.status !== null
-    ) {
-
-      unit.status =
-        String(
-          unit.status
-        )
-          .trim()
-          .toUpperCase();
-
+    if (unit.status !== undefined && unit.status !== null) {
+      unit.status = String(unit.status).trim().toUpperCase();
     }
 
-
-    if (
-      unit.view_type !== undefined &&
-      unit.view_type !== null
-    ) {
-
-      unit.view_type =
-        String(
-          unit.view_type
-        )
-          .trim()
-          .toUpperCase();
-
+    if (unit.view_type !== undefined && unit.view_type !== null) {
+      unit.view_type = String(unit.view_type).trim().toUpperCase();
     }
-
 
     return unit;
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -194,24 +116,16 @@ const UnitService = (() => {
    */
 
   function normalizeActorId(actorId) {
-
     if (
       actorId === undefined ||
       actorId === null ||
-      String(actorId).trim() === ''
+      String(actorId).trim() === ""
     ) {
-
       return CONFIG.DEFAULTS.ACTOR_ID;
-
     }
 
-
-    return String(
-      actorId
-    ).trim();
-
+    return String(actorId).trim();
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -220,48 +134,28 @@ const UnitService = (() => {
    */
 
   function requireUnit(unitId) {
-
     if (
       unitId === undefined ||
       unitId === null ||
-      String(unitId).trim() === ''
+      String(unitId).trim() === ""
     ) {
-
-      throw new Error(
-        'unitId is required.'
-      );
-
+      throw new Error("unitId is required.");
     }
 
+    const normalizedId = String(unitId).trim();
 
-    const normalizedId =
-      String(
-        unitId
-      ).trim();
-
-
-    const unit =
-      BaseRepository.findById(
-        CONFIG.SHEETS.UNITS,
-        'unit_id',
-        normalizedId
-      );
-
+    const unit = BaseRepository.findById(
+      CONFIG.SHEETS.UNITS,
+      "unit_id",
+      normalizedId,
+    );
 
     if (!unit) {
-
-      throw new Error(
-        'Unit not found: ' +
-        normalizedId
-      );
-
+      throw new Error("Unit not found: " + normalizedId);
     }
 
-
     return unit;
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -270,35 +164,22 @@ const UnitService = (() => {
    */
 
   function validateNumericFields(unit) {
-
     const fields = [
-      'bedrooms',
-      'bathrooms',
-      'max_adults',
-      'max_children',
-      'max_guests',
-      'area_sqm',
-      'floor_number'
+      "bedrooms",
+      "bathrooms",
+      "max_adults",
+      "max_children",
+      "max_guests",
+      "area_sqm",
+      "floor_number",
     ];
 
-
-    fields.forEach(
-      fieldName => {
-
-        ValidationService
-          .validateNonNegativeNumber(
-            unit[fieldName],
-            fieldName
-          );
-
-      }
-    );
-
+    fields.forEach((fieldName) => {
+      ValidationService.validateNonNegativeNumber(unit[fieldName], fieldName);
+    });
 
     return true;
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -307,60 +188,34 @@ const UnitService = (() => {
    */
 
   function validateUpdate(unit) {
+    ValidationService.requireFields(unit, [
+      "unit_id",
+      "property_id",
+      "unit_code",
+      "unit_name",
+      "unit_type",
+      "status",
+    ]);
 
-    ValidationService.requireFields(
-      unit,
-      [
-        'unit_id',
-        'property_id',
-        'unit_code',
-        'unit_name',
-        'unit_type',
-        'status'
-      ]
+    ValidationService.validatePropertyExists(unit.property_id);
+
+    ValidationService.validateReference("UNIT_TYPE", unit.unit_type);
+
+    ValidationService.validateReference("UNIT_STATUS", unit.status);
+
+    ValidationService.validateUniqueExcept(
+      CONFIG.SHEETS.UNITS,
+      "unit_code",
+      unit.unit_code,
+      "unit_id",
+      unit.unit_id,
+      "Unit code",
     );
 
-
-    ValidationService
-      .validatePropertyExists(
-        unit.property_id
-      );
-
-
-    ValidationService
-      .validateReference(
-        'UNIT_TYPE',
-        unit.unit_type
-      );
-
-
-    ValidationService
-      .validateReference(
-        'UNIT_STATUS',
-        unit.status
-      );
-
-
-    ValidationService
-      .validateUniqueExcept(
-        CONFIG.SHEETS.UNITS,
-        'unit_code',
-        unit.unit_code,
-        'unit_id',
-        unit.unit_id,
-        'Unit code'
-      );
-
-
-    validateNumericFields(
-      unit
-    );
-
+    validateNumericFields(unit);
 
     return true;
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -380,45 +235,26 @@ const UnitService = (() => {
    */
 
   function rollbackUnitInsert(unitId) {
+    const rowNumber = BaseRepository.findRowNumberById(
+      CONFIG.SHEETS.UNITS,
+      "unit_id",
+      unitId,
+    );
 
-    const rowNumber =
-      BaseRepository
-        .findRowNumberById(
-          CONFIG.SHEETS.UNITS,
-          'unit_id',
-          unitId
-        );
-
-
-    if (
-      rowNumber === -1
-    ) {
-
+    if (rowNumber === -1) {
       return false;
-
     }
 
-
-    BaseRepository
-      .getSheet(
-        CONFIG.SHEETS.UNITS
-      )
-      .deleteRow(
-        rowNumber
-      );
-
+    BaseRepository.getSheet(CONFIG.SHEETS.UNITS).deleteRow(rowNumber);
 
     return true;
-
   }
-
 
   /**
    * ==========================================================
    * CREATE
    * ==========================================================
    */
-
 
   /**
    * ----------------------------------------------------------
@@ -447,50 +283,22 @@ const UnitService = (() => {
    * inserted unit is rolled back.
    */
 
-  function createUnit(
-    data,
-    actorId
-  ) {
-
-    if (
-      !data ||
-      typeof data !== 'object'
-    ) {
-
-      throw new Error(
-        'Unit data is required.'
-      );
-
+  function createUnit(data, actorId) {
+    if (!data || typeof data !== "object") {
+      throw new Error("Unit data is required.");
     }
 
+    const normalizedActorId = normalizeActorId(actorId);
 
-    const normalizedActorId =
-      normalizeActorId(
-        actorId
-      );
-
-
-    let unit =
-      normalizeUnit(
-        data
-      );
-
+    let unit = normalizeUnit(data);
 
     /*
      * Apply default master status.
      */
 
-    if (
-      ValidationService.isBlank(
-        unit.status
-      )
-    ) {
-
-      unit.status =
-        DEFAULT_STATUS;
-
+    if (ValidationService.isBlank(unit.status)) {
+      unit.status = DEFAULT_STATUS;
     }
-
 
     /*
      * IMPORTANT:
@@ -498,44 +306,25 @@ const UnitService = (() => {
      * Validation occurs before ID generation.
      */
 
-    ValidationService
-      .validateUnitCreate(
-        unit
-      );
-
+    ValidationService.validateUnitCreate(unit);
 
     /*
      * Generate stable unit ID.
      */
 
-    unit.unit_id =
-      IdService.nextId(
-        ENTITY_TYPE
-      );
+    unit.unit_id = IdService.nextId(ENTITY_TYPE);
 
+    const now = timestamp();
 
-    const now =
-      timestamp();
+    unit.created_at = unit.created_at || now;
 
-
-    unit.created_at =
-      unit.created_at || now;
-
-
-    unit.updated_at =
-      now;
-
+    unit.updated_at = now;
 
     /*
      * Insert master unit record.
      */
 
-    const insertedUnit =
-      BaseRepository.insert(
-        CONFIG.SHEETS.UNITS,
-        unit
-      );
-
+    const insertedUnit = BaseRepository.insert(CONFIG.SHEETS.UNITS, unit);
 
     /*
      * Create physical operational state.
@@ -545,49 +334,36 @@ const UnitService = (() => {
      */
 
     try {
-
-      OperationalStatusService
-        .createInitialStatus(
-          insertedUnit.unit_id,
-          normalizedActorId
-        );
-
+      OperationalStatusService.createInitialStatus(
+        insertedUnit.unit_id,
+        normalizedActorId,
+      );
     } catch (error) {
-
       /*
        * Compensating rollback.
        */
 
       try {
-
-        rollbackUnitInsert(
-          insertedUnit.unit_id
-        );
-
+        rollbackUnitInsert(insertedUnit.unit_id);
       } catch (rollbackError) {
-
         throw new Error(
-          'Failed to create operational status for ' +
-          insertedUnit.unit_id +
-          '. Unit rollback also failed. ' +
-          'Original error: ' +
-          error.message +
-          '. Rollback error: ' +
-          rollbackError.message
+          "Failed to create operational status for " +
+            insertedUnit.unit_id +
+            ". Unit rollback also failed. " +
+            "Original error: " +
+            error.message +
+            ". Rollback error: " +
+            rollbackError.message,
         );
-
       }
 
-
       throw new Error(
-        'Unit creation rolled back because initial ' +
-        'operational status could not be created. ' +
-        'Reason: ' +
-        error.message
+        "Unit creation rolled back because initial " +
+          "operational status could not be created. " +
+          "Reason: " +
+          error.message,
       );
-
     }
-
 
     /*
      * Audit successful creation.
@@ -597,21 +373,17 @@ const UnitService = (() => {
       ENTITY_TYPE,
       insertedUnit.unit_id,
       insertedUnit,
-      normalizedActorId
+      normalizedActorId,
     );
 
-
     return insertedUnit;
-
   }
-
 
   /**
    * ==========================================================
    * READ
    * ==========================================================
    */
-
 
   /**
    * ----------------------------------------------------------
@@ -622,28 +394,20 @@ const UnitService = (() => {
    */
 
   function getUnitById(unitId) {
-
     if (
       unitId === undefined ||
       unitId === null ||
-      String(unitId).trim() === ''
+      String(unitId).trim() === ""
     ) {
-
-      throw new Error(
-        'unitId is required.'
-      );
-
+      throw new Error("unitId is required.");
     }
-
 
     return BaseRepository.findById(
       CONFIG.SHEETS.UNITS,
-      'unit_id',
-      String(unitId).trim()
+      "unit_id",
+      String(unitId).trim(),
     );
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -652,31 +416,20 @@ const UnitService = (() => {
    */
 
   function getUnitByCode(unitCode) {
-
     if (
       unitCode === undefined ||
       unitCode === null ||
-      String(unitCode).trim() === ''
+      String(unitCode).trim() === ""
     ) {
-
-      throw new Error(
-        'unitCode is required.'
-      );
-
+      throw new Error("unitCode is required.");
     }
 
-
-    return BaseRepository
-      .findOneByField(
-        CONFIG.SHEETS.UNITS,
-        'unit_code',
-        String(unitCode)
-          .trim()
-          .toUpperCase()
-      );
-
+    return BaseRepository.findOneByField(
+      CONFIG.SHEETS.UNITS,
+      "unit_code",
+      String(unitCode).trim().toUpperCase(),
+    );
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -685,13 +438,8 @@ const UnitService = (() => {
    */
 
   function getAllUnits() {
-
-    return BaseRepository.findAll(
-      CONFIG.SHEETS.UNITS
-    );
-
+    return BaseRepository.findAll(CONFIG.SHEETS.UNITS);
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -699,24 +447,15 @@ const UnitService = (() => {
    * ----------------------------------------------------------
    */
 
-  function getUnitsByProperty(
-    propertyId
-  ) {
-
-    ValidationService
-      .validatePropertyExists(
-        propertyId
-      );
-
+  function getUnitsByProperty(propertyId) {
+    ValidationService.validatePropertyExists(propertyId);
 
     return BaseRepository.findByField(
       CONFIG.SHEETS.UNITS,
-      'property_id',
-      String(propertyId).trim()
+      "property_id",
+      String(propertyId).trim(),
     );
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -731,42 +470,23 @@ const UnitService = (() => {
    * }
    */
 
-  function getUnitWithOperationalStatus(
-    unitId
-  ) {
+  function getUnitWithOperationalStatus(unitId) {
+    const unit = requireUnit(unitId);
 
-    const unit =
-      requireUnit(
-        unitId
-      );
-
-
-    const operationalStatus =
-      OperationalStatusService
-        .getStatus(
-          unit.unit_id
-        );
-
+    const operationalStatus = OperationalStatusService.getStatus(unit.unit_id);
 
     return {
+      unit: unit,
 
-      unit:
-        unit,
-
-      operational_status:
-        operationalStatus
-
+      operational_status: operationalStatus,
     };
-
   }
-
 
   /**
    * ==========================================================
    * UPDATE
    * ==========================================================
    */
-
 
   /**
    * ----------------------------------------------------------
@@ -779,87 +499,45 @@ const UnitService = (() => {
    * created_at
    */
 
-  function updateUnit(
-    unitId,
-    changes,
-    actorId
-  ) {
-
-    if (
-      !changes ||
-      typeof changes !== 'object'
-    ) {
-
-      throw new Error(
-        'Unit changes are required.'
-      );
-
+  function updateUnit(unitId, changes, actorId) {
+    if (!changes || typeof changes !== "object") {
+      throw new Error("Unit changes are required.");
     }
 
+    const existing = requireUnit(unitId);
 
-    const existing =
-      requireUnit(
-        unitId
-      );
-
-
-    const normalizedActorId =
-      normalizeActorId(
-        actorId
-      );
-
+    const normalizedActorId = normalizeActorId(actorId);
 
     /*
      * Merge existing record with changes.
      */
 
-    let updated =
-      Object.assign(
-        {},
-        existing,
-        changes
-      );
-
+    let updated = Object.assign({}, existing, changes);
 
     /*
      * Protect stable fields.
      */
 
-    updated.unit_id =
-      existing.unit_id;
+    updated.unit_id = existing.unit_id;
 
+    updated.created_at = existing.created_at;
 
-    updated.created_at =
-      existing.created_at;
-
-
-    updated =
-      normalizeUnit(
-        updated
-      );
-
+    updated = normalizeUnit(updated);
 
     /*
      * Validate complete resulting state.
      */
 
-    validateUpdate(
-      updated
+    validateUpdate(updated);
+
+    updated.updated_at = timestamp();
+
+    const persisted = BaseRepository.update(
+      CONFIG.SHEETS.UNITS,
+      "unit_id",
+      existing.unit_id,
+      updated,
     );
-
-
-    updated.updated_at =
-      timestamp();
-
-
-    const persisted =
-      BaseRepository.update(
-        CONFIG.SHEETS.UNITS,
-        'unit_id',
-        existing.unit_id,
-        updated
-      );
-
 
     /*
      * Generic update audit.
@@ -870,21 +548,17 @@ const UnitService = (() => {
       existing.unit_id,
       existing,
       persisted,
-      normalizedActorId
+      normalizedActorId,
     );
 
-
     return persisted;
-
   }
-
 
   /**
    * ==========================================================
    * MASTER STATUS
    * ==========================================================
    */
-
 
   /**
    * ----------------------------------------------------------
@@ -900,71 +574,35 @@ const UnitService = (() => {
    * 23_UnitOperationalStatus.operational_status
    */
 
-  function changeUnitStatus(
-    unitId,
-    newStatus,
-    actorId
-  ) {
+  function changeUnitStatus(unitId, newStatus, actorId) {
+    const existing = requireUnit(unitId);
 
-    const existing =
-      requireUnit(
-        unitId
-      );
+    const normalizedStatus = String(newStatus || "")
+      .trim()
+      .toUpperCase();
 
-
-    const normalizedStatus =
-      String(
-        newStatus || ''
-      )
-        .trim()
-        .toUpperCase();
-
-
-    ValidationService
-      .validateReference(
-        'UNIT_STATUS',
-        normalizedStatus
-      );
-
+    ValidationService.validateReference("UNIT_STATUS", normalizedStatus);
 
     /*
      * No-op when status is already correct.
      */
 
-    if (
-      String(
-        existing.status
-      )
-        .trim()
-        .toUpperCase() ===
-      normalizedStatus
-    ) {
-
+    if (String(existing.status).trim().toUpperCase() === normalizedStatus) {
       return existing;
-
     }
 
+    const normalizedActorId = normalizeActorId(actorId);
 
-    const normalizedActorId =
-      normalizeActorId(
-        actorId
-      );
+    const persisted = BaseRepository.update(
+      CONFIG.SHEETS.UNITS,
+      "unit_id",
+      existing.unit_id,
+      {
+        status: normalizedStatus,
 
-
-    const persisted =
-      BaseRepository.update(
-        CONFIG.SHEETS.UNITS,
-        'unit_id',
-        existing.unit_id,
-        {
-          status:
-            normalizedStatus,
-
-          updated_at:
-            timestamp()
-        }
-      );
-
+        updated_at: timestamp(),
+      },
+    );
 
     /*
      * Status change receives its own specific audit event.
@@ -975,14 +613,11 @@ const UnitService = (() => {
       existing.unit_id,
       existing.status,
       normalizedStatus,
-      normalizedActorId
+      normalizedActorId,
     );
 
-
     return persisted;
-
   }
-
 
   /**
    * ==========================================================
@@ -990,33 +625,21 @@ const UnitService = (() => {
    * ==========================================================
    */
 
-
   /**
    * ----------------------------------------------------------
    * GET OPERATIONAL STATUS
    * ----------------------------------------------------------
    */
 
-  function getOperationalStatus(
-    unitId
-  ) {
-
+  function getOperationalStatus(unitId) {
     /*
      * Confirm unit exists first.
      */
 
-    requireUnit(
-      unitId
-    );
+    requireUnit(unitId);
 
-
-    return OperationalStatusService
-      .getStatus(
-        String(unitId).trim()
-      );
-
+    return OperationalStatusService.getStatus(String(unitId).trim());
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -1032,36 +655,28 @@ const UnitService = (() => {
     newStatus,
     reason,
     actorId,
-    expectedReadyAt
+    expectedReadyAt,
   ) {
-
     /*
      * Confirm master unit exists.
      */
 
-    requireUnit(
-      unitId
+    requireUnit(unitId);
+
+    return OperationalStatusService.changeStatus(
+      String(unitId).trim(),
+      newStatus,
+      reason,
+      normalizeActorId(actorId),
+      expectedReadyAt,
     );
-
-
-    return OperationalStatusService
-      .changeStatus(
-        String(unitId).trim(),
-        newStatus,
-        reason,
-        normalizeActorId(actorId),
-        expectedReadyAt
-      );
-
   }
-
 
   /**
    * ==========================================================
    * CONVENIENCE QUERIES
    * ==========================================================
    */
-
 
   /**
    * ----------------------------------------------------------
@@ -1070,15 +685,8 @@ const UnitService = (() => {
    */
 
   function getActiveUnits() {
-
-    return BaseRepository.findByField(
-      CONFIG.SHEETS.UNITS,
-      'status',
-      'ACTIVE'
-    );
-
+    return BaseRepository.findByField(CONFIG.SHEETS.UNITS, "status", "ACTIVE");
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -1087,15 +695,12 @@ const UnitService = (() => {
    */
 
   function getInactiveUnits() {
-
     return BaseRepository.findByField(
       CONFIG.SHEETS.UNITS,
-      'status',
-      'INACTIVE'
+      "status",
+      "INACTIVE",
     );
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -1104,26 +709,20 @@ const UnitService = (() => {
    */
 
   function exists(unitId) {
-
     if (
       unitId === undefined ||
       unitId === null ||
-      String(unitId).trim() === ''
+      String(unitId).trim() === ""
     ) {
-
       return false;
-
     }
-
 
     return BaseRepository.exists(
       CONFIG.SHEETS.UNITS,
-      'unit_id',
-      String(unitId).trim()
+      "unit_id",
+      String(unitId).trim(),
     );
-
   }
-
 
   /**
    * ==========================================================
@@ -1132,7 +731,6 @@ const UnitService = (() => {
    */
 
   return {
-
     createUnit,
 
     getUnitById,
@@ -1157,8 +755,6 @@ const UnitService = (() => {
 
     getOperationalStatus,
 
-    changeOperationalStatus
-
+    changeOperationalStatus,
   };
-
 })();

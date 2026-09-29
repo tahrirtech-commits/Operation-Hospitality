@@ -41,14 +41,11 @@
  */
 
 const AuditService = (() => {
-
-
   /**
    * ==========================================================
    * INTERNAL HELPERS
    * ==========================================================
    */
-
 
   /**
    * ----------------------------------------------------------
@@ -57,15 +54,12 @@ const AuditService = (() => {
    */
 
   function timestamp() {
-
     return Utilities.formatDate(
       new Date(),
       CONFIG.TIMEZONE,
-      CONFIG.DATE_FORMATS.DATETIME
+      CONFIG.DATE_FORMATS.DATETIME,
     );
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -88,51 +82,28 @@ const AuditService = (() => {
    */
 
   function serialize(value) {
-
-    if (
-      value === undefined ||
-      value === null
-    ) {
-
-      return '';
-
+    if (value === undefined || value === null) {
+      return "";
     }
 
-
-    if (
-      value instanceof Date
-    ) {
-
+    if (value instanceof Date) {
       return Utilities.formatDate(
         value,
         CONFIG.TIMEZONE,
-        CONFIG.DATE_FORMATS.DATETIME
+        CONFIG.DATE_FORMATS.DATETIME,
       );
-
     }
 
-
-    if (
-      typeof value === 'object'
-    ) {
-
+    if (typeof value === "object") {
       try {
-
         return JSON.stringify(value);
-
       } catch (error) {
-
         return String(value);
-
       }
-
     }
-
 
     return String(value);
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -141,22 +112,16 @@ const AuditService = (() => {
    */
 
   function normalizeActorId(actorId) {
-
     if (
       actorId === undefined ||
       actorId === null ||
-      String(actorId).trim() === ''
+      String(actorId).trim() === ""
     ) {
-
       return CONFIG.DEFAULTS.ACTOR_ID;
-
     }
 
-
     return String(actorId).trim();
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -165,24 +130,16 @@ const AuditService = (() => {
    */
 
   function normalizeActorType(actorType) {
-
     if (
       actorType === undefined ||
       actorType === null ||
-      String(actorType).trim() === ''
+      String(actorType).trim() === ""
     ) {
-
       return CONFIG.DEFAULTS.ACTOR_TYPE;
-
     }
 
-
-    return String(actorType)
-      .trim()
-      .toUpperCase();
-
+    return String(actorType).trim().toUpperCase();
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -191,26 +148,16 @@ const AuditService = (() => {
    */
 
   function normalizeAction(action) {
-
     if (
       action === undefined ||
       action === null ||
-      String(action).trim() === ''
+      String(action).trim() === ""
     ) {
-
-      throw new Error(
-        'Audit action is required.'
-      );
-
+      throw new Error("Audit action is required.");
     }
 
-
-    return String(action)
-      .trim()
-      .toUpperCase();
-
+    return String(action).trim().toUpperCase();
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -219,26 +166,16 @@ const AuditService = (() => {
    */
 
   function normalizeEntityType(entityType) {
-
     if (
       entityType === undefined ||
       entityType === null ||
-      String(entityType).trim() === ''
+      String(entityType).trim() === ""
     ) {
-
-      throw new Error(
-        'Audit entity type is required.'
-      );
-
+      throw new Error("Audit entity type is required.");
     }
 
-
-    return String(entityType)
-      .trim()
-      .toUpperCase();
-
+    return String(entityType).trim().toUpperCase();
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -247,28 +184,18 @@ const AuditService = (() => {
    */
 
   function normalizeEntityId(entityId) {
-
-    if (
-      entityId === undefined ||
-      entityId === null
-    ) {
-
-      return '';
-
+    if (entityId === undefined || entityId === null) {
+      return "";
     }
 
-
     return String(entityId).trim();
-
   }
-
 
   /**
    * ==========================================================
    * CORE AUDIT FUNCTION
    * ==========================================================
    */
-
 
   /**
    * ----------------------------------------------------------
@@ -295,81 +222,46 @@ const AuditService = (() => {
     oldValue,
     newValue,
     actorId,
-    actorType
+    actorType,
   ) {
+    const normalizedAction = normalizeAction(action);
 
-    const normalizedAction =
-      normalizeAction(action);
+    const normalizedEntityType = normalizeEntityType(entityType);
 
+    const normalizedEntityId = normalizeEntityId(entityId);
 
-    const normalizedEntityType =
-      normalizeEntityType(entityType);
+    const normalizedActorId = normalizeActorId(actorId);
 
-
-    const normalizedEntityId =
-      normalizeEntityId(entityId);
-
-
-    const normalizedActorId =
-      normalizeActorId(actorId);
-
-
-    const normalizedActorType =
-      normalizeActorType(actorType);
-
+    const normalizedActorType = normalizeActorType(actorType);
 
     const auditRecord = {
+      audit_id: IdService.nextId("AUDIT"),
 
-      audit_id:
-        IdService.nextId(
-          'AUDIT'
-        ),
+      timestamp: timestamp(),
 
-      timestamp:
-        timestamp(),
+      actor_type: normalizedActorType,
 
-      actor_type:
-        normalizedActorType,
+      actor_id: normalizedActorId,
 
-      actor_id:
-        normalizedActorId,
+      action: normalizedAction,
 
-      action:
-        normalizedAction,
+      entity_type: normalizedEntityType,
 
-      entity_type:
-        normalizedEntityType,
+      entity_id: normalizedEntityId,
 
-      entity_id:
-        normalizedEntityId,
+      old_value: serialize(oldValue),
 
-      old_value:
-        serialize(
-          oldValue
-        ),
-
-      new_value:
-        serialize(
-          newValue
-        )
-
+      new_value: serialize(newValue),
     };
 
-
-    return BaseRepository.insert(
-      CONFIG.SHEETS.AUDIT_LOG,
-      auditRecord
-    );
-
+    return BaseRepository.insert(CONFIG.SHEETS.AUDIT_LOG, auditRecord);
   }
-
 
   /**
    * ==========================================================
    * CREATE AUDIT
    * ==========================================================
    */
-
 
   /**
    * ----------------------------------------------------------
@@ -386,33 +278,23 @@ const AuditService = (() => {
    * );
    */
 
-  function logCreate(
-    entityType,
-    entityId,
-    newValue,
-    actorId,
-    actorType
-  ) {
-
+  function logCreate(entityType, entityId, newValue, actorId, actorType) {
     return log(
-      'CREATE',
+      "CREATE",
       entityType,
       entityId,
       null,
       newValue,
       actorId,
-      actorType
+      actorType,
     );
-
   }
-
 
   /**
    * ==========================================================
    * UPDATE AUDIT
    * ==========================================================
    */
-
 
   /**
    * ----------------------------------------------------------
@@ -428,28 +310,24 @@ const AuditService = (() => {
     oldValue,
     newValue,
     actorId,
-    actorType
+    actorType,
   ) {
-
     return log(
-      'UPDATE',
+      "UPDATE",
       entityType,
       entityId,
       oldValue,
       newValue,
       actorId,
-      actorType
+      actorType,
     );
-
   }
-
 
   /**
    * ==========================================================
    * STATUS CHANGE AUDIT
    * ==========================================================
    */
-
 
   /**
    * ----------------------------------------------------------
@@ -475,28 +353,24 @@ const AuditService = (() => {
     oldStatus,
     newStatus,
     actorId,
-    actorType
+    actorType,
   ) {
-
     return log(
-      'STATUS_CHANGE',
+      "STATUS_CHANGE",
       entityType,
       entityId,
       oldStatus,
       newStatus,
       actorId,
-      actorType
+      actorType,
     );
-
   }
-
 
   /**
    * ==========================================================
    * SYSTEM AUDIT
    * ==========================================================
    */
-
 
   /**
    * ----------------------------------------------------------
@@ -523,9 +397,8 @@ const AuditService = (() => {
     oldValue,
     newValue,
     actorId,
-    actorType
+    actorType,
   ) {
-
     return log(
       action,
       entityType,
@@ -533,18 +406,15 @@ const AuditService = (() => {
       oldValue,
       newValue,
       actorId || CONFIG.DEFAULTS.ACTOR_ID,
-      actorType || CONFIG.DEFAULTS.ACTOR_TYPE
+      actorType || CONFIG.DEFAULTS.ACTOR_TYPE,
     );
-
   }
-
 
   /**
    * ==========================================================
    * QUERY HELPERS
    * ==========================================================
    */
-
 
   /**
    * ----------------------------------------------------------
@@ -553,28 +423,20 @@ const AuditService = (() => {
    */
 
   function getAuditById(auditId) {
-
     if (
       auditId === undefined ||
       auditId === null ||
-      String(auditId).trim() === ''
+      String(auditId).trim() === ""
     ) {
-
-      throw new Error(
-        'auditId is required.'
-      );
-
+      throw new Error("auditId is required.");
     }
-
 
     return BaseRepository.findById(
       CONFIG.SHEETS.AUDIT_LOG,
-      'audit_id',
-      String(auditId).trim()
+      "audit_id",
+      String(auditId).trim(),
     );
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -582,41 +444,21 @@ const AuditService = (() => {
    * ----------------------------------------------------------
    */
 
-  function getAuditForEntity(
-    entityType,
-    entityId
-  ) {
+  function getAuditForEntity(entityType, entityId) {
+    const normalizedEntityType = normalizeEntityType(entityType);
 
-    const normalizedEntityType =
-      normalizeEntityType(
-        entityType
-      );
+    const normalizedEntityId = normalizeEntityId(entityId);
 
-
-    const normalizedEntityId =
-      normalizeEntityId(
-        entityId
-      );
-
-
-    return BaseRepository
-      .findByField(
-        CONFIG.SHEETS.AUDIT_LOG,
-        'entity_id',
-        normalizedEntityId
-      )
-      .filter(
-        record =>
-          String(
-            record.entity_type
-          )
-            .trim()
-            .toUpperCase() ===
-          normalizedEntityType
-      );
-
+    return BaseRepository.findByField(
+      CONFIG.SHEETS.AUDIT_LOG,
+      "entity_id",
+      normalizedEntityId,
+    ).filter(
+      (record) =>
+        String(record.entity_type).trim().toUpperCase() ===
+        normalizedEntityType,
+    );
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -625,13 +467,8 @@ const AuditService = (() => {
    */
 
   function getAll() {
-
-    return BaseRepository.findAll(
-      CONFIG.SHEETS.AUDIT_LOG
-    );
-
+    return BaseRepository.findAll(CONFIG.SHEETS.AUDIT_LOG);
   }
-
 
   /**
    * ==========================================================
@@ -640,7 +477,6 @@ const AuditService = (() => {
    */
 
   return {
-
     timestamp,
 
     serialize,
@@ -659,8 +495,6 @@ const AuditService = (() => {
 
     getAuditForEntity,
 
-    getAll
-
+    getAll,
   };
-
 })();

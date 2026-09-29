@@ -47,20 +47,15 @@
  */
 
 const OperationalStatusService = (() => {
+  const ENTITY_TYPE = "UNIT_OPERATIONAL_STATUS";
 
-  const ENTITY_TYPE =
-    'UNIT_OPERATIONAL_STATUS';
-
-  const DEFAULT_STATUS =
-    CONFIG.DEFAULTS.OPERATIONAL_STATUS || 'READY';
-
+  const DEFAULT_STATUS = CONFIG.DEFAULTS.OPERATIONAL_STATUS || "READY";
 
   /**
    * ==========================================================
    * INTERNAL HELPERS
    * ==========================================================
    */
-
 
   /**
    * ----------------------------------------------------------
@@ -69,15 +64,12 @@ const OperationalStatusService = (() => {
    */
 
   function timestamp() {
-
     return Utilities.formatDate(
       new Date(),
       CONFIG.TIMEZONE,
-      CONFIG.DATE_FORMATS.DATETIME
+      CONFIG.DATE_FORMATS.DATETIME,
     );
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -86,22 +78,16 @@ const OperationalStatusService = (() => {
    */
 
   function normalizeActorId(actorId) {
-
     if (
       actorId === undefined ||
       actorId === null ||
-      String(actorId).trim() === ''
+      String(actorId).trim() === ""
     ) {
-
       return CONFIG.DEFAULTS.ACTOR_ID;
-
     }
 
-
     return String(actorId).trim();
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -110,24 +96,16 @@ const OperationalStatusService = (() => {
    */
 
   function normalizeUnitId(unitId) {
-
     if (
       unitId === undefined ||
       unitId === null ||
-      String(unitId).trim() === ''
+      String(unitId).trim() === ""
     ) {
-
-      throw new Error(
-        'unitId is required.'
-      );
-
+      throw new Error("unitId is required.");
     }
 
-
     return String(unitId).trim();
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -136,26 +114,16 @@ const OperationalStatusService = (() => {
    */
 
   function normalizeStatus(status) {
-
     if (
       status === undefined ||
       status === null ||
-      String(status).trim() === ''
+      String(status).trim() === ""
     ) {
-
-      throw new Error(
-        'Operational status is required.'
-      );
-
+      throw new Error("Operational status is required.");
     }
 
-
-    return String(status)
-      .trim()
-      .toUpperCase();
-
+    return String(status).trim().toUpperCase();
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -164,21 +132,12 @@ const OperationalStatusService = (() => {
    */
 
   function normalizeText(value) {
-
-    if (
-      value === undefined ||
-      value === null
-    ) {
-
-      return '';
-
+    if (value === undefined || value === null) {
+      return "";
     }
 
-
     return String(value).trim();
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -195,35 +154,20 @@ const OperationalStatusService = (() => {
    */
 
   function normalizeExpectedReadyAt(value) {
-
-    if (
-      value === undefined ||
-      value === null ||
-      String(value).trim() === ''
-    ) {
-
-      return '';
-
+    if (value === undefined || value === null || String(value).trim() === "") {
+      return "";
     }
 
-
-    if (
-      value instanceof Date
-    ) {
-
+    if (value instanceof Date) {
       return Utilities.formatDate(
         value,
         CONFIG.TIMEZONE,
-        CONFIG.DATE_FORMATS.DATETIME
+        CONFIG.DATE_FORMATS.DATETIME,
       );
-
     }
 
-
     return String(value).trim();
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -232,35 +176,20 @@ const OperationalStatusService = (() => {
    */
 
   function requireUnit(unitId) {
+    const normalizedUnitId = normalizeUnitId(unitId);
 
-    const normalizedUnitId =
-      normalizeUnitId(
-        unitId
-      );
-
-
-    const unit =
-      BaseRepository.findById(
-        CONFIG.SHEETS.UNITS,
-        'unit_id',
-        normalizedUnitId
-      );
-
+    const unit = BaseRepository.findById(
+      CONFIG.SHEETS.UNITS,
+      "unit_id",
+      normalizedUnitId,
+    );
 
     if (!unit) {
-
-      throw new Error(
-        'Unit not found: ' +
-        normalizedUnitId
-      );
-
+      throw new Error("Unit not found: " + normalizedUnitId);
     }
 
-
     return unit;
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -269,21 +198,14 @@ const OperationalStatusService = (() => {
    */
 
   function findStatusRecord(unitId) {
-
-    const normalizedUnitId =
-      normalizeUnitId(
-        unitId
-      );
-
+    const normalizedUnitId = normalizeUnitId(unitId);
 
     return BaseRepository.findOneByField(
       CONFIG.SHEETS.UNIT_OPERATIONAL_STATUS,
-      'unit_id',
-      normalizedUnitId
+      "unit_id",
+      normalizedUnitId,
     );
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -292,33 +214,18 @@ const OperationalStatusService = (() => {
    */
 
   function requireStatusRecord(unitId) {
+    const normalizedUnitId = normalizeUnitId(unitId);
 
-    const normalizedUnitId =
-      normalizeUnitId(
-        unitId
-      );
-
-
-    const record =
-      findStatusRecord(
-        normalizedUnitId
-      );
-
+    const record = findStatusRecord(normalizedUnitId);
 
     if (!record) {
-
       throw new Error(
-        'Operational status record not found for unit: ' +
-        normalizedUnitId
+        "Operational status record not found for unit: " + normalizedUnitId,
       );
-
     }
 
-
     return record;
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -330,44 +237,30 @@ const OperationalStatusService = (() => {
    */
 
   function assertSingleStatusRecord(unitId) {
+    const normalizedUnitId = normalizeUnitId(unitId);
 
-    const normalizedUnitId =
-      normalizeUnitId(
-        unitId
-      );
+    const records = BaseRepository.findByField(
+      CONFIG.SHEETS.UNIT_OPERATIONAL_STATUS,
+      "unit_id",
+      normalizedUnitId,
+    );
 
-
-    const records =
-      BaseRepository.findByField(
-        CONFIG.SHEETS.UNIT_OPERATIONAL_STATUS,
-        'unit_id',
-        normalizedUnitId
-      );
-
-
-    if (
-      records.length > 1
-    ) {
-
+    if (records.length > 1) {
       throw new Error(
-        'Data integrity error: multiple operational status ' +
-        'records found for unit ' +
-        normalizedUnitId
+        "Data integrity error: multiple operational status " +
+          "records found for unit " +
+          normalizedUnitId,
       );
-
     }
-
 
     return records.length;
   }
-
 
   /**
    * ==========================================================
    * CREATE INITIAL STATUS
    * ==========================================================
    */
-
 
   /**
    * ----------------------------------------------------------
@@ -386,126 +279,75 @@ const OperationalStatusService = (() => {
    * Only one status row may exist per unit.
    */
 
-  function createInitialStatus(
-    unitId,
-    actorId
-  ) {
-
-    const normalizedUnitId =
-      normalizeUnitId(
-        unitId
-      );
-
+  function createInitialStatus(unitId, actorId) {
+    const normalizedUnitId = normalizeUnitId(unitId);
 
     /*
      * Unit must exist first.
      */
 
-    requireUnit(
-      normalizedUnitId
-    );
-
+    requireUnit(normalizedUnitId);
 
     /*
      * Protect one-row-per-unit invariant.
      */
 
-    const existingCount =
-      assertSingleStatusRecord(
-        normalizedUnitId
-      );
+    const existingCount = assertSingleStatusRecord(normalizedUnitId);
 
-
-    if (
-      existingCount > 0
-    ) {
-
+    if (existingCount > 0) {
       throw new Error(
-        'Operational status already exists for unit: ' +
-        normalizedUnitId
+        "Operational status already exists for unit: " + normalizedUnitId,
       );
-
     }
 
+    const normalizedActorId = normalizeActorId(actorId);
 
-    const normalizedActorId =
-      normalizeActorId(
-        actorId
-      );
-
-
-    const initialStatus =
-      normalizeStatus(
-        DEFAULT_STATUS
-      );
-
+    const initialStatus = normalizeStatus(DEFAULT_STATUS);
 
     /*
      * Validate READY against ReferenceData.
      */
 
-    ValidationService
-      .validateOperationalStatus(
-        initialStatus
-      );
+    ValidationService.validateOperationalStatus(initialStatus);
 
-
-    const now =
-      timestamp();
-
+    const now = timestamp();
 
     const record = {
+      unit_id: normalizedUnitId,
 
-      unit_id:
-        normalizedUnitId,
+      operational_status: initialStatus,
 
-      operational_status:
-        initialStatus,
+      status_reason: "New unit",
 
-      status_reason:
-        'New unit',
+      status_since: now,
 
-      status_since:
-        now,
+      expected_ready_at: "",
 
-      expected_ready_at:
-        '',
+      updated_by: normalizedActorId,
 
-      updated_by:
-        normalizedActorId,
-
-      updated_at:
-        now
-
+      updated_at: now,
     };
 
-
-    const inserted =
-      BaseRepository.insert(
-        CONFIG.SHEETS.UNIT_OPERATIONAL_STATUS,
-        record
-      );
-
+    const inserted = BaseRepository.insert(
+      CONFIG.SHEETS.UNIT_OPERATIONAL_STATUS,
+      record,
+    );
 
     AuditService.logCreate(
       ENTITY_TYPE,
       normalizedUnitId,
       inserted,
-      normalizedActorId
+      normalizedActorId,
     );
 
-
     return inserted;
-
   }
-
 
   /**
    * ==========================================================
    * READ
    * ==========================================================
    */
-
 
   /**
    * ----------------------------------------------------------
@@ -518,33 +360,18 @@ const OperationalStatusService = (() => {
    */
 
   function getStatus(unitId) {
-
-    const normalizedUnitId =
-      normalizeUnitId(
-        unitId
-      );
-
+    const normalizedUnitId = normalizeUnitId(unitId);
 
     /*
      * Ensure referenced unit exists.
      */
 
-    requireUnit(
-      normalizedUnitId
-    );
+    requireUnit(normalizedUnitId);
 
+    assertSingleStatusRecord(normalizedUnitId);
 
-    assertSingleStatusRecord(
-      normalizedUnitId
-    );
-
-
-    return findStatusRecord(
-      normalizedUnitId
-    );
-
+    return findStatusRecord(normalizedUnitId);
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -553,13 +380,8 @@ const OperationalStatusService = (() => {
    */
 
   function getAllStatuses() {
-
-    return BaseRepository.findAll(
-      CONFIG.SHEETS.UNIT_OPERATIONAL_STATUS
-    );
-
+    return BaseRepository.findAll(CONFIG.SHEETS.UNIT_OPERATIONAL_STATUS);
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -568,27 +390,16 @@ const OperationalStatusService = (() => {
    */
 
   function getByStatus(status) {
+    const normalizedStatus = normalizeStatus(status);
 
-    const normalizedStatus =
-      normalizeStatus(
-        status
-      );
-
-
-    ValidationService
-      .validateOperationalStatus(
-        normalizedStatus
-      );
-
+    ValidationService.validateOperationalStatus(normalizedStatus);
 
     return BaseRepository.findByField(
       CONFIG.SHEETS.UNIT_OPERATIONAL_STATUS,
-      'operational_status',
-      normalizedStatus
+      "operational_status",
+      normalizedStatus,
     );
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -597,13 +408,8 @@ const OperationalStatusService = (() => {
    */
 
   function getReadyUnits() {
-
-    return getByStatus(
-      'READY'
-    );
-
+    return getByStatus("READY");
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -612,22 +418,13 @@ const OperationalStatusService = (() => {
    */
 
   function getNonReadyUnits() {
-
-    return getAllStatuses()
-      .filter(
-        record =>
-
-          String(
-            record.operational_status || ''
-          )
-            .trim()
-            .toUpperCase() !==
-          'READY'
-
-      );
-
+    return getAllStatuses().filter(
+      (record) =>
+        String(record.operational_status || "")
+          .trim()
+          .toUpperCase() !== "READY",
+    );
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -636,37 +433,28 @@ const OperationalStatusService = (() => {
    */
 
   function exists(unitId) {
-
     if (
       unitId === undefined ||
       unitId === null ||
-      String(unitId).trim() === ''
+      String(unitId).trim() === ""
     ) {
-
       return false;
-
     }
 
-
-    const normalizedUnitId =
-      String(unitId).trim();
-
+    const normalizedUnitId = String(unitId).trim();
 
     return BaseRepository.exists(
       CONFIG.SHEETS.UNIT_OPERATIONAL_STATUS,
-      'unit_id',
-      normalizedUnitId
+      "unit_id",
+      normalizedUnitId,
     );
-
   }
-
 
   /**
    * ==========================================================
    * CHANGE STATUS
    * ==========================================================
    */
-
 
   /**
    * ----------------------------------------------------------
@@ -692,81 +480,36 @@ const OperationalStatusService = (() => {
    * );
    */
 
-  function changeStatus(
-    unitId,
-    newStatus,
-    reason,
-    actorId,
-    expectedReadyAt
-  ) {
-
-    const normalizedUnitId =
-      normalizeUnitId(
-        unitId
-      );
-
+  function changeStatus(unitId, newStatus, reason, actorId, expectedReadyAt) {
+    const normalizedUnitId = normalizeUnitId(unitId);
 
     /*
      * Ensure unit exists.
      */
 
-    requireUnit(
-      normalizedUnitId
-    );
-
+    requireUnit(normalizedUnitId);
 
     /*
      * Ensure exactly one status row exists.
      */
 
-    assertSingleStatusRecord(
-      normalizedUnitId
-    );
+    assertSingleStatusRecord(normalizedUnitId);
 
+    const existing = requireStatusRecord(normalizedUnitId);
 
-    const existing =
-      requireStatusRecord(
-        normalizedUnitId
-      );
+    const normalizedStatus = normalizeStatus(newStatus);
 
+    ValidationService.validateOperationalStatus(normalizedStatus);
 
-    const normalizedStatus =
-      normalizeStatus(
-        newStatus
-      );
+    const normalizedActorId = normalizeActorId(actorId);
 
+    const normalizedReason = normalizeText(reason);
 
-    ValidationService
-      .validateOperationalStatus(
-        normalizedStatus
-      );
+    const normalizedExpectedReadyAt = normalizeExpectedReadyAt(expectedReadyAt);
 
-
-    const normalizedActorId =
-      normalizeActorId(
-        actorId
-      );
-
-
-    const normalizedReason =
-      normalizeText(
-        reason
-      );
-
-
-    const normalizedExpectedReadyAt =
-      normalizeExpectedReadyAt(
-        expectedReadyAt
-      );
-
-
-    const oldStatus =
-      String(
-        existing.operational_status || ''
-      )
-        .trim()
-        .toUpperCase();
-
+    const oldStatus = String(existing.operational_status || "")
+      .trim()
+      .toUpperCase();
 
     /*
      * --------------------------------------------------------
@@ -777,59 +520,32 @@ const OperationalStatusService = (() => {
      * avoid unnecessary Sheet writes and audit entries.
      */
 
-    const sameStatus =
-      oldStatus ===
-      normalizedStatus;
-
+    const sameStatus = oldStatus === normalizedStatus;
 
     const sameReason =
-      normalizeText(
-        existing.status_reason
-      ) ===
-      normalizedReason;
-
+      normalizeText(existing.status_reason) === normalizedReason;
 
     const sameExpectedReadyAt =
-      normalizeExpectedReadyAt(
-        existing.expected_ready_at
-      ) ===
+      normalizeExpectedReadyAt(existing.expected_ready_at) ===
       normalizedExpectedReadyAt;
 
-
-    if (
-      sameStatus &&
-      sameReason &&
-      sameExpectedReadyAt
-    ) {
-
+    if (sameStatus && sameReason && sameExpectedReadyAt) {
       return existing;
-
     }
 
-
-    const now =
-      timestamp();
-
+    const now = timestamp();
 
     const changes = {
+      operational_status: normalizedStatus,
 
-      operational_status:
-        normalizedStatus,
+      status_reason: normalizedReason,
 
-      status_reason:
-        normalizedReason,
+      expected_ready_at: normalizedExpectedReadyAt,
 
-      expected_ready_at:
-        normalizedExpectedReadyAt,
+      updated_by: normalizedActorId,
 
-      updated_by:
-        normalizedActorId,
-
-      updated_at:
-        now
-
+      updated_at: now,
     };
-
 
     /*
      * status_since changes ONLY when operational_status changes.
@@ -838,86 +554,61 @@ const OperationalStatusService = (() => {
      * falsely reset the time the unit entered its current state.
      */
 
-    if (
-      !sameStatus
-    ) {
-
-      changes.status_since =
-        now;
-
+    if (!sameStatus) {
+      changes.status_since = now;
     }
 
-
-    const persisted =
-      BaseRepository.update(
-        CONFIG.SHEETS.UNIT_OPERATIONAL_STATUS,
-        'unit_id',
-        normalizedUnitId,
-        changes
-      );
-
+    const persisted = BaseRepository.update(
+      CONFIG.SHEETS.UNIT_OPERATIONAL_STATUS,
+      "unit_id",
+      normalizedUnitId,
+      changes,
+    );
 
     /*
      * Differentiate actual status transition from metadata-only
      * update.
      */
 
-    if (
-      !sameStatus
-    ) {
-
+    if (!sameStatus) {
       AuditService.logStatusChange(
         ENTITY_TYPE,
         normalizedUnitId,
 
         {
-          operational_status:
-            existing.operational_status,
+          operational_status: existing.operational_status,
 
-          status_reason:
-            existing.status_reason,
+          status_reason: existing.status_reason,
 
-          status_since:
-            existing.status_since,
+          status_since: existing.status_since,
 
-          expected_ready_at:
-            existing.expected_ready_at
+          expected_ready_at: existing.expected_ready_at,
         },
 
         {
-          operational_status:
-            persisted.operational_status,
+          operational_status: persisted.operational_status,
 
-          status_reason:
-            persisted.status_reason,
+          status_reason: persisted.status_reason,
 
-          status_since:
-            persisted.status_since,
+          status_since: persisted.status_since,
 
-          expected_ready_at:
-            persisted.expected_ready_at
+          expected_ready_at: persisted.expected_ready_at,
         },
 
-        normalizedActorId
+        normalizedActorId,
       );
-
     } else {
-
       AuditService.logUpdate(
         ENTITY_TYPE,
         normalizedUnitId,
         existing,
         persisted,
-        normalizedActorId
+        normalizedActorId,
       );
-
     }
 
-
     return persisted;
-
   }
-
 
   /**
    * ==========================================================
@@ -925,29 +616,15 @@ const OperationalStatusService = (() => {
    * ==========================================================
    */
 
-
   /**
    * ----------------------------------------------------------
    * MARK READY
    * ----------------------------------------------------------
    */
 
-  function markReady(
-    unitId,
-    reason,
-    actorId
-  ) {
-
-    return changeStatus(
-      unitId,
-      'READY',
-      reason || 'Unit ready',
-      actorId,
-      ''
-    );
-
+  function markReady(unitId, reason, actorId) {
+    return changeStatus(unitId, "READY", reason || "Unit ready", actorId, "");
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -955,22 +632,15 @@ const OperationalStatusService = (() => {
    * ----------------------------------------------------------
    */
 
-  function markReserved(
-    unitId,
-    reason,
-    actorId
-  ) {
-
+  function markReserved(unitId, reason, actorId) {
     return changeStatus(
       unitId,
-      'RESERVED',
-      reason || 'Unit reserved',
+      "RESERVED",
+      reason || "Unit reserved",
       actorId,
-      ''
+      "",
     );
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -978,22 +648,15 @@ const OperationalStatusService = (() => {
    * ----------------------------------------------------------
    */
 
-  function markOccupied(
-    unitId,
-    reason,
-    actorId
-  ) {
-
+  function markOccupied(unitId, reason, actorId) {
     return changeStatus(
       unitId,
-      'OCCUPIED',
-      reason || 'Guest checked in',
+      "OCCUPIED",
+      reason || "Guest checked in",
       actorId,
-      ''
+      "",
     );
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -1001,23 +664,15 @@ const OperationalStatusService = (() => {
    * ----------------------------------------------------------
    */
 
-  function markDirty(
-    unitId,
-    reason,
-    actorId,
-    expectedReadyAt
-  ) {
-
+  function markDirty(unitId, reason, actorId, expectedReadyAt) {
     return changeStatus(
       unitId,
-      'DIRTY',
-      reason || 'Unit requires cleaning',
+      "DIRTY",
+      reason || "Unit requires cleaning",
       actorId,
-      expectedReadyAt
+      expectedReadyAt,
     );
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -1025,23 +680,15 @@ const OperationalStatusService = (() => {
    * ----------------------------------------------------------
    */
 
-  function markCleaning(
-    unitId,
-    reason,
-    actorId,
-    expectedReadyAt
-  ) {
-
+  function markCleaning(unitId, reason, actorId, expectedReadyAt) {
     return changeStatus(
       unitId,
-      'CLEANING',
-      reason || 'Cleaning in progress',
+      "CLEANING",
+      reason || "Cleaning in progress",
       actorId,
-      expectedReadyAt
+      expectedReadyAt,
     );
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -1049,23 +696,15 @@ const OperationalStatusService = (() => {
    * ----------------------------------------------------------
    */
 
-  function markInspection(
-    unitId,
-    reason,
-    actorId,
-    expectedReadyAt
-  ) {
-
+  function markInspection(unitId, reason, actorId, expectedReadyAt) {
     return changeStatus(
       unitId,
-      'INSPECTION',
-      reason || 'Inspection required',
+      "INSPECTION",
+      reason || "Inspection required",
       actorId,
-      expectedReadyAt
+      expectedReadyAt,
     );
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -1073,23 +712,15 @@ const OperationalStatusService = (() => {
    * ----------------------------------------------------------
    */
 
-  function markMaintenance(
-    unitId,
-    reason,
-    actorId,
-    expectedReadyAt
-  ) {
-
+  function markMaintenance(unitId, reason, actorId, expectedReadyAt) {
     return changeStatus(
       unitId,
-      'MAINTENANCE',
-      reason || 'Maintenance required',
+      "MAINTENANCE",
+      reason || "Maintenance required",
       actorId,
-      expectedReadyAt
+      expectedReadyAt,
     );
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -1097,23 +728,15 @@ const OperationalStatusService = (() => {
    * ----------------------------------------------------------
    */
 
-  function markOutOfService(
-    unitId,
-    reason,
-    actorId,
-    expectedReadyAt
-  ) {
-
+  function markOutOfService(unitId, reason, actorId, expectedReadyAt) {
     return changeStatus(
       unitId,
-      'OUT_OF_SERVICE',
-      reason || 'Unit out of service',
+      "OUT_OF_SERVICE",
+      reason || "Unit out of service",
       actorId,
-      expectedReadyAt
+      expectedReadyAt,
     );
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -1121,30 +744,21 @@ const OperationalStatusService = (() => {
    * ----------------------------------------------------------
    */
 
-  function markBlocked(
-    unitId,
-    reason,
-    actorId,
-    expectedReadyAt
-  ) {
-
+  function markBlocked(unitId, reason, actorId, expectedReadyAt) {
     return changeStatus(
       unitId,
-      'BLOCKED',
-      reason || 'Unit blocked',
+      "BLOCKED",
+      reason || "Unit blocked",
       actorId,
-      expectedReadyAt
+      expectedReadyAt,
     );
-
   }
-
 
   /**
    * ==========================================================
    * AVAILABILITY SUPPORT
    * ==========================================================
    */
-
 
   /**
    * ----------------------------------------------------------
@@ -1165,41 +779,25 @@ const OperationalStatusService = (() => {
    * 4. Operational readiness
    */
 
-  function isOperationallyReady(
-    unitId
-  ) {
-
-    const status =
-      getStatus(
-        unitId
-      );
-
+  function isOperationallyReady(unitId) {
+    const status = getStatus(unitId);
 
     if (!status) {
-
       return false;
-
     }
 
-
     return (
-      String(
-        status.operational_status || ''
-      )
+      String(status.operational_status || "")
         .trim()
-        .toUpperCase() ===
-      'READY'
+        .toUpperCase() === "READY"
     );
-
   }
-
 
   /**
    * ==========================================================
    * INTEGRITY SUPPORT
    * ==========================================================
    */
-
 
   /**
    * ----------------------------------------------------------
@@ -1210,43 +808,20 @@ const OperationalStatusService = (() => {
    */
 
   function findUnitsWithoutStatus() {
+    const units = BaseRepository.findAll(CONFIG.SHEETS.UNITS);
 
-    const units =
-      BaseRepository.findAll(
-        CONFIG.SHEETS.UNITS
-      );
-
-
-    const statuses =
-      BaseRepository.findAll(
-        CONFIG.SHEETS.UNIT_OPERATIONAL_STATUS
-      );
-
-
-    const statusUnitIds =
-      new Set(
-        statuses.map(
-          record =>
-            String(
-              record.unit_id || ''
-            ).trim()
-        )
-      );
-
-
-    return units.filter(
-      unit =>
-
-        !statusUnitIds.has(
-          String(
-            unit.unit_id || ''
-          ).trim()
-        )
-
+    const statuses = BaseRepository.findAll(
+      CONFIG.SHEETS.UNIT_OPERATIONAL_STATUS,
     );
 
-  }
+    const statusUnitIds = new Set(
+      statuses.map((record) => String(record.unit_id || "").trim()),
+    );
 
+    return units.filter(
+      (unit) => !statusUnitIds.has(String(unit.unit_id || "").trim()),
+    );
+  }
 
   /**
    * ----------------------------------------------------------
@@ -1257,43 +832,20 @@ const OperationalStatusService = (() => {
    */
 
   function findOrphanStatuses() {
+    const units = BaseRepository.findAll(CONFIG.SHEETS.UNITS);
 
-    const units =
-      BaseRepository.findAll(
-        CONFIG.SHEETS.UNITS
-      );
-
-
-    const statuses =
-      BaseRepository.findAll(
-        CONFIG.SHEETS.UNIT_OPERATIONAL_STATUS
-      );
-
-
-    const unitIds =
-      new Set(
-        units.map(
-          unit =>
-            String(
-              unit.unit_id || ''
-            ).trim()
-        )
-      );
-
-
-    return statuses.filter(
-      record =>
-
-        !unitIds.has(
-          String(
-            record.unit_id || ''
-          ).trim()
-        )
-
+    const statuses = BaseRepository.findAll(
+      CONFIG.SHEETS.UNIT_OPERATIONAL_STATUS,
     );
 
-  }
+    const unitIds = new Set(
+      units.map((unit) => String(unit.unit_id || "").trim()),
+    );
 
+    return statuses.filter(
+      (record) => !unitIds.has(String(record.unit_id || "").trim()),
+    );
+  }
 
   /**
    * ----------------------------------------------------------
@@ -1304,58 +856,30 @@ const OperationalStatusService = (() => {
    */
 
   function findDuplicateStatuses() {
-
-    const statuses =
-      BaseRepository.findAll(
-        CONFIG.SHEETS.UNIT_OPERATIONAL_STATUS
-      );
-
+    const statuses = BaseRepository.findAll(
+      CONFIG.SHEETS.UNIT_OPERATIONAL_STATUS,
+    );
 
     const counts = {};
 
+    statuses.forEach((record) => {
+      const unitId = String(record.unit_id || "").trim();
 
-    statuses.forEach(
-      record => {
-
-        const unitId =
-          String(
-            record.unit_id || ''
-          ).trim();
-
-
-        if (!unitId) {
-
-          return;
-
-        }
-
-
-        counts[unitId] =
-          (counts[unitId] || 0) + 1;
-
+      if (!unitId) {
+        return;
       }
-    );
 
+      counts[unitId] = (counts[unitId] || 0) + 1;
+    });
 
-    return Object.keys(
-      counts
-    )
-      .filter(
-        unitId =>
-          counts[unitId] > 1
-      )
-      .map(
-        unitId => ({
-          unit_id:
-            unitId,
+    return Object.keys(counts)
+      .filter((unitId) => counts[unitId] > 1)
+      .map((unitId) => ({
+        unit_id: unitId,
 
-          count:
-            counts[unitId]
-        })
-      );
-
+        count: counts[unitId],
+      }));
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -1367,47 +891,21 @@ const OperationalStatusService = (() => {
    */
 
   function findInvalidStatuses() {
-
     const validStatuses =
-      ValidationService
-        .getReferenceValues(
-          'OPERATIONAL_STATUS'
-        );
+      ValidationService.getReferenceValues("OPERATIONAL_STATUS");
 
+    const allowed = new Set(
+      validStatuses.map((value) => String(value).trim().toUpperCase()),
+    );
 
-    const allowed =
-      new Set(
-        validStatuses.map(
-          value =>
-            String(value)
-              .trim()
-              .toUpperCase()
-        )
-      );
+    return getAllStatuses().filter((record) => {
+      const status = String(record.operational_status || "")
+        .trim()
+        .toUpperCase();
 
-
-    return getAllStatuses()
-      .filter(
-        record => {
-
-          const status =
-            String(
-              record.operational_status || ''
-            )
-              .trim()
-              .toUpperCase();
-
-
-          return (
-            !status ||
-            !allowed.has(status)
-          );
-
-        }
-      );
-
+      return !status || !allowed.has(status);
+    });
   }
-
 
   /**
    * ==========================================================
@@ -1416,7 +914,6 @@ const OperationalStatusService = (() => {
    */
 
   return {
-
     createInitialStatus,
 
     getStatus,
@@ -1459,8 +956,6 @@ const OperationalStatusService = (() => {
 
     findDuplicateStatuses,
 
-    findInvalidStatuses
-
+    findInvalidStatuses,
   };
-
 })();

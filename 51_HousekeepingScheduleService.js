@@ -87,94 +87,54 @@
  * ============================================================
  */
 
-
 const HousekeepingScheduleService = (() => {
-
-
   /*
    * ==========================================================
    * CONSTANTS
    * ==========================================================
    */
 
-  const ENTITY_TYPE =
-    'HOUSEKEEPING_SCHEDULE';
+  const ENTITY_TYPE = "HOUSEKEEPING_SCHEDULE";
 
+  const SHEET = CONFIG.SHEETS.HOUSEKEEPING_SCHEDULES;
 
-  const SHEET =
-    CONFIG.SHEETS.HOUSEKEEPING_SCHEDULES;
+  const FREQUENCY = Object.freeze({
+    DAILY: "DAILY",
 
+    WEEKLY: "WEEKLY",
 
-  const FREQUENCY =
-    Object.freeze({
+    MONTHLY: "MONTHLY",
 
-      DAILY:
-        'DAILY',
+    INTERVAL_DAYS: "INTERVAL_DAYS",
+  });
 
-      WEEKLY:
-        'WEEKLY',
+  const VALID_FREQUENCIES = new Set(Object.values(FREQUENCY));
 
-      MONTHLY:
-        'MONTHLY',
+  const TASK_TYPE = Object.freeze({
+    CHECKOUT_CLEAN: "CHECKOUT_CLEAN",
 
-      INTERVAL_DAYS:
-        'INTERVAL_DAYS'
+    DEEP_CLEAN: "DEEP_CLEAN",
 
-    });
+    TOUCH_UP: "TOUCH_UP",
 
+    LINEN_CHANGE: "LINEN_CHANGE",
 
-  const VALID_FREQUENCIES =
-    new Set(
-      Object.values(FREQUENCY)
-    );
+    MANUAL: "MANUAL",
+  });
 
+  const VALID_TASK_TYPES = new Set(Object.values(TASK_TYPE));
 
-  const TASK_TYPE =
-    Object.freeze({
+  const DAY_OF_WEEK = Object.freeze({
+    SUNDAY: 0,
+    MONDAY: 1,
+    TUESDAY: 2,
+    WEDNESDAY: 3,
+    THURSDAY: 4,
+    FRIDAY: 5,
+    SATURDAY: 6,
+  });
 
-      CHECKOUT_CLEAN:
-        'CHECKOUT_CLEAN',
-
-      DEEP_CLEAN:
-        'DEEP_CLEAN',
-
-      TOUCH_UP:
-        'TOUCH_UP',
-
-      LINEN_CHANGE:
-        'LINEN_CHANGE',
-
-      MANUAL:
-        'MANUAL'
-
-    });
-
-
-  const VALID_TASK_TYPES =
-    new Set(
-      Object.values(TASK_TYPE)
-    );
-
-
-  const DAY_OF_WEEK =
-    Object.freeze({
-
-      SUNDAY: 0,
-      MONDAY: 1,
-      TUESDAY: 2,
-      WEDNESDAY: 3,
-      THURSDAY: 4,
-      FRIDAY: 5,
-      SATURDAY: 6
-
-    });
-
-
-  const VALID_DAYS_OF_WEEK =
-    new Set(
-      Object.keys(DAY_OF_WEEK)
-    );
-
+  const VALID_DAYS_OF_WEEK = new Set(Object.keys(DAY_OF_WEEK));
 
   /*
    * ==========================================================
@@ -183,69 +143,38 @@ const HousekeepingScheduleService = (() => {
    */
 
   function isBlank(value) {
-
-    return (
-      value === undefined ||
-      value === null ||
-      String(value).trim() === ''
-    );
-
+    return value === undefined || value === null || String(value).trim() === "";
   }
-
 
   function normalize(value) {
-
     if (isBlank(value)) {
-      return '';
+      return "";
     }
 
-    return String(value)
-      .trim()
-      .toUpperCase();
-
+    return String(value).trim().toUpperCase();
   }
 
-
   function normalizeText(value) {
-
     if (isBlank(value)) {
-      return '';
+      return "";
     }
 
     return String(value).trim();
-
   }
 
-
   function normalizeBoolean(value) {
-
     if (value === true) {
       return true;
     }
 
-    const normalized =
-      normalize(value);
+    const normalized = normalize(value);
 
-
-    return (
-      normalized === 'TRUE' ||
-      normalized === 'YES' ||
-      normalized === '1'
-    );
-
+    return normalized === "TRUE" || normalized === "YES" || normalized === "1";
   }
-
 
   function pad2(value) {
-
-    return String(value)
-      .padStart(
-        2,
-        '0'
-      );
-
+    return String(value).padStart(2, "0");
   }
-
 
   /*
    * ==========================================================
@@ -254,180 +183,80 @@ const HousekeepingScheduleService = (() => {
    */
 
   function parseDate(value) {
-
     if (value instanceof Date) {
-
-      return new Date(
-        value.getFullYear(),
-        value.getMonth(),
-        value.getDate()
-      );
-
+      return new Date(value.getFullYear(), value.getMonth(), value.getDate());
     }
 
-
-    const text =
-      normalizeText(value);
-
+    const text = normalizeText(value);
 
     if (!text) {
       return null;
     }
 
-
-    const match =
-      text.match(
-        /^(\d{4})-(\d{2})-(\d{2})$/
-      );
-
+    const match = text.match(/^(\d{4})-(\d{2})-(\d{2})$/);
 
     if (!match) {
-
       throw new Error(
-        'Invalid date format: ' +
-        value +
-        '. Expected YYYY-MM-DD.'
+        "Invalid date format: " + value + ". Expected YYYY-MM-DD.",
       );
-
     }
 
+    const year = Number(match[1]);
 
-    const year =
-      Number(match[1]);
+    const month = Number(match[2]);
 
-    const month =
-      Number(match[2]);
+    const day = Number(match[3]);
 
-    const day =
-      Number(match[3]);
-
-
-    const result =
-      new Date(
-        year,
-        month - 1,
-        day
-      );
-
+    const result = new Date(year, month - 1, day);
 
     if (
       result.getFullYear() !== year ||
       result.getMonth() !== month - 1 ||
       result.getDate() !== day
     ) {
-
-      throw new Error(
-        'Invalid date: ' +
-        value
-      );
-
+      throw new Error("Invalid date: " + value);
     }
-
 
     return result;
-
   }
 
-
   function formatDate(date) {
-
     if (!(date instanceof Date)) {
-
-      throw new Error(
-        'Expected Date object.'
-      );
-
+      throw new Error("Expected Date object.");
     }
-
 
     return (
       date.getFullYear() +
-      '-' +
-      pad2(
-        date.getMonth() + 1
-      ) +
-      '-' +
-      pad2(
-        date.getDate()
-      )
+      "-" +
+      pad2(date.getMonth() + 1) +
+      "-" +
+      pad2(date.getDate())
     );
-
   }
-
 
   function getToday() {
+    const now = new Date();
 
-    const now =
-      new Date();
-
-
-    return new Date(
-      now.getFullYear(),
-      now.getMonth(),
-      now.getDate()
-    );
-
+    return new Date(now.getFullYear(), now.getMonth(), now.getDate());
   }
 
+  function addDays(date, days) {
+    const result = new Date(date);
 
-  function addDays(
-    date,
-    days
-  ) {
-
-    const result =
-      new Date(date);
-
-
-    result.setDate(
-      result.getDate() +
-      Number(days)
-    );
-
+    result.setDate(result.getDate() + Number(days));
 
     return result;
-
   }
 
+  function daysBetween(start, end) {
+    const milliseconds = end.getTime() - start.getTime();
 
-  function daysBetween(
-    start,
-    end
-  ) {
-
-    const milliseconds =
-      (
-        end.getTime() -
-        start.getTime()
-      );
-
-
-    return Math.round(
-      milliseconds /
-      (
-        24 *
-        60 *
-        60 *
-        1000
-      )
-    );
-
+    return Math.round(milliseconds / (24 * 60 * 60 * 1000));
   }
 
-
-  function getLastDayOfMonth(
-    year,
-    monthIndex
-  ) {
-
-    return new Date(
-      year,
-      monthIndex + 1,
-      0
-    ).getDate();
-
+  function getLastDayOfMonth(year, monthIndex) {
+    return new Date(year, monthIndex + 1, 0).getDate();
   }
-
 
   /*
    * ==========================================================
@@ -436,164 +265,64 @@ const HousekeepingScheduleService = (() => {
    */
 
   function getAll() {
-
-    return BaseRepository.findAll(
-      SHEET
-    );
-
+    return BaseRepository.findAll(SHEET);
   }
 
-
-  function getById(
-    scheduleId
-  ) {
-
+  function getById(scheduleId) {
     if (isBlank(scheduleId)) {
       return null;
     }
 
-
-    return BaseRepository.findById(
-      SHEET,
-      'schedule_id',
-      scheduleId
-    );
-
+    return BaseRepository.findById(SHEET, "schedule_id", scheduleId);
   }
 
-
-  function exists(
-    scheduleId
-  ) {
-
-    return !!getById(
-      scheduleId
-    );
-
+  function exists(scheduleId) {
+    return !!getById(scheduleId);
   }
 
-
-  function requireSchedule(
-    scheduleId
-  ) {
-
-    const schedule =
-      getById(
-        scheduleId
-      );
-
+  function requireSchedule(scheduleId) {
+    const schedule = getById(scheduleId);
 
     if (!schedule) {
-
-      throw new Error(
-        'Housekeeping schedule not found: ' +
-        scheduleId
-      );
-
+      throw new Error("Housekeeping schedule not found: " + scheduleId);
     }
 
-
     return schedule;
-
   }
 
+  function getByUnit(unitId) {
+    return BaseRepository.findByField(SHEET, "unit_id", unitId);
+  }
 
-  function getByUnit(
-    unitId
-  ) {
+  function getByTaskType(taskType) {
+    const expected = normalize(taskType);
 
-    return BaseRepository.findByField(
-      SHEET,
-      'unit_id',
-      unitId
+    return getAll().filter(
+      (schedule) => normalize(schedule.task_type) === expected,
     );
-
   }
 
+  function getByFrequency(frequency) {
+    const expected = normalize(frequency);
 
-  function getByTaskType(
-    taskType
-  ) {
-
-    const expected =
-      normalize(
-        taskType
-      );
-
-
-    return getAll()
-      .filter(
-        schedule =>
-          normalize(
-            schedule.task_type
-          ) === expected
-      );
-
+    return getAll().filter(
+      (schedule) => normalize(schedule.frequency) === expected,
+    );
   }
-
-
-  function getByFrequency(
-    frequency
-  ) {
-
-    const expected =
-      normalize(
-        frequency
-      );
-
-
-    return getAll()
-      .filter(
-        schedule =>
-          normalize(
-            schedule.frequency
-          ) === expected
-      );
-
-  }
-
 
   function getActiveSchedules() {
-
-    return getAll()
-      .filter(
-        schedule =>
-          normalizeBoolean(
-            schedule.active
-          )
-      );
-
+    return getAll().filter((schedule) => normalizeBoolean(schedule.active));
   }
-
 
   function getInactiveSchedules() {
-
-    return getAll()
-      .filter(
-        schedule =>
-          !normalizeBoolean(
-            schedule.active
-          )
-      );
-
+    return getAll().filter((schedule) => !normalizeBoolean(schedule.active));
   }
 
-
-  function getActiveByUnit(
-    unitId
-  ) {
-
-    return getByUnit(
-      unitId
-    ).filter(
-      schedule =>
-        normalizeBoolean(
-          schedule.active
-        )
+  function getActiveByUnit(unitId) {
+    return getByUnit(unitId).filter((schedule) =>
+      normalizeBoolean(schedule.active),
     );
-
   }
-
 
   /*
    * ==========================================================
@@ -601,394 +330,168 @@ const HousekeepingScheduleService = (() => {
    * ==========================================================
    */
 
-  function validateUnit(
-    unitId
-  ) {
-
+  function validateUnit(unitId) {
     if (isBlank(unitId)) {
-
-      throw new Error(
-        'unit_id is required.'
-      );
-
+      throw new Error("unit_id is required.");
     }
 
-
-    const unit =
-      BaseRepository.findById(
-        CONFIG.SHEETS.UNITS,
-        'unit_id',
-        unitId
-      );
-
+    const unit = BaseRepository.findById(
+      CONFIG.SHEETS.UNITS,
+      "unit_id",
+      unitId,
+    );
 
     if (!unit) {
-
-      throw new Error(
-        'Unit not found: ' +
-        unitId
-      );
-
+      throw new Error("Unit not found: " + unitId);
     }
-
 
     return unit;
-
   }
 
+  function validateTaskType(taskType) {
+    const normalized = normalize(taskType);
 
-  function validateTaskType(
-    taskType
-  ) {
-
-    const normalized =
-      normalize(
-        taskType
-      );
-
-
-    if (
-      !VALID_TASK_TYPES.has(
-        normalized
-      )
-    ) {
-
-      throw new Error(
-        'Invalid housekeeping task type: ' +
-        taskType
-      );
-
+    if (!VALID_TASK_TYPES.has(normalized)) {
+      throw new Error("Invalid housekeeping task type: " + taskType);
     }
-
 
     return normalized;
-
   }
 
+  function validateFrequency(frequency) {
+    const normalized = normalize(frequency);
 
-  function validateFrequency(
-    frequency
-  ) {
-
-    const normalized =
-      normalize(
-        frequency
-      );
-
-
-    if (
-      !VALID_FREQUENCIES.has(
-        normalized
-      )
-    ) {
-
-      throw new Error(
-        'Invalid housekeeping schedule frequency: ' +
-        frequency
-      );
-
+    if (!VALID_FREQUENCIES.has(normalized)) {
+      throw new Error("Invalid housekeeping schedule frequency: " + frequency);
     }
-
 
     return normalized;
-
   }
 
+  function validateIntervalValue(intervalValue) {
+    const number = Number(intervalValue);
 
-  function validateIntervalValue(
-    intervalValue
-  ) {
-
-    const number =
-      Number(
-        intervalValue
-      );
-
-
-    if (
-      !Number.isInteger(number) ||
-      number <= 0
-    ) {
-
-      throw new Error(
-        'interval_value must be a positive integer.'
-      );
-
+    if (!Number.isInteger(number) || number <= 0) {
+      throw new Error("interval_value must be a positive integer.");
     }
-
 
     return number;
-
   }
 
-
-  function validateDayOfWeek(
-    dayOfWeek
-  ) {
-
+  function validateDayOfWeek(dayOfWeek) {
     if (isBlank(dayOfWeek)) {
-      return '';
+      return "";
     }
 
+    const normalized = normalize(dayOfWeek);
 
-    const normalized =
-      normalize(
-        dayOfWeek
-      );
-
-
-    if (
-      !VALID_DAYS_OF_WEEK.has(
-        normalized
-      )
-    ) {
-
-      throw new Error(
-        'Invalid day_of_week: ' +
-        dayOfWeek
-      );
-
+    if (!VALID_DAYS_OF_WEEK.has(normalized)) {
+      throw new Error("Invalid day_of_week: " + dayOfWeek);
     }
-
 
     return normalized;
-
   }
 
-
-  function validateDayOfMonth(
-    dayOfMonth
-  ) {
-
+  function validateDayOfMonth(dayOfMonth) {
     if (isBlank(dayOfMonth)) {
-      return '';
+      return "";
     }
 
+    const number = Number(dayOfMonth);
 
-    const number =
-      Number(
-        dayOfMonth
-      );
-
-
-    if (
-      !Number.isInteger(number) ||
-      number < 1 ||
-      number > 31
-    ) {
-
-      throw new Error(
-        'day_of_month must be between 1 and 31.'
-      );
-
+    if (!Number.isInteger(number) || number < 1 || number > 31) {
+      throw new Error("day_of_month must be between 1 and 31.");
     }
-
 
     return number;
-
   }
 
-
-  function validateAssignedStaff(
-    staffId
-  ) {
-
+  function validateAssignedStaff(staffId) {
     if (isBlank(staffId)) {
-      return '';
+      return "";
     }
 
-
-    const staff =
-      StaffService.getStaffById(
-        staffId
-      );
-
+    const staff = StaffService.getStaffById(staffId);
 
     if (!staff) {
-
-      throw new Error(
-        'Staff not found: ' +
-        staffId
-      );
-
+      throw new Error("Staff not found: " + staffId);
     }
 
-
-    if (
-      normalize(
-        staff.status
-      ) !== 'ACTIVE'
-    ) {
-
-      throw new Error(
-        'Assigned staff must be ACTIVE: ' +
-        staffId
-      );
-
+    if (normalize(staff.status) !== "ACTIVE") {
+      throw new Error("Assigned staff must be ACTIVE: " + staffId);
     }
 
+    const role = normalize(staff.role);
 
-    const role =
-      normalize(
-        staff.role
-      );
-
-
-    if (
-      ![
-        'HOUSEKEEPER',
-        'SUPERVISOR'
-      ].includes(role)
-    ) {
-
+    if (!["HOUSEKEEPER", "SUPERVISOR"].includes(role)) {
       throw new Error(
-        'Staff cannot be assigned to housekeeping schedule: ' +
-        staffId +
-        '. Role: ' +
-        staff.role
+        "Staff cannot be assigned to housekeeping schedule: " +
+          staffId +
+          ". Role: " +
+          staff.role,
       );
-
     }
-
 
     return staff;
   }
 
-
-  function validateSchedule(
-    data
-  ) {
-
+  function validateSchedule(data) {
     if (!data) {
-
-      throw new Error(
-        'Schedule data is required.'
-      );
-
+      throw new Error("Schedule data is required.");
     }
 
+    validateUnit(data.unit_id);
 
-    validateUnit(
-      data.unit_id
-    );
+    const taskType = validateTaskType(data.task_type);
 
+    const frequency = validateFrequency(data.frequency);
 
-    const taskType =
-      validateTaskType(
-        data.task_type
-      );
+    const intervalValue = validateIntervalValue(data.interval_value);
 
+    const dayOfWeek = validateDayOfWeek(data.day_of_week);
 
-    const frequency =
-      validateFrequency(
-        data.frequency
-      );
-
-
-    const intervalValue =
-      validateIntervalValue(
-        data.interval_value
-      );
-
-
-    const dayOfWeek =
-      validateDayOfWeek(
-        data.day_of_week
-      );
-
-
-    const dayOfMonth =
-      validateDayOfMonth(
-        data.day_of_month
-      );
-
+    const dayOfMonth = validateDayOfMonth(data.day_of_month);
 
     /*
      * A specific weekday is only meaningful
      * for WEEKLY schedules.
      */
 
-    if (
-      frequency !== FREQUENCY.WEEKLY &&
-      dayOfWeek
-    ) {
-
-      throw new Error(
-        'day_of_week can only be used with WEEKLY frequency.'
-      );
-
+    if (frequency !== FREQUENCY.WEEKLY && dayOfWeek) {
+      throw new Error("day_of_week can only be used with WEEKLY frequency.");
     }
-
 
     /*
      * A specific calendar day is only meaningful
      * for MONTHLY schedules.
      */
 
-    if (
-      frequency !== FREQUENCY.MONTHLY &&
-      dayOfMonth !== ''
-    ) {
-
-      throw new Error(
-        'day_of_month can only be used with MONTHLY frequency.'
-      );
-
+    if (frequency !== FREQUENCY.MONTHLY && dayOfMonth !== "") {
+      throw new Error("day_of_month can only be used with MONTHLY frequency.");
     }
 
+    validateAssignedStaff(data.assigned_to);
 
-    validateAssignedStaff(
-      data.assigned_to
-    );
-
-
-    if (
-      !isBlank(
-        data.last_completed
-      )
-    ) {
-
-      parseDate(
-        data.last_completed
-      );
-
+    if (!isBlank(data.last_completed)) {
+      parseDate(data.last_completed);
     }
 
-
-    if (
-      !isBlank(
-        data.next_due
-      )
-    ) {
-
-      parseDate(
-        data.next_due
-      );
-
+    if (!isBlank(data.next_due)) {
+      parseDate(data.next_due);
     }
-
 
     return {
+      task_type: taskType,
 
-      task_type:
-        taskType,
+      frequency: frequency,
 
-      frequency:
-        frequency,
+      interval_value: intervalValue,
 
-      interval_value:
-        intervalValue,
+      day_of_week: dayOfWeek,
 
-      day_of_week:
-        dayOfWeek,
-
-      day_of_month:
-        dayOfMonth
-
+      day_of_month: dayOfMonth,
     };
-
   }
-
 
   /*
    * ==========================================================
@@ -996,64 +499,24 @@ const HousekeepingScheduleService = (() => {
    * ==========================================================
    */
 
-  function calculateNextDue(
-    schedule,
-    baseDateValue
-  ) {
-
+  function calculateNextDue(schedule, baseDateValue) {
     if (!schedule) {
-
-      throw new Error(
-        'Schedule is required.'
-      );
-
+      throw new Error("Schedule is required.");
     }
 
+    const frequency = validateFrequency(schedule.frequency);
 
-    const frequency =
-      validateFrequency(
-        schedule.frequency
-      );
-
-
-    const interval =
-      validateIntervalValue(
-        schedule.interval_value
-      );
-
+    const interval = validateIntervalValue(schedule.interval_value);
 
     let baseDate;
 
-
-    if (
-      !isBlank(
-        baseDateValue
-      )
-    ) {
-
-      baseDate =
-        parseDate(
-          baseDateValue
-        );
-
-    } else if (
-      !isBlank(
-        schedule.last_completed
-      )
-    ) {
-
-      baseDate =
-        parseDate(
-          schedule.last_completed
-        );
-
+    if (!isBlank(baseDateValue)) {
+      baseDate = parseDate(baseDateValue);
+    } else if (!isBlank(schedule.last_completed)) {
+      baseDate = parseDate(schedule.last_completed);
     } else {
-
-      baseDate =
-        getToday();
-
+      baseDate = getToday();
     }
-
 
     /*
      * --------------------------------------------------------
@@ -1065,16 +528,8 @@ const HousekeepingScheduleService = (() => {
       frequency === FREQUENCY.DAILY ||
       frequency === FREQUENCY.INTERVAL_DAYS
     ) {
-
-      return formatDate(
-        addDays(
-          baseDate,
-          interval
-        )
-      );
-
+      return formatDate(addDays(baseDate, interval));
     }
-
 
     /*
      * --------------------------------------------------------
@@ -1082,16 +537,8 @@ const HousekeepingScheduleService = (() => {
      * --------------------------------------------------------
      */
 
-    if (
-      frequency ===
-      FREQUENCY.WEEKLY
-    ) {
-
-      const configuredDay =
-        validateDayOfWeek(
-          schedule.day_of_week
-        );
-
+    if (frequency === FREQUENCY.WEEKLY) {
+      const configuredDay = validateDayOfWeek(schedule.day_of_week);
 
       /*
        * No explicit weekday:
@@ -1100,30 +547,12 @@ const HousekeepingScheduleService = (() => {
        */
 
       if (!configuredDay) {
-
-        return formatDate(
-          addDays(
-            baseDate,
-            interval * 7
-          )
-        );
-
+        return formatDate(addDays(baseDate, interval * 7));
       }
 
+      const targetDay = DAY_OF_WEEK[configuredDay];
 
-      const targetDay =
-        DAY_OF_WEEK[
-          configuredDay
-        ];
-
-
-      let daysUntilTarget =
-        (
-          targetDay -
-          baseDate.getDay() +
-          7
-        ) % 7;
-
+      let daysUntilTarget = (targetDay - baseDate.getDay() + 7) % 7;
 
       /*
        * If base date is already the requested
@@ -1131,37 +560,19 @@ const HousekeepingScheduleService = (() => {
        * later.
        */
 
-      if (
-        daysUntilTarget === 0
-      ) {
-
-        daysUntilTarget =
-          interval * 7;
-
+      if (daysUntilTarget === 0) {
+        daysUntilTarget = interval * 7;
       } else {
-
         /*
          * Reach the next requested weekday,
          * then add remaining interval weeks.
          */
 
-        daysUntilTarget +=
-          (
-            interval - 1
-          ) * 7;
-
+        daysUntilTarget += (interval - 1) * 7;
       }
 
-
-      return formatDate(
-        addDays(
-          baseDate,
-          daysUntilTarget
-        )
-      );
-
+      return formatDate(addDays(baseDate, daysUntilTarget));
     }
-
 
     /*
      * --------------------------------------------------------
@@ -1169,32 +580,19 @@ const HousekeepingScheduleService = (() => {
      * --------------------------------------------------------
      */
 
-    if (
-      frequency ===
-      FREQUENCY.MONTHLY
-    ) {
+    if (frequency === FREQUENCY.MONTHLY) {
+      const configuredDay = validateDayOfMonth(schedule.day_of_month);
 
-      const configuredDay =
-        validateDayOfMonth(
-          schedule.day_of_month
-        );
+      const targetMonth = new Date(
+        baseDate.getFullYear(),
+        baseDate.getMonth() + interval,
+        1,
+      );
 
-
-      const targetMonth =
-        new Date(
-          baseDate.getFullYear(),
-          baseDate.getMonth() +
-            interval,
-          1
-        );
-
-
-      const lastDay =
-        getLastDayOfMonth(
-          targetMonth.getFullYear(),
-          targetMonth.getMonth()
-        );
-
+      const lastDay = getLastDayOfMonth(
+        targetMonth.getFullYear(),
+        targetMonth.getMonth(),
+      );
 
       /*
        * If day_of_month is configured,
@@ -1205,36 +603,17 @@ const HousekeepingScheduleService = (() => {
        */
 
       const targetDay =
-        configuredDay !== ''
-          ? Math.min(
-              configuredDay,
-              lastDay
-            )
-          : Math.min(
-              baseDate.getDate(),
-              lastDay
-            );
+        configuredDay !== ""
+          ? Math.min(configuredDay, lastDay)
+          : Math.min(baseDate.getDate(), lastDay);
 
+      targetMonth.setDate(targetDay);
 
-      targetMonth.setDate(
-        targetDay
-      );
-
-
-      return formatDate(
-        targetMonth
-      );
-
+      return formatDate(targetMonth);
     }
 
-
-    throw new Error(
-      'Unsupported housekeeping frequency: ' +
-      frequency
-    );
-
+    throw new Error("Unsupported housekeeping frequency: " + frequency);
   }
-
 
   /*
    * ==========================================================
@@ -1242,78 +621,35 @@ const HousekeepingScheduleService = (() => {
    * ==========================================================
    */
 
-  function findDuplicateSchedule(
-    data,
-    excludeScheduleId
-  ) {
+  function findDuplicateSchedule(data, excludeScheduleId) {
+    const unitId = normalizeText(data.unit_id);
 
-    const unitId =
-      normalizeText(
-        data.unit_id
-      );
+    const taskType = normalize(data.task_type);
 
+    const frequency = normalize(data.frequency);
 
-    const taskType =
-      normalize(
-        data.task_type
-      );
-
-
-    const frequency =
-      normalize(
-        data.frequency
-      );
-
-
-    return getAll()
-      .find(
-        schedule => {
-
-          if (
-            excludeScheduleId &&
-            normalizeText(
-              schedule.schedule_id
-            ) ===
-            normalizeText(
-              excludeScheduleId
-            )
-          ) {
-
-            return false;
-
-          }
-
-
-          if (
-            !normalizeBoolean(
-              schedule.active
-            )
-          ) {
-
-            return false;
-
-          }
-
-
-          return (
-            normalizeText(
-              schedule.unit_id
-            ) === unitId &&
-
-            normalize(
-              schedule.task_type
-            ) === taskType &&
-
-            normalize(
-              schedule.frequency
-            ) === frequency
-          );
-
+    return (
+      getAll().find((schedule) => {
+        if (
+          excludeScheduleId &&
+          normalizeText(schedule.schedule_id) ===
+            normalizeText(excludeScheduleId)
+        ) {
+          return false;
         }
-      ) || null;
 
+        if (!normalizeBoolean(schedule.active)) {
+          return false;
+        }
+
+        return (
+          normalizeText(schedule.unit_id) === unitId &&
+          normalize(schedule.task_type) === taskType &&
+          normalize(schedule.frequency) === frequency
+        );
+      }) || null
+    );
   }
-
 
   /*
    * ==========================================================
@@ -1321,166 +657,79 @@ const HousekeepingScheduleService = (() => {
    * ==========================================================
    */
 
-  function createSchedule(
-    data,
-    actorId
-  ) {
+  function createSchedule(data, actorId) {
+    const validated = validateSchedule(data);
 
-    const validated =
-      validateSchedule(
-        data
-      );
-
-
-    const duplicate =
-      findDuplicateSchedule(
-        data
-      );
-
+    const duplicate = findDuplicateSchedule(data);
 
     if (duplicate) {
-
       throw new Error(
-        'Active housekeeping schedule already exists: ' +
-        duplicate.schedule_id
+        "Active housekeeping schedule already exists: " + duplicate.schedule_id,
       );
-
     }
 
-
     let nextDue;
-
 
     /*
      * Caller may explicitly provide the
      * first due date.
      */
 
-    if (
-      !isBlank(
-        data.next_due
-      )
-    ) {
-
-      nextDue =
-        formatDate(
-          parseDate(
-            data.next_due
-          )
-        );
-
+    if (!isBlank(data.next_due)) {
+      nextDue = formatDate(parseDate(data.next_due));
     } else {
+      const baseDate = !isBlank(data.last_completed)
+        ? data.last_completed
+        : formatDate(getToday());
 
-      const baseDate =
-        !isBlank(
-          data.last_completed
-        )
-          ? data.last_completed
-          : formatDate(
-              getToday()
-            );
+      nextDue = calculateNextDue(
+        {
+          frequency: validated.frequency,
 
+          interval_value: validated.interval_value,
 
-      nextDue =
-        calculateNextDue(
-          {
-            frequency:
-              validated.frequency,
+          day_of_week: validated.day_of_week,
 
-            interval_value:
-              validated.interval_value,
-
-            day_of_week:
-              validated.day_of_week,
-
-            day_of_month:
-              validated.day_of_month
-          },
-          baseDate
-        );
-
+          day_of_month: validated.day_of_month,
+        },
+        baseDate,
+      );
     }
 
-
-    const scheduleId =
-      IdService.nextId(
-        ENTITY_TYPE
-      );
-
+    const scheduleId = IdService.nextId(ENTITY_TYPE);
 
     const record = {
+      schedule_id: scheduleId,
 
-      schedule_id:
-        scheduleId,
+      unit_id: normalizeText(data.unit_id),
 
-      unit_id:
-        normalizeText(
-          data.unit_id
-        ),
+      task_type: validated.task_type,
 
-      task_type:
-        validated.task_type,
+      frequency: validated.frequency,
 
-      frequency:
-        validated.frequency,
+      interval_value: validated.interval_value,
 
-      interval_value:
-        validated.interval_value,
+      day_of_week: validated.day_of_week,
 
-      day_of_week:
-        validated.day_of_week,
+      day_of_month: validated.day_of_month,
 
-      day_of_month:
-        validated.day_of_month,
+      last_completed: !isBlank(data.last_completed)
+        ? formatDate(parseDate(data.last_completed))
+        : "",
 
-      last_completed:
-        !isBlank(
-          data.last_completed
-        )
-          ? formatDate(
-              parseDate(
-                data.last_completed
-              )
-            )
-          : '',
+      next_due: nextDue,
 
-      next_due:
-        nextDue,
+      assigned_to: normalizeText(data.assigned_to),
 
-      assigned_to:
-        normalizeText(
-          data.assigned_to
-        ),
-
-      active:
-        data.active === undefined
-          ? true
-          : normalizeBoolean(
-              data.active
-            )
-
+      active: data.active === undefined ? true : normalizeBoolean(data.active),
     };
 
+    const created = BaseRepository.insert(SHEET, record);
 
-    const created =
-      BaseRepository.insert(
-        SHEET,
-        record
-      );
-
-
-    AuditService.logCreate(
-      ENTITY_TYPE,
-      scheduleId,
-      created,
-      actorId
-    );
-
+    AuditService.logCreate(ENTITY_TYPE, scheduleId, created, actorId);
 
     return created;
-
   }
-
 
   /*
    * ==========================================================
@@ -1488,132 +737,61 @@ const HousekeepingScheduleService = (() => {
    * ==========================================================
    */
 
-  function updateSchedule(
-    scheduleId,
-    changes,
-    actorId
-  ) {
+  function updateSchedule(scheduleId, changes, actorId) {
+    const existing = requireSchedule(scheduleId);
 
-    const existing =
-      requireSchedule(
-        scheduleId
-      );
+    const candidate = Object.assign({}, existing, changes || {});
 
+    candidate.schedule_id = scheduleId;
 
-    const candidate =
-      Object.assign(
-        {},
-        existing,
-        changes || {}
-      );
+    const validated = validateSchedule(candidate);
 
-
-    candidate.schedule_id =
-      scheduleId;
-
-
-    const validated =
-      validateSchedule(
-        candidate
-      );
-
-
-    const duplicate =
-      findDuplicateSchedule(
-        candidate,
-        scheduleId
-      );
-
+    const duplicate = findDuplicateSchedule(candidate, scheduleId);
 
     if (duplicate) {
-
       throw new Error(
-        'Another active housekeeping schedule already exists: ' +
-        duplicate.schedule_id
+        "Another active housekeeping schedule already exists: " +
+          duplicate.schedule_id,
       );
-
     }
 
-
     const update = {
+      unit_id: normalizeText(candidate.unit_id),
 
-      unit_id:
-        normalizeText(
-          candidate.unit_id
-        ),
+      task_type: validated.task_type,
 
-      task_type:
-        validated.task_type,
+      frequency: validated.frequency,
 
-      frequency:
-        validated.frequency,
+      interval_value: validated.interval_value,
 
-      interval_value:
-        validated.interval_value,
+      day_of_week: validated.day_of_week,
 
-      day_of_week:
-        validated.day_of_week,
+      day_of_month: validated.day_of_month,
 
-      day_of_month:
-        validated.day_of_month,
+      last_completed: isBlank(candidate.last_completed)
+        ? ""
+        : formatDate(parseDate(candidate.last_completed)),
 
-      last_completed:
-        isBlank(
-          candidate.last_completed
-        )
-          ? ''
-          : formatDate(
-              parseDate(
-                candidate.last_completed
-              )
-            ),
+      next_due: isBlank(candidate.next_due)
+        ? ""
+        : formatDate(parseDate(candidate.next_due)),
 
-      next_due:
-        isBlank(
-          candidate.next_due
-        )
-          ? ''
-          : formatDate(
-              parseDate(
-                candidate.next_due
-              )
-            ),
+      assigned_to: normalizeText(candidate.assigned_to),
 
-      assigned_to:
-        normalizeText(
-          candidate.assigned_to
-        ),
-
-      active:
-        normalizeBoolean(
-          candidate.active
-        )
-
+      active: normalizeBoolean(candidate.active),
     };
 
-
-    const updated =
-      BaseRepository.update(
-        SHEET,
-        'schedule_id',
-        scheduleId,
-        update
-      );
-
-
-    AuditService.logUpdate(
-      ENTITY_TYPE,
+    const updated = BaseRepository.update(
+      SHEET,
+      "schedule_id",
       scheduleId,
-      existing,
-      updated,
-      actorId
+      update,
     );
 
+    AuditService.logUpdate(ENTITY_TYPE, scheduleId, existing, updated, actorId);
 
     return updated;
-
   }
-
 
   /*
    * ==========================================================
@@ -1621,37 +799,25 @@ const HousekeepingScheduleService = (() => {
    * ==========================================================
    */
 
-  function activateSchedule(
-    scheduleId,
-    actorId
-  ) {
-
+  function activateSchedule(scheduleId, actorId) {
     return updateSchedule(
       scheduleId,
       {
-        active: true
+        active: true,
       },
-      actorId
+      actorId,
     );
-
   }
 
-
-  function deactivateSchedule(
-    scheduleId,
-    actorId
-  ) {
-
+  function deactivateSchedule(scheduleId, actorId) {
     return updateSchedule(
       scheduleId,
       {
-        active: false
+        active: false,
       },
-      actorId
+      actorId,
     );
-
   }
-
 
   /*
    * ==========================================================
@@ -1659,135 +825,47 @@ const HousekeepingScheduleService = (() => {
    * ==========================================================
    */
 
-  function isDue(
-    schedule,
-    asOfDate
-  ) {
-
-    if (
-      !normalizeBoolean(
-        schedule.active
-      )
-    ) {
-
+  function isDue(schedule, asOfDate) {
+    if (!normalizeBoolean(schedule.active)) {
       return false;
-
     }
 
-
-    if (
-      isBlank(
-        schedule.next_due
-      )
-    ) {
-
+    if (isBlank(schedule.next_due)) {
       return false;
-
     }
 
+    const dueDate = parseDate(schedule.next_due);
 
-    const dueDate =
-      parseDate(
-        schedule.next_due
-      );
+    const referenceDate = isBlank(asOfDate) ? getToday() : parseDate(asOfDate);
 
+    return dueDate.getTime() <= referenceDate.getTime();
+  }
 
-    const referenceDate =
-      isBlank(asOfDate)
-        ? getToday()
-        : parseDate(
-            asOfDate
-          );
+  function isOverdue(schedule, asOfDate) {
+    if (!normalizeBoolean(schedule.active)) {
+      return false;
+    }
 
+    if (isBlank(schedule.next_due)) {
+      return false;
+    }
 
-    return (
-      dueDate.getTime() <=
-      referenceDate.getTime()
+    const dueDate = parseDate(schedule.next_due);
+
+    const referenceDate = isBlank(asOfDate) ? getToday() : parseDate(asOfDate);
+
+    return dueDate.getTime() < referenceDate.getTime();
+  }
+
+  function getDueSchedules(asOfDate) {
+    return getActiveSchedules().filter((schedule) => isDue(schedule, asOfDate));
+  }
+
+  function getOverdueSchedules(asOfDate) {
+    return getActiveSchedules().filter((schedule) =>
+      isOverdue(schedule, asOfDate),
     );
-
   }
-
-
-  function isOverdue(
-    schedule,
-    asOfDate
-  ) {
-
-    if (
-      !normalizeBoolean(
-        schedule.active
-      )
-    ) {
-
-      return false;
-
-    }
-
-
-    if (
-      isBlank(
-        schedule.next_due
-      )
-    ) {
-
-      return false;
-
-    }
-
-
-    const dueDate =
-      parseDate(
-        schedule.next_due
-      );
-
-
-    const referenceDate =
-      isBlank(asOfDate)
-        ? getToday()
-        : parseDate(
-            asOfDate
-          );
-
-
-    return (
-      dueDate.getTime() <
-      referenceDate.getTime()
-    );
-
-  }
-
-
-  function getDueSchedules(
-    asOfDate
-  ) {
-
-    return getActiveSchedules()
-      .filter(
-        schedule =>
-          isDue(
-            schedule,
-            asOfDate
-          )
-      );
-
-  }
-
-
-  function getOverdueSchedules(
-    asOfDate
-  ) {
-
-    return getActiveSchedules()
-      .filter(
-        schedule =>
-          isOverdue(
-            schedule,
-            asOfDate
-          )
-      );
-
-  }
-
 
   /*
    * ==========================================================
@@ -1795,263 +873,116 @@ const HousekeepingScheduleService = (() => {
    * ==========================================================
    */
 
-function findExistingGeneratedTask(
-  schedule
-) {
+  function findExistingGeneratedTask(schedule) {
+    if (isBlank(schedule.next_due)) {
+      return null;
+    }
 
-  if (
-    isBlank(
-      schedule.next_due
-    )
-  ) {
+    const tasks = HousekeepingService.getByUnit(schedule.unit_id);
 
-    return null;
+    const scheduleDueDate = formatDate(parseDate(schedule.next_due));
 
+    return (
+      tasks.find((task) => {
+        if (normalize(task.status) === "CANCELLED") {
+          return false;
+        }
+
+        if (normalize(task.task_type) !== normalize(schedule.task_type)) {
+          return false;
+        }
+
+        if (isBlank(task.scheduled_date)) {
+          return false;
+        }
+
+        const taskDate = formatDate(parseDate(task.scheduled_date));
+
+        return taskDate === scheduleDueDate;
+      }) || null
+    );
   }
 
+  function generateTask(scheduleId, actorId) {
+    const schedule = requireSchedule(scheduleId);
 
-  const tasks =
-    HousekeepingService.getByUnit(
-      schedule.unit_id
-    );
-
-
-  const scheduleDueDate =
-    formatDate(
-      parseDate(
-        schedule.next_due
-      )
-    );
-
-
-  return tasks.find(
-    task => {
-
-      if (
-        normalize(
-          task.status
-        ) === 'CANCELLED'
-      ) {
-
-        return false;
-
-      }
-
-
-      if (
-        normalize(
-          task.task_type
-        ) !==
-        normalize(
-          schedule.task_type
-        )
-      ) {
-
-        return false;
-
-      }
-
-
-      if (
-        isBlank(
-          task.scheduled_date
-        )
-      ) {
-
-        return false;
-
-      }
-
-
-      const taskDate =
-        formatDate(
-          parseDate(
-            task.scheduled_date
-          )
-        );
-
-
-      return (
-        taskDate ===
-        scheduleDueDate
-      );
-
-    }
-  ) || null;
-
-}
-
-  function generateTask(
-    scheduleId,
-    actorId
-  ) {
-
-    const schedule =
-      requireSchedule(
-        scheduleId
-      );
-
-
-    if (
-      !normalizeBoolean(
-        schedule.active
-      )
-    ) {
-
+    if (!normalizeBoolean(schedule.active)) {
       throw new Error(
-        'Cannot generate task from inactive schedule: ' +
-        scheduleId
+        "Cannot generate task from inactive schedule: " + scheduleId,
       );
-
     }
 
-
-    if (
-      isBlank(
-        schedule.next_due
-      )
-    ) {
-
-      throw new Error(
-        'Schedule has no next_due date: ' +
-        scheduleId
-      );
-
+    if (isBlank(schedule.next_due)) {
+      throw new Error("Schedule has no next_due date: " + scheduleId);
     }
 
-
-    const existing =
-      findExistingGeneratedTask(
-        schedule
-      );
-
+    const existing = findExistingGeneratedTask(schedule);
 
     if (existing) {
-
       return {
         created: false,
-        reason:
-          'TASK_ALREADY_EXISTS',
-        schedule:
-          schedule,
-        task:
-          existing
+        reason: "TASK_ALREADY_EXISTS",
+        schedule: schedule,
+        task: existing,
       };
-
     }
 
+    const task = HousekeepingService.createTask(
+      {
+        unit_id: schedule.unit_id,
 
-    const task =
-      HousekeepingService.createTask(
-        {
+        reservation_id: "",
 
-          unit_id:
-            schedule.unit_id,
+        task_type: schedule.task_type,
 
-          reservation_id:
-            '',
+        priority: "NORMAL",
 
-          task_type:
-            schedule.task_type,
+        scheduled_date: schedule.next_due,
 
-          priority:
-            'NORMAL',
+        scheduled_start: "",
 
-          scheduled_date:
-            schedule.next_due,
+        scheduled_end: "",
 
-          scheduled_start:
-            '',
+        assigned_to: schedule.assigned_to,
 
-          scheduled_end:
-            '',
+        inspection_required: normalize(schedule.task_type) === "DEEP_CLEAN",
 
-          assigned_to:
-            schedule.assigned_to,
-
-          inspection_required:
-            (
-              normalize(
-                schedule.task_type
-              ) === 'DEEP_CLEAN'
-            ),
-
-          notes:
-            'Generated from housekeeping schedule ' +
-            schedule.schedule_id
-
-        },
-        actorId
-      );
-
+        notes: "Generated from housekeeping schedule " + schedule.schedule_id,
+      },
+      actorId,
+    );
 
     return {
       created: true,
-      reason:
-        'TASK_CREATED',
-      schedule:
-        schedule,
-      task:
-        task
+      reason: "TASK_CREATED",
+      schedule: schedule,
+      task: task,
     };
-
   }
 
-
-  function generateDueTasks(
-    asOfDate,
-    actorId
-  ) {
-
-    const schedules =
-      getDueSchedules(
-        asOfDate
-      );
-
+  function generateDueTasks(asOfDate, actorId) {
+    const schedules = getDueSchedules(asOfDate);
 
     const results = [];
 
+    schedules.forEach((schedule) => {
+      try {
+        results.push(generateTask(schedule.schedule_id, actorId));
+      } catch (err) {
+        results.push({
+          created: false,
 
-    schedules.forEach(
-      schedule => {
+          reason: "ERROR",
 
-        try {
+          schedule_id: schedule.schedule_id,
 
-          results.push(
-            generateTask(
-              schedule.schedule_id,
-              actorId
-            )
-          );
-
-        } catch (err) {
-
-          results.push({
-
-            created:
-              false,
-
-            reason:
-              'ERROR',
-
-            schedule_id:
-              schedule.schedule_id,
-
-            error:
-              err.message
-
-          });
-
-        }
-
+          error: err.message,
+        });
       }
-    );
-
+    });
 
     return results;
-
   }
-
 
   /*
    * ==========================================================
@@ -2073,34 +1004,20 @@ function findExistingGeneratedTask(
    * ==========================================================
    */
 
-  function findScheduleForTask(
-    task
-  ) {
-
+  function findScheduleForTask(task) {
     if (!task) {
       return null;
     }
 
-
-    const candidates =
-      getActiveByUnit(
-        task.unit_id
-      ).filter(
-        schedule =>
-          normalize(
-            schedule.task_type
-          ) ===
-          normalize(
-            task.task_type
-          )
-      );
-
+    const candidates = getActiveByUnit(task.unit_id).filter(
+      (schedule) => normalize(schedule.task_type) === normalize(task.task_type),
+    );
 
     /*
      * Strongest MVP match:
      * next_due == task scheduled date.
      */
-/*
+    /*
     const exact =
       candidates.find(
         schedule =>
@@ -2112,44 +1029,20 @@ function findExistingGeneratedTask(
           )
       );
       */
-const exact =
-  candidates.find(
-    schedule => {
-
-      if (
-        isBlank(
-          schedule.next_due
-        ) ||
-        isBlank(
-          task.scheduled_date
-        )
-      ) {
-
+    const exact = candidates.find((schedule) => {
+      if (isBlank(schedule.next_due) || isBlank(task.scheduled_date)) {
         return false;
-
       }
 
-
       return (
-        formatDate(
-          parseDate(
-            schedule.next_due
-          )
-        ) ===
-        formatDate(
-          parseDate(
-            task.scheduled_date
-          )
-        )
+        formatDate(parseDate(schedule.next_due)) ===
+        formatDate(parseDate(task.scheduled_date))
       );
-
-    }
-  );
+    });
 
     if (exact) {
       return exact;
     }
-
 
     /*
      * If only one recurring schedule exists
@@ -2157,73 +1050,36 @@ const exact =
      * for the current MVP model.
      */
 
-    if (
-      candidates.length === 1
-    ) {
-
+    if (candidates.length === 1) {
       return candidates[0];
-
     }
-
 
     return null;
-
   }
 
-
-  function recordTaskCompletion(
-    taskId,
-    actorId
-  ) {
-
-    const task =
-      HousekeepingService.getById(
-        taskId
-      );
-
+  function recordTaskCompletion(taskId, actorId) {
+    const task = HousekeepingService.getById(taskId);
 
     if (!task) {
-
-      throw new Error(
-        'Housekeeping task not found: ' +
-        taskId
-      );
-
+      throw new Error("Housekeeping task not found: " + taskId);
     }
 
-
-    if (
-      normalize(
-        task.status
-      ) !== 'COMPLETED'
-    ) {
-
+    if (normalize(task.status) !== "COMPLETED") {
       throw new Error(
-        'Housekeeping task must be COMPLETED before updating schedule: ' +
-        taskId
+        "Housekeeping task must be COMPLETED before updating schedule: " +
+          taskId,
       );
-
     }
 
-
-    const schedule =
-      findScheduleForTask(
-        task
-      );
-
+    const schedule = findScheduleForTask(task);
 
     if (!schedule) {
-
       return {
         updated: false,
-        reason:
-          'NO_MATCHING_SCHEDULE',
-        task:
-          task
+        reason: "NO_MATCHING_SCHEDULE",
+        task: task,
       };
-
     }
-
 
     /*
      * Use actual completion date when possible.
@@ -2232,75 +1088,37 @@ const exact =
      * YYYY-MM-DD HH:mm:ss
      */
 
-    let completionDate =
-      normalizeText(
-        task.completed_at
-      );
+    let completionDate = normalizeText(task.completed_at);
 
-
-    if (
-      completionDate.length >= 10
-    ) {
-
-      completionDate =
-        completionDate.substring(
-          0,
-          10
-        );
-
+    if (completionDate.length >= 10) {
+      completionDate = completionDate.substring(0, 10);
     } else {
-
-      completionDate =
-        normalizeText(
-          task.scheduled_date
-        );
-
+      completionDate = normalizeText(task.scheduled_date);
     }
-
 
     if (!completionDate) {
-
-      completionDate =
-        formatDate(
-          getToday()
-        );
-
+      completionDate = formatDate(getToday());
     }
 
+    const nextDue = calculateNextDue(schedule, completionDate);
 
-    const nextDue =
-      calculateNextDue(
-        schedule,
-        completionDate
-      );
+    const updated = updateSchedule(
+      schedule.schedule_id,
+      {
+        last_completed: completionDate,
 
-
-    const updated =
-      updateSchedule(
-        schedule.schedule_id,
-        {
-          last_completed:
-            completionDate,
-
-          next_due:
-            nextDue
-        },
-        actorId
-      );
-
+        next_due: nextDue,
+      },
+      actorId,
+    );
 
     return {
       updated: true,
-      reason:
-        'SCHEDULE_ADVANCED',
-      task:
-        task,
-      schedule:
-        updated
+      reason: "SCHEDULE_ADVANCED",
+      task: task,
+      schedule: updated,
     };
-
   }
-
 
   /*
    * ==========================================================
@@ -2308,45 +1126,23 @@ const exact =
    * ==========================================================
    */
 
-  function recalculateNextDue(
-    scheduleId,
-    actorId
-  ) {
+  function recalculateNextDue(scheduleId, actorId) {
+    const schedule = requireSchedule(scheduleId);
 
-    const schedule =
-      requireSchedule(
-        scheduleId
-      );
+    const baseDate = !isBlank(schedule.last_completed)
+      ? schedule.last_completed
+      : formatDate(getToday());
 
-
-    const baseDate =
-      !isBlank(
-        schedule.last_completed
-      )
-        ? schedule.last_completed
-        : formatDate(
-            getToday()
-          );
-
-
-    const nextDue =
-      calculateNextDue(
-        schedule,
-        baseDate
-      );
-
+    const nextDue = calculateNextDue(schedule, baseDate);
 
     return updateSchedule(
       scheduleId,
       {
-        next_due:
-          nextDue
+        next_due: nextDue,
       },
-      actorId
+      actorId,
     );
-
   }
-
 
   /*
    * ==========================================================
@@ -2355,410 +1151,164 @@ const exact =
    */
 
   function findOrphanUnitLinks() {
+    return getAll().filter((schedule) => {
+      if (isBlank(schedule.unit_id)) {
+        return true;
+      }
 
-    return getAll()
-      .filter(
-        schedule => {
-
-          if (
-            isBlank(
-              schedule.unit_id
-            )
-          ) {
-
-            return true;
-
-          }
-
-
-          return !BaseRepository.findById(
-            CONFIG.SHEETS.UNITS,
-            'unit_id',
-            schedule.unit_id
-          );
-
-        }
+      return !BaseRepository.findById(
+        CONFIG.SHEETS.UNITS,
+        "unit_id",
+        schedule.unit_id,
       );
-
+    });
   }
-
 
   function findOrphanStaffLinks() {
+    return getAll().filter((schedule) => {
+      if (isBlank(schedule.assigned_to)) {
+        return false;
+      }
 
-    return getAll()
-      .filter(
-        schedule => {
-
-          if (
-            isBlank(
-              schedule.assigned_to
-            )
-          ) {
-
-            return false;
-
-          }
-
-
-          return !StaffService.getStaffById(
-            schedule.assigned_to
-          );
-
-        }
-      );
-
+      return !StaffService.getStaffById(schedule.assigned_to);
+    });
   }
-
 
   function findInvalidTaskTypes() {
-
-    return getAll()
-      .filter(
-        schedule =>
-          !VALID_TASK_TYPES.has(
-            normalize(
-              schedule.task_type
-            )
-          )
-      );
-
+    return getAll().filter(
+      (schedule) => !VALID_TASK_TYPES.has(normalize(schedule.task_type)),
+    );
   }
-
 
   function findInvalidFrequencies() {
-
-    return getAll()
-      .filter(
-        schedule =>
-          !VALID_FREQUENCIES.has(
-            normalize(
-              schedule.frequency
-            )
-          )
-      );
-
+    return getAll().filter(
+      (schedule) => !VALID_FREQUENCIES.has(normalize(schedule.frequency)),
+    );
   }
-
 
   function findInvalidIntervals() {
+    return getAll().filter((schedule) => {
+      const value = Number(schedule.interval_value);
 
-    return getAll()
-      .filter(
-        schedule => {
-
-          const value =
-            Number(
-              schedule.interval_value
-            );
-
-
-          return (
-            !Number.isInteger(
-              value
-            ) ||
-            value <= 0
-          );
-
-        }
-      );
-
+      return !Number.isInteger(value) || value <= 0;
+    });
   }
-
 
   function findInvalidDaysOfWeek() {
+    return getAll().filter((schedule) => {
+      if (isBlank(schedule.day_of_week)) {
+        return false;
+      }
 
-    return getAll()
-      .filter(
-        schedule => {
+      if (normalize(schedule.frequency) !== FREQUENCY.WEEKLY) {
+        return true;
+      }
 
-          if (
-            isBlank(
-              schedule.day_of_week
-            )
-          ) {
-
-            return false;
-
-          }
-
-
-          if (
-            normalize(
-              schedule.frequency
-            ) !== FREQUENCY.WEEKLY
-          ) {
-
-            return true;
-
-          }
-
-
-          return !VALID_DAYS_OF_WEEK.has(
-            normalize(
-              schedule.day_of_week
-            )
-          );
-
-        }
-      );
-
+      return !VALID_DAYS_OF_WEEK.has(normalize(schedule.day_of_week));
+    });
   }
-
 
   function findInvalidDaysOfMonth() {
+    return getAll().filter((schedule) => {
+      if (isBlank(schedule.day_of_month)) {
+        return false;
+      }
 
-    return getAll()
-      .filter(
-        schedule => {
+      if (normalize(schedule.frequency) !== FREQUENCY.MONTHLY) {
+        return true;
+      }
 
-          if (
-            isBlank(
-              schedule.day_of_month
-            )
-          ) {
+      const value = Number(schedule.day_of_month);
 
-            return false;
-
-          }
-
-
-          if (
-            normalize(
-              schedule.frequency
-            ) !== FREQUENCY.MONTHLY
-          ) {
-
-            return true;
-
-          }
-
-
-          const value =
-            Number(
-              schedule.day_of_month
-            );
-
-
-          return (
-            !Number.isInteger(
-              value
-            ) ||
-            value < 1 ||
-            value > 31
-          );
-
-        }
-      );
-
+      return !Number.isInteger(value) || value < 1 || value > 31;
+    });
   }
-
 
   function findInvalidDates() {
-
-    return getAll()
-      .filter(
-        schedule => {
-
-          try {
-
-            if (
-              !isBlank(
-                schedule.last_completed
-              )
-            ) {
-
-              parseDate(
-                schedule.last_completed
-              );
-
-            }
-
-
-            if (
-              !isBlank(
-                schedule.next_due
-              )
-            ) {
-
-              parseDate(
-                schedule.next_due
-              );
-
-            }
-
-
-            return false;
-
-          } catch (err) {
-
-            return true;
-
-          }
-
+    return getAll().filter((schedule) => {
+      try {
+        if (!isBlank(schedule.last_completed)) {
+          parseDate(schedule.last_completed);
         }
-      );
 
+        if (!isBlank(schedule.next_due)) {
+          parseDate(schedule.next_due);
+        }
+
+        return false;
+      } catch (err) {
+        return true;
+      }
+    });
   }
-
 
   function findInvalidStaffAssignments() {
+    const staff = StaffService.getAllStaff();
 
-    const staff =
-      StaffService.getAllStaff();
+    const staffById = new Map(
+      staff.map((member) => [normalizeText(member.staff_id), member]),
+    );
 
+    return getAll().filter((schedule) => {
+      const staffId = normalizeText(schedule.assigned_to);
 
-    const staffById =
-      new Map(
-        staff.map(
-          member => [
-            normalizeText(
-              member.staff_id
-            ),
-            member
-          ]
-        )
+      if (!staffId) {
+        return false;
+      }
+
+      const member = staffById.get(staffId);
+
+      /*
+       * Missing staff is handled separately
+       * by findOrphanStaffLinks().
+       */
+
+      if (!member) {
+        return false;
+      }
+
+      return (
+        normalize(member.status) !== "ACTIVE" ||
+        !["HOUSEKEEPER", "SUPERVISOR"].includes(normalize(member.role))
       );
-
-
-    return getAll()
-      .filter(
-        schedule => {
-
-          const staffId =
-            normalizeText(
-              schedule.assigned_to
-            );
-
-
-          if (!staffId) {
-            return false;
-          }
-
-
-          const member =
-            staffById.get(
-              staffId
-            );
-
-
-          /*
-           * Missing staff is handled separately
-           * by findOrphanStaffLinks().
-           */
-
-          if (!member) {
-            return false;
-          }
-
-
-          return (
-            normalize(
-              member.status
-            ) !== 'ACTIVE' ||
-
-            ![
-              'HOUSEKEEPER',
-              'SUPERVISOR'
-            ].includes(
-              normalize(
-                member.role
-              )
-            )
-          );
-
-        }
-      );
-
+    });
   }
 
-
   function findDuplicateActiveSchedules() {
+    const groups = new Map();
 
-    const groups =
-      new Map();
+    getActiveSchedules().forEach((schedule) => {
+      const key = [
+        normalizeText(schedule.unit_id),
 
+        normalize(schedule.task_type),
 
-    getActiveSchedules()
-      .forEach(
-        schedule => {
+        normalize(schedule.frequency),
+      ].join("|");
 
-          const key =
-            [
-              normalizeText(
-                schedule.unit_id
-              ),
+      if (!groups.has(key)) {
+        groups.set(key, []);
+      }
 
-              normalize(
-                schedule.task_type
-              ),
-
-              normalize(
-                schedule.frequency
-              )
-            ].join('|');
-
-
-          if (
-            !groups.has(
-              key
-            )
-          ) {
-
-            groups.set(
-              key,
-              []
-            );
-
-          }
-
-
-          groups
-            .get(key)
-            .push(
-              schedule
-            );
-
-        }
-      );
-
+      groups.get(key).push(schedule);
+    });
 
     const duplicates = [];
 
-
-    groups.forEach(
-      records => {
-
-        if (
-          records.length > 1
-        ) {
-
-          duplicates.push(
-            ...records
-          );
-
-        }
-
+    groups.forEach((records) => {
+      if (records.length > 1) {
+        duplicates.push(...records);
       }
-    );
-
+    });
 
     return duplicates;
-
   }
-
 
   function findActiveSchedulesWithoutNextDue() {
-
-    return getActiveSchedules()
-      .filter(
-        schedule =>
-          isBlank(
-            schedule.next_due
-          )
-      );
-
+    return getActiveSchedules().filter((schedule) =>
+      isBlank(schedule.next_due),
+    );
   }
-
 
   /*
    * ==========================================================
@@ -2766,94 +1316,39 @@ const exact =
    * ==========================================================
    */
 
-  function getScheduleStatus(
-    scheduleId,
-    asOfDate
-  ) {
+  function getScheduleStatus(scheduleId, asOfDate) {
+    const schedule = requireSchedule(scheduleId);
 
-    const schedule =
-      requireSchedule(
-        scheduleId
-      );
+    const referenceDate = isBlank(asOfDate) ? getToday() : parseDate(asOfDate);
 
+    let daysUntilDue = null;
 
-    const referenceDate =
-      isBlank(asOfDate)
-        ? getToday()
-        : parseDate(
-            asOfDate
-          );
-
-
-    let daysUntilDue =
-      null;
-
-
-    if (
-      !isBlank(
-        schedule.next_due
-      )
-    ) {
-
-      daysUntilDue =
-        daysBetween(
-          referenceDate,
-          parseDate(
-            schedule.next_due
-          )
-        );
-
+    if (!isBlank(schedule.next_due)) {
+      daysUntilDue = daysBetween(referenceDate, parseDate(schedule.next_due));
     }
 
-
     return {
+      schedule_id: schedule.schedule_id,
 
-      schedule_id:
-        schedule.schedule_id,
+      unit_id: schedule.unit_id,
 
-      unit_id:
-        schedule.unit_id,
+      task_type: schedule.task_type,
 
-      task_type:
-        schedule.task_type,
+      frequency: schedule.frequency,
 
-      frequency:
-        schedule.frequency,
+      active: normalizeBoolean(schedule.active),
 
-      active:
-        normalizeBoolean(
-          schedule.active
-        ),
+      last_completed: schedule.last_completed,
 
-      last_completed:
-        schedule.last_completed,
+      next_due: schedule.next_due,
 
-      next_due:
-        schedule.next_due,
+      due: isDue(schedule, formatDate(referenceDate)),
 
-      due:
-        isDue(
-          schedule,
-          formatDate(
-            referenceDate
-          )
-        ),
+      overdue: isOverdue(schedule, formatDate(referenceDate)),
 
-      overdue:
-        isOverdue(
-          schedule,
-          formatDate(
-            referenceDate
-          )
-        ),
-
-      days_until_due:
-        daysUntilDue
-
+      days_until_due: daysUntilDue,
     };
-
   }
-
 
   /*
    * ==========================================================
@@ -2862,7 +1357,6 @@ const exact =
    */
 
   return {
-
     FREQUENCY,
     TASK_TYPE,
 
@@ -2915,9 +1409,6 @@ const exact =
     findInvalidDates,
     findInvalidStaffAssignments,
     findDuplicateActiveSchedules,
-    findActiveSchedulesWithoutNextDue
-
+    findActiveSchedulesWithoutNextDue,
   };
-
-
 })();

@@ -18,7 +18,6 @@
  */
 
 const CONFIG = {
-
   /**
    * ----------------------------------------------------------
    * APPLICATION
@@ -26,18 +25,12 @@ const CONFIG = {
    */
 
   APP: {
+    NAME: "Rental Operations MVP",
 
-    NAME:
-      'Rental Operations MVP',
+    VERSION: "1.0.0",
 
-    VERSION:
-      '1.0.0',
-
-    PHASE:
-      'PHASE_1'
-
+    PHASE: "PHASE_1",
   },
-
 
   /**
    * ----------------------------------------------------------
@@ -45,9 +38,7 @@ const CONFIG = {
    * ----------------------------------------------------------
    */
 
-  TIMEZONE:
-    'Africa/Cairo',
-
+  TIMEZONE: "Africa/Cairo",
 
   /**
    * ----------------------------------------------------------
@@ -56,131 +47,88 @@ const CONFIG = {
    */
 
   SHEETS: {
-
     // Reference / Master Data
 
-    REFERENCE_DATA:
-      '00_ReferenceData',
+    REFERENCE_DATA: "00_ReferenceData",
 
-    PROPERTIES:
-      '01_Properties',
+    PROPERTIES: "01_Properties",
 
-    UNITS:
-      '02_Units',
+    UNITS: "02_Units",
 
-    AMENITIES:
-      '03_Amenities',
+    AMENITIES: "03_Amenities",
 
-    UNIT_AMENITIES:
-      '04_UnitAmenities',
+    UNIT_AMENITIES: "04_UnitAmenities",
 
-    MEDIA:
-      '05_Media',
+    MEDIA: "05_Media",
 
-    LOCATIONS:
-      '06_Locations',
-
+    LOCATIONS: "06_Locations",
 
     // Customers / Reservations
 
-    CUSTOMERS:
-      '07_Customers',
+    CUSTOMERS: "07_Customers",
 
-    GUESTS:
-      '08_Guests',
+    GUESTS: "08_Guests",
 
-    RESERVATIONS:
-      '09_Reservations',
+    RESERVATIONS: "09_Reservations",
 
-    RESERVATION_GUESTS:
-      '10_ReservationGuests',
+    RESERVATION_GUESTS: "10_ReservationGuests",
 
-    RESERVATION_CHARGES:
-      '11_ReservationCharges',
+    RESERVATION_CHARGES: "11_ReservationCharges",
 
-    PAYMENTS:
-      '12_Payments',
+    PAYMENTS: "12_Payments",
 
-    EXTERNAL_CALENDAR_EVENTS:
-      '13_ExternalCalendarEvents',
+    EXTERNAL_CALENDAR_EVENTS: "13_ExternalCalendarEvents",
 
-    OTA_BLOCKS:
-      '14_OTABlocks',
-
+    OTA_BLOCKS: "14_OTABlocks",
 
     // Operations
 
-    STAFF:
-      '15_Staff',
+    STAFF: "15_Staff",
 
-    HOUSEKEEPING_TASKS:
-      '16_HousekeepingTasks',
+    HOUSEKEEPING_TASKS: "16_HousekeepingTasks",
 
-    HOUSEKEEPING_SCHEDULES:
-      '17_HousekeepingSchedules',
+    HOUSEKEEPING_SCHEDULES: "17_HousekeepingSchedules",
 
-    MAINTENANCE_ASSETS:
-      '18_MaintenanceAssets',
+    MAINTENANCE_ASSETS: "18_MaintenanceAssets",
 
-    MAINTENANCE_SCHEDULES:
-      '19_MaintenanceSchedules',
+    MAINTENANCE_SCHEDULES: "19_MaintenanceSchedules",
 
-    MAINTENANCE_WORK_ORDERS:
-      '20_MaintenanceWorkOrders',
+    MAINTENANCE_WORK_ORDERS: "20_MaintenanceWorkOrders",
 
-    INSPECTIONS:
-      '21_Inspections',
+    INSPECTIONS: "21_Inspections",
 
-    INSPECTION_CHECKLIST:
-      '22_InspectionChecklist',
+    INSPECTION_CHECKLIST: "22_InspectionChecklist",
 
-    UNIT_OPERATIONAL_STATUS:
-      '23_UnitOperationalStatus',
-
+    UNIT_OPERATIONAL_STATUS: "23_UnitOperationalStatus",
 
     // Finance
 
-    UTILITIES:
-      '24_Utilities',
+    UTILITIES: "24_Utilities",
 
-    UTILITY_BILLS:
-      '25_UtilityBills',
+    UTILITY_BILLS: "25_UtilityBills",
 
-    INTERNET_SERVICES:
-      '26_InternetServices',
+    INTERNET_SERVICES: "26_InternetServices",
 
-    OPERATING_EXPENSES:
-      '27_OperatingExpenses',
+    OPERATING_EXPENSES: "27_OperatingExpenses",
 
-    VENDORS:
-      '28_Vendors',
-
+    VENDORS: "28_Vendors",
 
     // System
 
-    NOTIFICATIONS:
-      '29_Notifications',
+    NOTIFICATIONS: "29_Notifications",
 
-    AUDIT_LOG:
-      '30_AuditLog',
-
+    AUDIT_LOG: "30_AuditLog",
 
     // Inventory
 
-    INVENTORY_ITEMS:
-      '31_InventoryItems',
+    INVENTORY_ITEMS: "31_InventoryItems",
 
-    INVENTORY_LOCATIONS:
-      '32_InventoryLocations',
+    INVENTORY_LOCATIONS: "32_InventoryLocations",
 
-    INVENTORY_STOCK:
-      '33_InventoryStock',
+    INVENTORY_STOCK: "33_InventoryStock",
 
-    INVENTORY_TRANSACTIONS:
-      '34_InventoryTransactions'
-
+    INVENTORY_TRANSACTIONS: "34_InventoryTransactions",
   },
-
 
   /**
    * ----------------------------------------------------------
@@ -203,84 +151,60 @@ const CONFIG = {
    */
 
   ID_PREFIXES: {
+    PROPERTY: "PROP",
 
-    PROPERTY:
-      'PROP',
+    UNIT: "UNIT",
 
-    UNIT:
-      'UNIT',
+    AMENITY: "AMN",
 
-    AMENITY:
-      'AMN',
+    MEDIA: "MED",
 
-    MEDIA:
-      'MED',
+    LOCATION: "LOC",
 
-    LOCATION:
-      'LOC',
+    CUSTOMER: "CUST",
 
-    CUSTOMER:
-      'CUST',
+    GUEST: "GST",
 
-    GUEST:
-      'GST',
+    RESERVATION: "RES",
 
-    RESERVATION:
-      'RES',
+    EXTERNAL_CALENDAR_EVENT: "EXT",
 
-    EXTERNAL_CALENDAR_EVENT:
-      'EXT',
+    OTA_BLOCK: "OTAB",
 
-    OTA_BLOCK:
-      'OTAB',
+    STAFF: "STF",
 
-    STAFF:
-      'STF',
+    HOUSEKEEPING_TASK: "TASK",
 
-    HOUSEKEEPING_TASK:
-      'TASK',
+    MAINTENANCE_ASSET: "AST",
 
-    MAINTENANCE_ASSET:
-      'AST',
+    MAINTENANCE_WORK_ORDER: "WO",
 
-    MAINTENANCE_WORK_ORDER:
-      'WO',
+    INSPECTION: "INSP",
 
-    INSPECTION:
-      'INSP',
+    UTILITY: "UTL",
 
-    UTILITY:
-      'UTL',
+    UTILITY_BILL: "BILL",
 
-    UTILITY_BILL:
-      'BILL',
+    INTERNET_SERVICE: "INT",
 
-    INTERNET_SERVICE:
-      'INT',
+    OPERATING_EXPENSE: "EXP",
 
-    OPERATING_EXPENSE:
-      'EXP',
+    VENDOR: "VND",
 
-    VENDOR:
-      'VND',
+    NOTIFICATION: "NTF",
 
-    NOTIFICATION:
-      'NTF',
+    AUDIT: "AUD",
+    RESERVATION_GUEST: "RG",
+    HOUSEKEEPING_SCHEDULE: "HS",
+    INSPECTION: "INSP",
+    INSPECTION_CHECKLIST_ITEM: "IC",
+    MAINTENANCE_SCHEDULE: "MS",
 
-    AUDIT:
-      'AUD',
-    RESERVATION_GUEST: 'RG',
-    HOUSEKEEPING_SCHEDULE: 'HS',
-    INSPECTION: 'INSP',
-    INSPECTION_CHECKLIST_ITEM: 'IC',
-    MAINTENANCE_SCHEDULE: 'MS',
-
-    INVENTORY_ITEM: 'ITEM',
-    INVENTORY_LOCATION: 'ILOC',
-    INVENTORY_STOCK: 'STK',
-    INVENTORY_TRANSACTION: 'ITX'
+    INVENTORY_ITEM: "ITEM",
+    INVENTORY_LOCATION: "ILOC",
+    INVENTORY_STOCK: "STK",
+    INVENTORY_TRANSACTION: "ITX",
   },
-
 
   /**
    * ----------------------------------------------------------
@@ -289,15 +213,10 @@ const CONFIG = {
    */
 
   ID: {
+    PADDING: 6,
 
-    PADDING:
-      6,
-
-    SEQUENCE_PROPERTY_PREFIX:
-      'SEQ_'
-
+    SEQUENCE_PROPERTY_PREFIX: "SEQ_",
   },
-
 
   /**
    * ----------------------------------------------------------
@@ -306,30 +225,20 @@ const CONFIG = {
    */
 
   DEFAULTS: {
+    PROPERTY_STATUS: "ACTIVE",
 
-    PROPERTY_STATUS:
-      'ACTIVE',
+    UNIT_STATUS: "ACTIVE",
 
-    UNIT_STATUS:
-      'ACTIVE',
+    CUSTOMER_STATUS: "ACTIVE",
 
-    CUSTOMER_STATUS:
-      'ACTIVE',
+    STAFF_STATUS: "ACTIVE",
 
-    STAFF_STATUS:
-      'ACTIVE',
+    OPERATIONAL_STATUS: "READY",
 
-    OPERATIONAL_STATUS:
-      'READY',
+    ACTOR_ID: "SYSTEM",
 
-    ACTOR_ID:
-      'SYSTEM',
-
-    ACTOR_TYPE:
-      'SYSTEM'
-
+    ACTOR_TYPE: "SYSTEM",
   },
-
 
   /**
    * ----------------------------------------------------------
@@ -338,18 +247,12 @@ const CONFIG = {
    */
 
   DATE_FORMATS: {
+    DATE: "yyyy-MM-dd",
 
-    DATE:
-      'yyyy-MM-dd',
+    DATETIME: "yyyy-MM-dd HH:mm:ss",
 
-    DATETIME:
-      'yyyy-MM-dd HH:mm:ss',
-
-    TIME:
-      'HH:mm'
-
+    TIME: "HH:mm",
   },
-
 
   /**
    * ----------------------------------------------------------
@@ -366,27 +269,24 @@ const CONFIG = {
    */
 
   PHASE_1_REQUIRED_SHEETS: [
+    "00_ReferenceData",
 
-    '00_ReferenceData',
+    "01_Properties",
 
-    '01_Properties',
+    "02_Units",
 
-    '02_Units',
+    "06_Locations",
 
-    '06_Locations',
+    "07_Customers",
 
-    '07_Customers',
+    "08_Guests",
 
-    '08_Guests',
+    "15_Staff",
 
-    '15_Staff',
+    "23_UnitOperationalStatus",
 
-    '23_UnitOperationalStatus',
-
-    '30_AuditLog'
-
+    "30_AuditLog",
   ],
-
 
   /**
    * ----------------------------------------------------------
@@ -395,17 +295,14 @@ const CONFIG = {
    */
 
   PHASE_1_REFERENCE_CATEGORIES: [
+    "PROPERTY_TYPE",
 
-    'PROPERTY_TYPE',
+    "UNIT_TYPE",
 
-    'UNIT_TYPE',
+    "UNIT_STATUS",
 
-    'UNIT_STATUS',
+    "STAFF_ROLE",
 
-    'STAFF_ROLE',
-
-    'OPERATIONAL_STATUS'
-
-  ]
-
+    "OPERATIONAL_STATUS",
+  ],
 };

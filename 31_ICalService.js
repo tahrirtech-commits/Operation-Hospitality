@@ -64,13 +64,11 @@
  */
 
 const ICalService = (() => {
-
   /**
    * ==========================================================
    * INTERNAL HELPERS
    * ==========================================================
    */
-
 
   /**
    * ----------------------------------------------------------
@@ -79,15 +77,8 @@ const ICalService = (() => {
    */
 
   function isBlank(value) {
-
-    return (
-      value === undefined ||
-      value === null ||
-      String(value).trim() === ''
-    );
-
+    return value === undefined || value === null || String(value).trim() === "";
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -96,18 +87,12 @@ const ICalService = (() => {
    */
 
   function normalizeText(value) {
-
     if (isBlank(value)) {
-
-      return '';
-
+      return "";
     }
 
-
     return String(value).trim();
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -116,26 +101,14 @@ const ICalService = (() => {
    */
 
   function normalizeSource(source) {
-
-    const normalized =
-      normalizeText(
-        source
-      ).toUpperCase();
-
+    const normalized = normalizeText(source).toUpperCase();
 
     if (!normalized) {
-
-      throw new Error(
-        'source is required.'
-      );
-
+      throw new Error("source is required.");
     }
 
-
     return normalized;
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -144,20 +117,12 @@ const ICalService = (() => {
    */
 
   function normalizeActorId(actorId) {
-
     if (isBlank(actorId)) {
-
       return CONFIG.DEFAULTS.ACTOR_ID;
-
     }
 
-
-    return normalizeText(
-      actorId
-    );
-
+    return normalizeText(actorId);
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -166,15 +131,12 @@ const ICalService = (() => {
    */
 
   function timestamp() {
-
     return Utilities.formatDate(
       new Date(),
       CONFIG.TIMEZONE,
-      CONFIG.DATE_FORMATS.DATETIME
+      CONFIG.DATE_FORMATS.DATETIME,
     );
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -183,22 +145,18 @@ const ICalService = (() => {
    */
 
   function formatDate(date) {
-
     return Utilities.formatDate(
       date,
       CONFIG.TIMEZONE,
-      CONFIG.DATE_FORMATS.DATE
+      CONFIG.DATE_FORMATS.DATE,
     );
-
   }
-
 
   /**
    * ==========================================================
    * FETCH
    * ==========================================================
    */
-
 
   /**
    * ----------------------------------------------------------
@@ -207,39 +165,18 @@ const ICalService = (() => {
    */
 
   function validateCalendarUrl(url) {
-
     if (isBlank(url)) {
-
-      throw new Error(
-        'calendarUrl is required.'
-      );
-
+      throw new Error("calendarUrl is required.");
     }
 
+    const normalized = normalizeText(url);
 
-    const normalized =
-      normalizeText(
-        url
-      );
-
-
-    if (
-      !/^https?:\/\//i.test(
-        normalized
-      )
-    ) {
-
-      throw new Error(
-        'Calendar URL must use HTTP or HTTPS.'
-      );
-
+    if (!/^https?:\/\//i.test(normalized)) {
+      throw new Error("Calendar URL must use HTTP or HTTPS.");
     }
-
 
     return normalized;
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -249,112 +186,51 @@ const ICalService = (() => {
    * Returns raw ICS text.
    */
 
-  function fetchCalendar(
-    calendarUrl
-  ) {
-
-    const url =
-      validateCalendarUrl(
-        calendarUrl
-      );
-
+  function fetchCalendar(calendarUrl) {
+    const url = validateCalendarUrl(calendarUrl);
 
     let response;
 
-
     try {
+      response = UrlFetchApp.fetch(url, {
+        method: "get",
 
-      response =
-        UrlFetchApp.fetch(
-          url,
-          {
-            method:
-              'get',
+        followRedirects: true,
 
-            followRedirects:
-              true,
+        muteHttpExceptions: true,
 
-            muteHttpExceptions:
-              true,
-
-            headers: {
-
-              'Accept':
-                'text/calendar,text/plain,*/*'
-
-            }
-          }
-        );
-
+        headers: {
+          Accept: "text/calendar,text/plain,*/*",
+        },
+      });
     } catch (error) {
-
-      throw new Error(
-        'Unable to fetch external calendar: ' +
-        error.message
-      );
-
+      throw new Error("Unable to fetch external calendar: " + error.message);
     }
 
+    const statusCode = response.getResponseCode();
 
-    const statusCode =
-      response.getResponseCode();
-
-
-    if (
-      statusCode < 200 ||
-      statusCode >= 300
-    ) {
-
-      throw new Error(
-        'External calendar returned HTTP ' +
-        statusCode +
-        '.'
-      );
-
+    if (statusCode < 200 || statusCode >= 300) {
+      throw new Error("External calendar returned HTTP " + statusCode + ".");
     }
 
+    const content = response.getContentText();
 
-    const content =
-      response.getContentText();
-
-
-    if (
-      isBlank(content)
-    ) {
-
-      throw new Error(
-        'External calendar returned empty content.'
-      );
-
+    if (isBlank(content)) {
+      throw new Error("External calendar returned empty content.");
     }
 
-
-    if (
-      content
-        .toUpperCase()
-        .indexOf(
-          'BEGIN:VCALENDAR'
-        ) === -1
-    ) {
-
-      throw new Error(
-        'Response does not appear to be an iCalendar feed.'
-      );
-
+    if (content.toUpperCase().indexOf("BEGIN:VCALENDAR") === -1) {
+      throw new Error("Response does not appear to be an iCalendar feed.");
     }
-
 
     return content;
-
   }
-
 
   /**
    * ==========================================================
    * ICS TEXT PROCESSING
    * ==========================================================
    */
-
 
   /**
    * ----------------------------------------------------------
@@ -363,21 +239,10 @@ const ICalService = (() => {
    */
 
   function normalizeLineEndings(text) {
-
-    return String(
-      text || ''
-    )
-      .replace(
-        /\r\n/g,
-        '\n'
-      )
-      .replace(
-        /\r/g,
-        '\n'
-      );
-
+    return String(text || "")
+      .replace(/\r\n/g, "\n")
+      .replace(/\r/g, "\n");
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -397,54 +262,25 @@ const ICalService = (() => {
    */
 
   function unfoldLines(text) {
+    const normalized = normalizeLineEndings(text);
 
-    const normalized =
-      normalizeLineEndings(
-        text
-      );
-
-
-    const lines =
-      normalized.split(
-        '\n'
-      );
-
+    const lines = normalized.split("\n");
 
     const unfolded = [];
 
-
-    lines.forEach(
-      line => {
-
-        if (
-          unfolded.length > 0 &&
-          (
-            line.startsWith(' ') ||
-            line.startsWith('\t')
-          )
-        ) {
-
-          unfolded[
-            unfolded.length - 1
-          ] +=
-            line.substring(1);
-
-        } else {
-
-          unfolded.push(
-            line
-          );
-
-        }
-
+    lines.forEach((line) => {
+      if (
+        unfolded.length > 0 &&
+        (line.startsWith(" ") || line.startsWith("\t"))
+      ) {
+        unfolded[unfolded.length - 1] += line.substring(1);
+      } else {
+        unfolded.push(line);
       }
-    );
-
+    });
 
     return unfolded;
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -455,55 +291,35 @@ const ICalService = (() => {
    */
 
   function unescapeText(value) {
-
-    if (
-      value === undefined ||
-      value === null
-    ) {
-
-      return '';
-
+    if (value === undefined || value === null) {
+      return "";
     }
 
+    return (
+      String(value)
+        /*
+         * Escaped newline.
+         */
+        .replace(/\\n/gi, "\n")
 
-    return String(value)
+        /*
+         * Escaped comma.
+         */
+        .replace(/\\,/g, ",")
 
-      /*
-       * Escaped newline.
-       */
-      .replace(
-        /\\n/gi,
-        '\n'
-      )
+        /*
+         * Escaped semicolon.
+         */
+        .replace(/\\;/g, ";")
 
-      /*
-       * Escaped comma.
-       */
-      .replace(
-        /\\,/g,
-        ','
-      )
+        /*
+         * Escaped backslash.
+         */
+        .replace(/\\\\/g, "\\")
 
-      /*
-       * Escaped semicolon.
-       */
-      .replace(
-        /\\;/g,
-        ';'
-      )
-
-      /*
-       * Escaped backslash.
-       */
-      .replace(
-        /\\\\/g,
-        '\\'
-      )
-
-      .trim();
-
+        .trim()
+    );
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -526,136 +342,66 @@ const ICalService = (() => {
    */
 
   function parseContentLine(line) {
-
-    if (
-      isBlank(line)
-    ) {
-
+    if (isBlank(line)) {
       return null;
-
     }
 
+    const colonIndex = line.indexOf(":");
 
-    const colonIndex =
-      line.indexOf(':');
-
-
-    if (
-      colonIndex === -1
-    ) {
-
+    if (colonIndex === -1) {
       return null;
-
     }
 
+    const left = line.substring(0, colonIndex);
 
-    const left =
-      line.substring(
-        0,
-        colonIndex
-      );
+    const value = line.substring(colonIndex + 1);
 
+    const parts = left.split(";");
 
-    const value =
-      line.substring(
-        colonIndex + 1
-      );
-
-
-    const parts =
-      left.split(';');
-
-
-    const name =
-      normalizeText(
-        parts.shift()
-      ).toUpperCase();
-
+    const name = normalizeText(parts.shift()).toUpperCase();
 
     const parameters = {};
 
+    parts.forEach((part) => {
+      const equalsIndex = part.indexOf("=");
 
-    parts.forEach(
-      part => {
-
-        const equalsIndex =
-          part.indexOf('=');
-
-
-        if (
-          equalsIndex === -1
-        ) {
-
-          return;
-
-        }
-
-
-        const key =
-          normalizeText(
-            part.substring(
-              0,
-              equalsIndex
-            )
-          ).toUpperCase();
-
-
-        let parameterValue =
-          normalizeText(
-            part.substring(
-              equalsIndex + 1
-            )
-          );
-
-
-        /*
-         * Remove surrounding quotes.
-         */
-
-        if (
-          parameterValue.length >= 2 &&
-          parameterValue.startsWith('"') &&
-          parameterValue.endsWith('"')
-        ) {
-
-          parameterValue =
-            parameterValue.substring(
-              1,
-              parameterValue.length - 1
-            );
-
-        }
-
-
-        parameters[key] =
-          parameterValue;
-
+      if (equalsIndex === -1) {
+        return;
       }
-    );
 
+      const key = normalizeText(part.substring(0, equalsIndex)).toUpperCase();
+
+      let parameterValue = normalizeText(part.substring(equalsIndex + 1));
+
+      /*
+       * Remove surrounding quotes.
+       */
+
+      if (
+        parameterValue.length >= 2 &&
+        parameterValue.startsWith('"') &&
+        parameterValue.endsWith('"')
+      ) {
+        parameterValue = parameterValue.substring(1, parameterValue.length - 1);
+      }
+
+      parameters[key] = parameterValue;
+    });
 
     return {
+      name: name,
 
-      name:
-        name,
+      parameters: parameters,
 
-      parameters:
-        parameters,
-
-      value:
-        value
-
+      value: value,
     };
-
   }
-
 
   /**
    * ==========================================================
    * DATE PARSING
    * ==========================================================
    */
-
 
   /**
    * ----------------------------------------------------------
@@ -664,15 +410,8 @@ const ICalService = (() => {
    */
 
   function pad2(value) {
-
-    return String(value)
-      .padStart(
-        2,
-        '0'
-      );
-
+    return String(value).padStart(2, "0");
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -680,22 +419,9 @@ const ICalService = (() => {
    * ----------------------------------------------------------
    */
 
-  function formatDateParts(
-    year,
-    month,
-    day
-  ) {
-
-    return (
-      String(year) +
-      '-' +
-      pad2(month) +
-      '-' +
-      pad2(day)
-    );
-
+  function formatDateParts(year, month, day) {
+    return String(year) + "-" + pad2(month) + "-" + pad2(day);
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -703,40 +429,19 @@ const ICalService = (() => {
    * ----------------------------------------------------------
    */
 
-  function validateDateParts(
-    year,
-    month,
-    day,
-    fieldName
-  ) {
-
-    const date =
-      new Date(
-        year,
-        month - 1,
-        day
-      );
-
+  function validateDateParts(year, month, day, fieldName) {
+    const date = new Date(year, month - 1, day);
 
     if (
       date.getFullYear() !== year ||
       date.getMonth() !== month - 1 ||
       date.getDate() !== day
     ) {
-
-      throw new Error(
-        'Invalid ' +
-        fieldName +
-        ' date.'
-      );
-
+      throw new Error("Invalid " + fieldName + " date.");
     }
 
-
     return true;
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -752,75 +457,25 @@ const ICalService = (() => {
    * 2026-10-10
    */
 
-  function parseDateOnly(
-    value,
-    fieldName
-  ) {
+  function parseDateOnly(value, fieldName) {
+    const text = normalizeText(value);
 
-    const text =
-      normalizeText(
-        value
-      );
-
-
-    if (
-      !/^\d{8}$/.test(
-        text
-      )
-    ) {
-
+    if (!/^\d{8}$/.test(text)) {
       throw new Error(
-        fieldName +
-        ' is not a valid iCalendar DATE value: ' +
-        text
+        fieldName + " is not a valid iCalendar DATE value: " + text,
       );
-
     }
 
+    const year = Number(text.substring(0, 4));
 
-    const year =
-      Number(
-        text.substring(
-          0,
-          4
-        )
-      );
+    const month = Number(text.substring(4, 6));
 
+    const day = Number(text.substring(6, 8));
 
-    const month =
-      Number(
-        text.substring(
-          4,
-          6
-        )
-      );
+    validateDateParts(year, month, day, fieldName);
 
-
-    const day =
-      Number(
-        text.substring(
-          6,
-          8
-        )
-      );
-
-
-    validateDateParts(
-      year,
-      month,
-      day,
-      fieldName
-    );
-
-
-    return formatDateParts(
-      year,
-      month,
-      day
-    );
-
+    return formatDateParts(year, month, day);
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -835,53 +490,30 @@ const ICalService = (() => {
    * before extracting the date.
    */
 
-  function parseUtcDateTime(
-    value,
-    fieldName
-  ) {
+  function parseUtcDateTime(value, fieldName) {
+    const text = normalizeText(value);
 
-    const text =
-      normalizeText(
-        value
-      );
-
-
-    const match =
-      text.match(
-        /^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z$/
-      );
-
+    const match = text.match(/^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z$/);
 
     if (!match) {
-
       throw new Error(
-        fieldName +
-        ' is not a supported UTC iCalendar datetime: ' +
-        text
+        fieldName + " is not a supported UTC iCalendar datetime: " + text,
       );
-
     }
 
-
-    const date =
-      new Date(
-        Date.UTC(
-          Number(match[1]),
-          Number(match[2]) - 1,
-          Number(match[3]),
-          Number(match[4]),
-          Number(match[5]),
-          Number(match[6])
-        )
-      );
-
-
-    return formatDate(
-      date
+    const date = new Date(
+      Date.UTC(
+        Number(match[1]),
+        Number(match[2]) - 1,
+        Number(match[3]),
+        Number(match[4]),
+        Number(match[5]),
+        Number(match[6]),
+      ),
     );
 
+    return formatDate(date);
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -898,68 +530,27 @@ const ICalService = (() => {
    * not hourly granularity.
    */
 
-  function parseLocalDateTime(
-    value,
-    fieldName
-  ) {
+  function parseLocalDateTime(value, fieldName) {
+    const text = normalizeText(value);
 
-    const text =
-      normalizeText(
-        value
-      );
-
-
-    const match =
-      text.match(
-        /^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})$/
-      );
-
+    const match = text.match(/^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})$/);
 
     if (!match) {
-
       throw new Error(
-        fieldName +
-        ' is not a supported iCalendar datetime: ' +
-        text
+        fieldName + " is not a supported iCalendar datetime: " + text,
       );
-
     }
 
+    const year = Number(match[1]);
 
-    const year =
-      Number(
-        match[1]
-      );
+    const month = Number(match[2]);
 
+    const day = Number(match[3]);
 
-    const month =
-      Number(
-        match[2]
-      );
+    validateDateParts(year, month, day, fieldName);
 
-
-    const day =
-      Number(
-        match[3]
-      );
-
-
-    validateDateParts(
-      year,
-      month,
-      day,
-      fieldName
-    );
-
-
-    return formatDateParts(
-      year,
-      month,
-      day
-    );
-
+    return formatDateParts(year, month, day);
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -983,84 +574,38 @@ const ICalService = (() => {
    * date-time values are normalized to dates.
    */
 
-  function parseICalDate(
-    property,
-    fieldName
-  ) {
-
+  function parseICalDate(property, fieldName) {
     if (!property) {
-
-      throw new Error(
-        fieldName +
-        ' is missing.'
-      );
-
+      throw new Error(fieldName + " is missing.");
     }
 
+    const value = normalizeText(property.value);
 
-    const value =
-      normalizeText(
-        property.value
-      );
-
-
-    const valueType =
-      normalizeText(
-        property.parameters.VALUE
-      ).toUpperCase();
-
+    const valueType = normalizeText(property.parameters.VALUE).toUpperCase();
 
     /*
      * Explicit DATE.
      */
 
-    if (
-      valueType === 'DATE'
-    ) {
-
-      return parseDateOnly(
-        value,
-        fieldName
-      );
-
+    if (valueType === "DATE") {
+      return parseDateOnly(value, fieldName);
     }
-
 
     /*
      * Plain YYYYMMDD.
      */
 
-    if (
-      /^\d{8}$/.test(
-        value
-      )
-    ) {
-
-      return parseDateOnly(
-        value,
-        fieldName
-      );
-
+    if (/^\d{8}$/.test(value)) {
+      return parseDateOnly(value, fieldName);
     }
-
 
     /*
      * UTC datetime.
      */
 
-    if (
-      /^\d{8}T\d{6}Z$/.test(
-        value
-      )
-    ) {
-
-      return parseUtcDateTime(
-        value,
-        fieldName
-      );
-
+    if (/^\d{8}T\d{6}Z$/.test(value)) {
+      return parseUtcDateTime(value, fieldName);
     }
-
 
     /*
      * Floating/local datetime.
@@ -1069,36 +614,18 @@ const ICalService = (() => {
      * here because Phase 2 availability is date-based.
      */
 
-    if (
-      /^\d{8}T\d{6}$/.test(
-        value
-      )
-    ) {
-
-      return parseLocalDateTime(
-        value,
-        fieldName
-      );
-
+    if (/^\d{8}T\d{6}$/.test(value)) {
+      return parseLocalDateTime(value, fieldName);
     }
 
-
-    throw new Error(
-      'Unsupported ' +
-      fieldName +
-      ' value: ' +
-      value
-    );
-
+    throw new Error("Unsupported " + fieldName + " value: " + value);
   }
-
 
   /**
    * ==========================================================
    * VEVENT PARSING
    * ==========================================================
    */
-
 
   /**
    * ----------------------------------------------------------
@@ -1107,28 +634,18 @@ const ICalService = (() => {
    */
 
   function createEmptyEvent() {
-
     return {
+      UID: null,
 
-      UID:
-        null,
+      SUMMARY: null,
 
-      SUMMARY:
-        null,
+      DTSTART: null,
 
-      DTSTART:
-        null,
+      DTEND: null,
 
-      DTEND:
-        null,
-
-      STATUS:
-        null
-
+      STATUS: null,
     };
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -1138,176 +655,87 @@ const ICalService = (() => {
    * Returns raw parsed event structures.
    */
 
-  function parseEventBlocks(
-    icsText
-  ) {
-
-    if (
-      isBlank(
-        icsText
-      )
-    ) {
-
-      throw new Error(
-        'ICS content is required.'
-      );
-
+  function parseEventBlocks(icsText) {
+    if (isBlank(icsText)) {
+      throw new Error("ICS content is required.");
     }
 
-
-    const lines =
-      unfoldLines(
-        icsText
-      );
-
+    const lines = unfoldLines(icsText);
 
     const events = [];
 
+    let currentEvent = null;
 
-    let currentEvent =
-      null;
+    lines.forEach((rawLine) => {
+      const line = String(rawLine || "");
 
+      const normalizedLine = line.trim().toUpperCase();
 
-    lines.forEach(
-      rawLine => {
+      /*
+       * Start VEVENT.
+       */
 
-        const line =
-          String(
-            rawLine || ''
-          );
-
-
-        const normalizedLine =
-          line
-            .trim()
-            .toUpperCase();
-
-
-        /*
-         * Start VEVENT.
-         */
-
-        if (
-          normalizedLine ===
-          'BEGIN:VEVENT'
-        ) {
-
-          if (
-            currentEvent !== null
-          ) {
-
-            throw new Error(
-              'Nested VEVENT detected.'
-            );
-
-          }
-
-
-          currentEvent =
-            createEmptyEvent();
-
-
-          return;
-
+      if (normalizedLine === "BEGIN:VEVENT") {
+        if (currentEvent !== null) {
+          throw new Error("Nested VEVENT detected.");
         }
 
+        currentEvent = createEmptyEvent();
 
-        /*
-         * End VEVENT.
-         */
-
-        if (
-          normalizedLine ===
-          'END:VEVENT'
-        ) {
-
-          if (
-            currentEvent === null
-          ) {
-
-            return;
-
-          }
-
-
-          events.push(
-            currentEvent
-          );
-
-
-          currentEvent =
-            null;
-
-
-          return;
-
-        }
-
-
-        /*
-         * Ignore lines outside VEVENT.
-         */
-
-        if (
-          currentEvent === null
-        ) {
-
-          return;
-
-        }
-
-
-        const property =
-          parseContentLine(
-            line
-          );
-
-
-        if (!property) {
-
-          return;
-
-        }
-
-
-        /*
-         * Only properties relevant to Phase 2 are retained.
-         */
-
-        if (
-          property.name === 'UID' ||
-          property.name === 'SUMMARY' ||
-          property.name === 'DTSTART' ||
-          property.name === 'DTEND' ||
-          property.name === 'STATUS'
-        ) {
-
-          currentEvent[
-            property.name
-          ] =
-            property;
-
-        }
-
+        return;
       }
-    );
 
+      /*
+       * End VEVENT.
+       */
 
-    if (
-      currentEvent !== null
-    ) {
+      if (normalizedLine === "END:VEVENT") {
+        if (currentEvent === null) {
+          return;
+        }
 
-      throw new Error(
-        'VEVENT was not closed with END:VEVENT.'
-      );
+        events.push(currentEvent);
 
+        currentEvent = null;
+
+        return;
+      }
+
+      /*
+       * Ignore lines outside VEVENT.
+       */
+
+      if (currentEvent === null) {
+        return;
+      }
+
+      const property = parseContentLine(line);
+
+      if (!property) {
+        return;
+      }
+
+      /*
+       * Only properties relevant to Phase 2 are retained.
+       */
+
+      if (
+        property.name === "UID" ||
+        property.name === "SUMMARY" ||
+        property.name === "DTSTART" ||
+        property.name === "DTEND" ||
+        property.name === "STATUS"
+      ) {
+        currentEvent[property.name] = property;
+      }
+    });
+
+    if (currentEvent !== null) {
+      throw new Error("VEVENT was not closed with END:VEVENT.");
     }
 
-
     return events;
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -1315,104 +743,48 @@ const ICalService = (() => {
    * ----------------------------------------------------------
    */
 
-  function normalizeParsedEvent(
-    rawEvent
-  ) {
-
-    if (
-      !rawEvent.UID ||
-      isBlank(
-        rawEvent.UID.value
-      )
-    ) {
-
-      throw new Error(
-        'VEVENT is missing UID.'
-      );
-
+  function normalizeParsedEvent(rawEvent) {
+    if (!rawEvent.UID || isBlank(rawEvent.UID.value)) {
+      throw new Error("VEVENT is missing UID.");
     }
-
 
     if (!rawEvent.DTSTART) {
-
-      throw new Error(
-        'VEVENT ' +
-        rawEvent.UID.value +
-        ' is missing DTSTART.'
-      );
-
+      throw new Error("VEVENT " + rawEvent.UID.value + " is missing DTSTART.");
     }
-
 
     if (!rawEvent.DTEND) {
-
-      throw new Error(
-        'VEVENT ' +
-        rawEvent.UID.value +
-        ' is missing DTEND.'
-      );
-
+      throw new Error("VEVENT " + rawEvent.UID.value + " is missing DTEND.");
     }
 
+    const startDate = parseICalDate(rawEvent.DTSTART, "DTSTART");
 
-    const startDate =
-      parseICalDate(
-        rawEvent.DTSTART,
-        'DTSTART'
-      );
-
-
-    const endDate =
-      parseICalDate(
-        rawEvent.DTEND,
-        'DTEND'
-      );
-
+    const endDate = parseICalDate(rawEvent.DTEND, "DTEND");
 
     /*
      * Reuse the calendar-domain range validation.
      */
 
-    ExternalCalendarService
-      .rangesOverlap(
-        startDate,
-        endDate,
-        startDate,
-        endDate
-      );
-
+    ExternalCalendarService.rangesOverlap(
+      startDate,
+      endDate,
+      startDate,
+      endDate,
+    );
 
     return {
+      external_uid: normalizeText(rawEvent.UID.value),
 
-      external_uid:
-        normalizeText(
-          rawEvent.UID.value
-        ),
+      summary: rawEvent.SUMMARY ? unescapeText(rawEvent.SUMMARY.value) : "",
 
-      summary:
-        rawEvent.SUMMARY
-          ? unescapeText(
-              rawEvent.SUMMARY.value
-            )
-          : '',
+      start_date: startDate,
 
-      start_date:
-        startDate,
+      end_date: endDate,
 
-      end_date:
-        endDate,
-
-      ical_status:
-        rawEvent.STATUS
-          ? normalizeText(
-              rawEvent.STATUS.value
-            ).toUpperCase()
-          : ''
-
+      ical_status: rawEvent.STATUS
+        ? normalizeText(rawEvent.STATUS.value).toUpperCase()
+        : "",
     };
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -1432,91 +804,40 @@ const ICalService = (() => {
    * }
    */
 
-  function parseCalendar(
-    icsText
-  ) {
-
-    if (
-      isBlank(
-        icsText
-      )
-    ) {
-
-      throw new Error(
-        'ICS content is required.'
-      );
-
+  function parseCalendar(icsText) {
+    if (isBlank(icsText)) {
+      throw new Error("ICS content is required.");
     }
 
+    const normalized = normalizeLineEndings(icsText);
 
-    const normalized =
-      normalizeLineEndings(
-        icsText
-      );
-
-
-    if (
-      normalized
-        .toUpperCase()
-        .indexOf(
-          'BEGIN:VCALENDAR'
-        ) === -1
-    ) {
-
-      throw new Error(
-        'ICS content does not contain BEGIN:VCALENDAR.'
-      );
-
+    if (normalized.toUpperCase().indexOf("BEGIN:VCALENDAR") === -1) {
+      throw new Error("ICS content does not contain BEGIN:VCALENDAR.");
     }
 
-
-    const rawEvents =
-      parseEventBlocks(
-        normalized
-      );
-
+    const rawEvents = parseEventBlocks(normalized);
 
     const events = [];
 
+    rawEvents.forEach((rawEvent) => {
+      const event = normalizeParsedEvent(rawEvent);
 
-    rawEvents.forEach(
-      rawEvent => {
+      /*
+       * CANCELLED events should not block availability.
+       *
+       * We retain this information in parsing but exclude
+       * cancelled events from the active feed result.
+       */
 
-        const event =
-          normalizeParsedEvent(
-            rawEvent
-          );
-
-
-        /*
-         * CANCELLED events should not block availability.
-         *
-         * We retain this information in parsing but exclude
-         * cancelled events from the active feed result.
-         */
-
-        if (
-          event.ical_status ===
-          'CANCELLED'
-        ) {
-
-          return;
-
-        }
-
-
-        events.push(
-          event
-        );
-
+      if (event.ical_status === "CANCELLED") {
+        return;
       }
-    );
 
+      events.push(event);
+    });
 
     return events;
-
   }
-
 
   /**
    * ==========================================================
@@ -1524,36 +845,23 @@ const ICalService = (() => {
    * ==========================================================
    */
 
-
   /**
    * ----------------------------------------------------------
    * FETCH AND PARSE
    * ----------------------------------------------------------
    */
 
-  function fetchAndParse(
-    calendarUrl
-  ) {
+  function fetchAndParse(calendarUrl) {
+    const content = fetchCalendar(calendarUrl);
 
-    const content =
-      fetchCalendar(
-        calendarUrl
-      );
-
-
-    return parseCalendar(
-      content
-    );
-
+    return parseCalendar(content);
   }
-
 
   /**
    * ==========================================================
    * SYNCHRONIZATION
    * ==========================================================
    */
-
 
   /**
    * ----------------------------------------------------------
@@ -1574,43 +882,16 @@ const ICalService = (() => {
    * feed was successfully parsed and upserted.
    */
 
-  function syncCalendarContent(
-    unitId,
-    source,
-    icsText,
-    actorId
-  ) {
-
-    if (
-      isBlank(
-        unitId
-      )
-    ) {
-
-      throw new Error(
-        'unitId is required.'
-      );
-
+  function syncCalendarContent(unitId, source, icsText, actorId) {
+    if (isBlank(unitId)) {
+      throw new Error("unitId is required.");
     }
 
+    ValidationService.validateUnitExists(unitId);
 
-    ValidationService
-      .validateUnitExists(
-        unitId
-      );
+    const normalizedSource = normalizeSource(source);
 
-
-    const normalizedSource =
-      normalizeSource(
-        source
-      );
-
-
-    const normalizedActorId =
-      normalizeActorId(
-        actorId
-      );
-
+    const normalizedActorId = normalizeActorId(actorId);
 
     /*
      * Parse everything BEFORE changing stored data.
@@ -1618,141 +899,88 @@ const ICalService = (() => {
      * If parsing fails, no existing events are deactivated.
      */
 
-    const parsedEvents =
-      parseCalendar(
-        icsText
-      );
-
+    const parsedEvents = parseCalendar(icsText);
 
     const seenUids = [];
 
-
     const created = [];
 
-
     const updated = [];
-
 
     /*
      * Capture existing natural keys before upsert so the
      * result can distinguish create vs update.
      */
 
-    parsedEvents.forEach(
-      event => {
+    parsedEvents.forEach((event) => {
+      const existing = ExternalCalendarService.findBySourceUid(
+        unitId,
+        normalizedSource,
+        event.external_uid,
+      );
 
-        const existing =
-          ExternalCalendarService
-            .findBySourceUid(
-              unitId,
-              normalizedSource,
-              event.external_uid
-            );
+      const stored = ExternalCalendarService.upsertEvent(
+        {
+          unit_id: unitId,
 
+          source: normalizedSource,
 
-        const stored =
-          ExternalCalendarService
-            .upsertEvent(
-              {
-                unit_id:
-                  unitId,
+          external_uid: event.external_uid,
 
-                source:
-                  normalizedSource,
+          summary: event.summary,
 
-                external_uid:
-                  event.external_uid,
+          start_date: event.start_date,
 
-                summary:
-                  event.summary,
+          end_date: event.end_date,
+        },
+        normalizedActorId,
+      );
 
-                start_date:
-                  event.start_date,
+      seenUids.push(event.external_uid);
 
-                end_date:
-                  event.end_date
-              },
-              normalizedActorId
-            );
-
-
-        seenUids.push(
-          event.external_uid
-        );
-
-
-        if (existing) {
-
-          updated.push(
-            stored
-          );
-
-        } else {
-
-          created.push(
-            stored
-          );
-
-        }
-
+      if (existing) {
+        updated.push(stored);
+      } else {
+        created.push(stored);
       }
-    );
-
+    });
 
     /*
      * Only after successful parsing and successful upserts do
      * we deactivate events which disappeared from the feed.
      */
 
-    const deactivated =
-      ExternalCalendarService
-        .deactivateMissingEvents(
-          unitId,
-          normalizedSource,
-          seenUids,
-          normalizedActorId
-        );
-
+    const deactivated = ExternalCalendarService.deactivateMissingEvents(
+      unitId,
+      normalizedSource,
+      seenUids,
+      normalizedActorId,
+    );
 
     return {
+      success: true,
 
-      success:
-        true,
+      unit_id: unitId,
 
-      unit_id:
-        unitId,
+      source: normalizedSource,
 
-      source:
-        normalizedSource,
+      synced_at: timestamp(),
 
-      synced_at:
-        timestamp(),
+      feed_event_count: parsedEvents.length,
 
-      feed_event_count:
-        parsedEvents.length,
+      created_count: created.length,
 
-      created_count:
-        created.length,
+      updated_count: updated.length,
 
-      updated_count:
-        updated.length,
+      deactivated_count: deactivated.length,
 
-      deactivated_count:
-        deactivated.length,
+      created: created,
 
-      created:
-        created,
+      updated: updated,
 
-      updated:
-        updated,
-
-      deactivated:
-        deactivated
-
+      deactivated: deactivated,
     };
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -1772,35 +1000,17 @@ const ICalService = (() => {
    * deactivate disappeared events
    */
 
-  function syncCalendar(
-    unitId,
-    source,
-    calendarUrl,
-    actorId
-  ) {
+  function syncCalendar(unitId, source, calendarUrl, actorId) {
+    const content = fetchCalendar(calendarUrl);
 
-    const content =
-      fetchCalendar(
-        calendarUrl
-      );
-
-
-    return syncCalendarContent(
-      unitId,
-      source,
-      content,
-      actorId
-    );
-
+    return syncCalendarContent(unitId, source, content, actorId);
   }
-
 
   /**
    * ==========================================================
    * DIAGNOSTICS
    * ==========================================================
    */
-
 
   /**
    * ----------------------------------------------------------
@@ -1812,31 +1022,17 @@ const ICalService = (() => {
    * Useful before activating a new OTA calendar.
    */
 
-  function inspectCalendar(
-    calendarUrl
-  ) {
-
-    const events =
-      fetchAndParse(
-        calendarUrl
-      );
-
+  function inspectCalendar(calendarUrl) {
+    const events = fetchAndParse(calendarUrl);
 
     return {
+      valid: true,
 
-      valid:
-        true,
+      event_count: events.length,
 
-      event_count:
-        events.length,
-
-      events:
-        events
-
+      events: events,
     };
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -1846,50 +1042,27 @@ const ICalService = (() => {
    * Does not write anything.
    */
 
-  function validateContent(
-    icsText
-  ) {
-
+  function validateContent(icsText) {
     try {
-
-      const events =
-        parseCalendar(
-          icsText
-        );
-
+      const events = parseCalendar(icsText);
 
       return {
+        valid: true,
 
-        valid:
-          true,
+        event_count: events.length,
 
-        event_count:
-          events.length,
-
-        error:
-          ''
-
+        error: "",
       };
-
     } catch (error) {
-
       return {
+        valid: false,
 
-        valid:
-          false,
+        event_count: 0,
 
-        event_count:
-          0,
-
-        error:
-          error.message
-
+        error: error.message,
       };
-
     }
-
   }
-
 
   /**
    * ==========================================================
@@ -1898,13 +1071,11 @@ const ICalService = (() => {
    */
 
   return {
-
     /*
      * Fetch
      */
 
     fetchCalendar,
-
 
     /*
      * Parsing
@@ -1920,13 +1091,11 @@ const ICalService = (() => {
 
     parseCalendar,
 
-
     /*
      * Fetch + parse
      */
 
     fetchAndParse,
-
 
     /*
      * Synchronization
@@ -1936,15 +1105,12 @@ const ICalService = (() => {
 
     syncCalendar,
 
-
     /*
      * Diagnostics
      */
 
     inspectCalendar,
 
-    validateContent
-
+    validateContent,
   };
-
 })();

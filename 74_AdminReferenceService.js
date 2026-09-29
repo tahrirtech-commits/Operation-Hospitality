@@ -54,17 +54,8 @@
 
  */
 
-
-
 const AdminReferenceService = (() => {
-
-
-
-  const ACTIVE = 'ACTIVE';
-
-
-
-
+  const ACTIVE = "ACTIVE";
 
   // ==========================================================================
 
@@ -72,149 +63,49 @@ const AdminReferenceService = (() => {
 
   // ==========================================================================
 
-
-
   function isBlank(value) {
-
-    return (
-
-      value === undefined ||
-
-      value === null ||
-
-      String(value).trim() === ''
-
-    );
-
+    return value === undefined || value === null || String(value).trim() === "";
   }
-
-
-
-
 
   function text(value) {
-
-    return isBlank(value)
-
-      ? ''
-
-      : String(value).trim();
-
+    return isBlank(value) ? "" : String(value).trim();
   }
-
-
-
-
 
   function upper(value) {
-
     return text(value).toUpperCase();
-
   }
-
-
-
-
 
   function normalizeBoolean(value) {
-
     if (value === true) {
-
       return true;
-
     }
 
-
-
-    return (
-
-      upper(value) === 'TRUE' ||
-
-      text(value) === '1'
-
-    );
-
+    return upper(value) === "TRUE" || text(value) === "1";
   }
 
-
-
-
-
   function sortByLabel(rows) {
-
     return (rows || [])
 
       .slice()
 
-      .sort((a, b) =>
-
-        text(a.label)
-
-          .localeCompare(
-
-            text(b.label)
-
-          )
-
-      );
-
+      .sort((a, b) => text(a.label).localeCompare(text(b.label)));
   }
-
-
-
-
 
   function requireProperty(propertyId) {
-
     propertyId = text(propertyId);
 
-
-
     if (!propertyId) {
-
-      throw new Error(
-
-        'property_id is required.'
-
-      );
-
+      throw new Error("property_id is required.");
     }
 
-
-
-    const property =
-
-      PropertyService
-
-        .getPropertyById(
-
-          propertyId
-
-        );
-
-
+    const property = PropertyService.getPropertyById(propertyId);
 
     if (!property) {
-
-      throw new Error(
-
-        'Property not found: ' +
-
-        propertyId
-
-      );
-
+      throw new Error("Property not found: " + propertyId);
     }
 
-
-
     return property;
-
   }
-
-
-
-
 
   // ==========================================================================
 
@@ -222,379 +113,129 @@ const AdminReferenceService = (() => {
 
   // ==========================================================================
 
-
-
   function propertyOption(row) {
-
     return {
+      property_id: text(row.property_id),
 
-      property_id:
+      property_code: text(row.property_code),
 
-        text(row.property_id),
+      name: text(row.name),
 
+      property_type: text(row.property_type),
 
+      status: upper(row.status),
 
-      property_code:
-
-        text(row.property_code),
-
-
-
-      name:
-
-        text(row.name),
-
-
-
-      property_type:
-
-        text(row.property_type),
-
-
-
-      status:
-
-        upper(row.status),
-
-
-
-      label:
-
-        text(row.name) ||
-
-        text(row.property_code) ||
-
-        text(row.property_id)
-
+      label: text(row.name) || text(row.property_code) || text(row.property_id),
     };
-
   }
-
-
-
-
 
   function unitOption(row) {
-
     return {
+      unit_id: text(row.unit_id),
 
-      unit_id:
+      property_id: text(row.property_id),
 
-        text(row.unit_id),
+      unit_code: text(row.unit_code),
 
+      unit_name: text(row.unit_name),
 
+      unit_type: text(row.unit_type),
 
-      property_id:
+      status: upper(row.status),
 
-        text(row.property_id),
-
-
-
-      unit_code:
-
-        text(row.unit_code),
-
-
-
-      unit_name:
-
-        text(row.unit_name),
-
-
-
-      unit_type:
-
-        text(row.unit_type),
-
-
-
-      status:
-
-        upper(row.status),
-
-
-
-      label:
-
-        text(row.unit_name) ||
-
-        text(row.unit_code) ||
-
-        text(row.unit_id)
-
+      label: text(row.unit_name) || text(row.unit_code) || text(row.unit_id),
     };
-
   }
 
-
-
-
-
   function personName(row) {
-
     return (
-
       text(row.full_name) ||
-
       text(row.name) ||
-
-      [
-
-        text(row.first_name),
-
-        text(row.last_name)
-
-      ]
+      [text(row.first_name), text(row.last_name)]
 
         .filter(Boolean)
 
-        .join(' ') ||
-
-      ''
-
+        .join(" ") ||
+      ""
     );
-
   }
-
-
-
-
 
   function customerOption(row) {
-
-    const name =
-
-      personName(row);
-
-
+    const name = personName(row);
 
     return {
+      customer_id: text(row.customer_id),
 
-      customer_id:
+      first_name: text(row.first_name),
 
-        text(row.customer_id),
+      last_name: text(row.last_name),
 
+      email: text(row.email),
 
+      phone: text(row.phone),
 
-      first_name:
-
-        text(row.first_name),
-
-
-
-      last_name:
-
-        text(row.last_name),
-
-
-
-      email:
-
-        text(row.email),
-
-
-
-      phone:
-
-        text(row.phone),
-
-
-
-      status:
-
-        upper(row.status),
-
-
+      status: upper(row.status),
 
       label:
-
-        name ||
-
-        text(row.email) ||
-
-        text(row.phone) ||
-
-        text(row.customer_id)
-
+        name || text(row.email) || text(row.phone) || text(row.customer_id),
     };
-
   }
-
-
-
-
 
   function guestOption(row) {
-
-    const name =
-
-      personName(row);
-
-
+    const name = personName(row);
 
     return {
+      guest_id: text(row.guest_id),
 
-      guest_id:
+      first_name: text(row.first_name),
 
-        text(row.guest_id),
+      last_name: text(row.last_name),
 
+      email: text(row.email),
 
+      phone: text(row.phone),
 
-      first_name:
+      nationality: text(row.nationality),
 
-        text(row.first_name),
-
-
-
-      last_name:
-
-        text(row.last_name),
-
-
-
-      email:
-
-        text(row.email),
-
-
-
-      phone:
-
-        text(row.phone),
-
-
-
-      nationality:
-
-        text(row.nationality),
-
-
-
-      label:
-
-        name ||
-
-        text(row.email) ||
-
-        text(row.phone) ||
-
-        text(row.guest_id)
-
+      label: name || text(row.email) || text(row.phone) || text(row.guest_id),
     };
-
   }
-
-
-
-
 
   function staffOption(row) {
-
-    const name =
-
-      personName(row);
-
-
+    const name = personName(row);
 
     return {
+      staff_id: text(row.staff_id),
 
-      staff_id:
+      property_id: text(row.property_id),
 
-        text(row.staff_id),
+      name: name,
 
+      role: upper(row.role),
 
+      phone: text(row.phone),
 
-      property_id:
+      email: text(row.email),
 
-        text(row.property_id),
+      status: upper(row.status),
 
-
-
-      name:
-
-        name,
-
-
-
-      role:
-
-        upper(row.role),
-
-
-
-      phone:
-
-        text(row.phone),
-
-
-
-      email:
-
-        text(row.email),
-
-
-
-      status:
-
-        upper(row.status),
-
-
-
-      label:
-
-        name ||
-
-        text(row.staff_id)
-
+      label: name || text(row.staff_id),
     };
-
   }
-
-
-
-
 
   function referenceOption(row) {
-
     return {
+      category: upper(row.category),
 
-      category:
+      code: upper(row.code),
 
-        upper(row.category),
+      name: text(row.name),
 
+      description: text(row.description),
 
-
-      code:
-
-        upper(row.code),
-
-
-
-      name:
-
-        text(row.name),
-
-
-
-      description:
-
-        text(row.description),
-
-
-
-      label:
-
-        text(row.name) ||
-
-        upper(row.code)
-
+      label: text(row.name) || upper(row.code),
     };
-
   }
-
-
-
-
 
   // ==========================================================================
 
@@ -602,49 +243,21 @@ const AdminReferenceService = (() => {
 
   // ==========================================================================
 
-
-
   function getProperties(options) {
-
     options = options || {};
 
+    const activeOnly = options.active_only !== false;
 
-
-    const activeOnly =
-
-      options.active_only !== false;
-
-
-
-    const rows =
-
-      PropertyService
-
-        .getAllProperties();
-
-
+    const rows = PropertyService.getAllProperties();
 
     return sortByLabel(
-
       rows
 
-        .filter(row =>
+        .filter((row) => !activeOnly || upper(row.status) === ACTIVE)
 
-          !activeOnly ||
-
-          upper(row.status) === ACTIVE
-
-        )
-
-        .map(propertyOption)
-
+        .map(propertyOption),
     );
-
   }
-
-
-
-
 
   // ==========================================================================
 
@@ -652,63 +265,23 @@ const AdminReferenceService = (() => {
 
   // ==========================================================================
 
-
-
   function getUnits(propertyId, options) {
-
     options = options || {};
 
+    const property = requireProperty(propertyId);
 
+    const activeOnly = options.active_only !== false;
 
-    const property =
-
-      requireProperty(
-
-        propertyId
-
-      );
-
-
-
-    const activeOnly =
-
-      options.active_only !== false;
-
-
-
-    const rows =
-
-      UnitService
-
-        .getUnitsByProperty(
-
-          property.property_id
-
-        );
-
-
+    const rows = UnitService.getUnitsByProperty(property.property_id);
 
     return sortByLabel(
-
       rows
 
-        .filter(row =>
+        .filter((row) => !activeOnly || upper(row.status) === ACTIVE)
 
-          !activeOnly ||
-
-          upper(row.status) === ACTIVE
-
-        )
-
-        .map(unitOption)
-
+        .map(unitOption),
     );
-
   }
-
-
-
-
 
   // ==========================================================================
 
@@ -716,111 +289,47 @@ const AdminReferenceService = (() => {
 
   // ==========================================================================
 
-
-
   function getCustomers(options) {
-
     options = options || {};
 
+    const activeOnly = options.active_only !== false;
 
+    const query = upper(options.query);
 
-    const activeOnly =
-
-      options.active_only !== false;
-
-
-
-    const query =
-
-      upper(
-
-        options.query
-
-      );
-
-
-
-    let rows =
-
-      CustomerService
-
-        .getAllCustomers();
-
-
+    let rows = CustomerService.getAllCustomers();
 
     if (activeOnly) {
-
-      rows =
-
-        rows.filter(row =>
-
-          !text(row.status) ||
-
-          upper(row.status) === ACTIVE
-
-        );
-
+      rows = rows.filter(
+        (row) => !text(row.status) || upper(row.status) === ACTIVE,
+      );
     }
-
-
 
     if (query) {
+      rows = rows.filter((row) => {
+        const haystack = [
+          row.customer_id,
 
-      rows =
+          row.first_name,
 
-        rows.filter(row => {
+          row.last_name,
 
-          const haystack =
+          row.full_name,
 
-            [
+          row.email,
 
-              row.customer_id,
+          row.phone,
+        ]
 
-              row.first_name,
+          .map(upper)
 
-              row.last_name,
+          .join(" ");
 
-              row.full_name,
-
-              row.email,
-
-              row.phone
-
-            ]
-
-              .map(upper)
-
-              .join(' ');
-
-
-
-          return (
-
-            haystack.indexOf(query) !== -1
-
-          );
-
-        });
-
+        return haystack.indexOf(query) !== -1;
+      });
     }
 
-
-
-    return sortByLabel(
-
-      rows.map(
-
-        customerOption
-
-      )
-
-    );
-
+    return sortByLabel(rows.map(customerOption));
   }
-
-
-
-
 
   // ==========================================================================
 
@@ -828,95 +337,41 @@ const AdminReferenceService = (() => {
 
   // ==========================================================================
 
-
-
   function getGuests(options) {
-
     options = options || {};
 
+    const query = upper(options.query);
 
-
-    const query =
-
-      upper(
-
-        options.query
-
-      );
-
-
-
-    let rows =
-
-      BaseRepository
-
-        .findAll(
-
-          CONFIG.SHEETS.GUESTS
-
-        );
-
-
+    let rows = BaseRepository.findAll(CONFIG.SHEETS.GUESTS);
 
     if (query) {
+      rows = rows.filter((row) => {
+        const haystack = [
+          row.guest_id,
 
-      rows =
+          row.first_name,
 
-        rows.filter(row => {
+          row.last_name,
 
-          const haystack =
+          row.full_name,
 
-            [
+          row.email,
 
-              row.guest_id,
+          row.phone,
 
-              row.first_name,
+          row.nationality,
+        ]
 
-              row.last_name,
+          .map(upper)
 
-              row.full_name,
+          .join(" ");
 
-              row.email,
-
-              row.phone,
-
-              row.nationality
-
-            ]
-
-              .map(upper)
-
-              .join(' ');
-
-
-
-          return (
-
-            haystack.indexOf(query) !== -1
-
-          );
-
-        });
-
+        return haystack.indexOf(query) !== -1;
+      });
     }
 
-
-
-    return sortByLabel(
-
-      rows.map(
-
-        guestOption
-
-      )
-
-    );
-
+    return sortByLabel(rows.map(guestOption));
   }
-
-
-
-
 
   // ==========================================================================
 
@@ -924,97 +379,27 @@ const AdminReferenceService = (() => {
 
   // ==========================================================================
 
-
-
   function getStaff(options) {
-
     options = options || {};
 
+    const propertyId = text(options.property_id);
 
+    const role = upper(options.role);
 
-    const propertyId =
-
-      text(
-
-        options.property_id
-
-      );
-
-
-
-    const role =
-
-      upper(
-
-        options.role
-
-      );
-
-
-
-    let rows =
-
-      StaffService
-
-        .getActiveStaff();
-
-
+    let rows = StaffService.getActiveStaff();
 
     if (propertyId) {
+      requireProperty(propertyId);
 
-      requireProperty(
-
-        propertyId
-
-      );
-
-
-
-      rows =
-
-        rows.filter(row =>
-
-          text(row.property_id) ===
-
-          propertyId
-
-        );
-
+      rows = rows.filter((row) => text(row.property_id) === propertyId);
     }
-
-
 
     if (role) {
-
-      rows =
-
-        rows.filter(row =>
-
-          upper(row.role) ===
-
-          role
-
-        );
-
+      rows = rows.filter((row) => upper(row.role) === role);
     }
 
-
-
-    return sortByLabel(
-
-      rows.map(
-
-        staffOption
-
-      )
-
-    );
-
+    return sortByLabel(rows.map(staffOption));
   }
-
-
-
-
 
   // ==========================================================================
 
@@ -1022,91 +407,34 @@ const AdminReferenceService = (() => {
 
   // ==========================================================================
 
-
-
   function getReferenceValues(category) {
-
-    category =
-
-      upper(category);
-
-
+    category = upper(category);
 
     if (!category) {
-
-      throw new Error(
-
-        'category is required.'
-
-      );
-
+      throw new Error("category is required.");
     }
 
+    const rows = BaseRepository.findByField(
+      CONFIG.SHEETS.REFERENCE_DATA,
 
+      "category",
 
-    const rows =
+      category,
+    )
 
-      BaseRepository
+      .filter((row) => normalizeBoolean(row.active))
 
-        .findByField(
+      .map(referenceOption);
 
-          CONFIG.SHEETS
-
-            .REFERENCE_DATA,
-
-          'category',
-
-          category
-
-        )
-
-        .filter(row =>
-
-          normalizeBoolean(
-
-            row.active
-
-          )
-
-        )
-
-        .map(
-
-          referenceOption
-
-        );
-
-
-
-    return sortByLabel(
-
-      rows
-
-    );
-
+    return sortByLabel(rows);
   }
 
-
-
-
-
   function getReferenceBundle(categories) {
-
     if (!Array.isArray(categories)) {
-
-      throw new Error(
-
-        'categories must be an array.'
-
-      );
-
+      throw new Error("categories must be an array.");
     }
 
-
-
     const result = {};
-
-
 
     categories
 
@@ -1114,43 +442,20 @@ const AdminReferenceService = (() => {
 
       .filter(Boolean)
 
-      .filter(
+      .filter((value, index, all) => all.indexOf(value) === index)
 
-        (value, index, all) =>
-
-          all.indexOf(value) === index
-
-      )
-
-      .forEach(category => {
-
-        result[category] =
-
-          getReferenceValues(
-
-            category
-
-          );
-
+      .forEach((category) => {
+        result[category] = getReferenceValues(category);
       });
 
-
-
     return result;
-
   }
-
-
-
-
 
   // ==========================================================================
 
   // BOOTSTRAP
 
   // ==========================================================================
-
-
 
   /**
 
@@ -1166,7 +471,7 @@ const AdminReferenceService = (() => {
 
   function getBootstrap() {
     const properties = getProperties({
-      active_only: true
+      active_only: true,
     });
 
     // Performance Patch 1:
@@ -1175,34 +480,22 @@ const AdminReferenceService = (() => {
     // once per property during application startup.
     const activeUnits = UnitService.getActiveUnits();
     const propertyIdsWithUnits = new Set(
-      (activeUnits || [])
-        .map(unit => text(unit.property_id))
-        .filter(Boolean)
+      (activeUnits || []).map((unit) => text(unit.property_id)).filter(Boolean),
     );
 
-    const operationalProperty =
-      properties.find(property =>
-        propertyIdsWithUnits.has(
-          text(property.property_id)
-        )
-      );
+    const operationalProperty = properties.find((property) =>
+      propertyIdsWithUnits.has(text(property.property_id)),
+    );
 
     return {
       properties: properties,
-      default_property_id:
-        operationalProperty
-          ? operationalProperty.property_id
-          : (
-              properties.length > 0
-                ? properties[0].property_id
-                : ''
-            )
+      default_property_id: operationalProperty
+        ? operationalProperty.property_id
+        : properties.length > 0
+          ? properties[0].property_id
+          : "",
     };
   }
-
-
-
-
 
   // ==========================================================================
 
@@ -1210,10 +503,7 @@ const AdminReferenceService = (() => {
 
   // ==========================================================================
 
-
-
   return {
-
     getBootstrap,
 
     getProperties,
@@ -1228,10 +518,6 @@ const AdminReferenceService = (() => {
 
     getReferenceValues,
 
-    getReferenceBundle
-
+    getReferenceBundle,
   };
-
-
-
 })();

@@ -5,7 +5,6 @@
  * ============================================================
  */
 
-
 /**
  * Entry point used by the Apps Script trigger.
  *
@@ -13,40 +12,20 @@
  * directly to an object method.
  */
 function scheduledCalendarSync() {
-
   try {
+    const result = CalendarSyncService.runScheduledSync();
 
-    const result =
-      CalendarSyncService
-        .runScheduledSync();
+    Logger.log("Scheduled calendar sync completed.");
 
-    Logger.log(
-      'Scheduled calendar sync completed.'
-    );
-
-    Logger.log(
-      JSON.stringify(
-        result,
-        null,
-        2
-      )
-    );
+    Logger.log(JSON.stringify(result, null, 2));
 
     return result;
-
   } catch (err) {
-
-    Logger.log(
-      'Scheduled calendar sync FAILED: ' +
-      err.message
-    );
+    Logger.log("Scheduled calendar sync FAILED: " + err.message);
 
     throw err;
-
   }
-
 }
-
 
 /**
  * Creates the automatic hourly calendar-sync trigger.
@@ -55,125 +34,63 @@ function scheduledCalendarSync() {
  * existing trigger is removed first.
  */
 function installCalendarSyncTrigger() {
-
   removeCalendarSyncTrigger();
 
+  const trigger = ScriptApp.newTrigger("scheduledCalendarSync")
+    .timeBased()
+    .everyHours(1)
+    .create();
 
-  const trigger =
-    ScriptApp
-      .newTrigger(
-        'scheduledCalendarSync'
-      )
-      .timeBased()
-      .everyHours(1)
-      .create();
+  Logger.log("Calendar sync trigger installed.");
 
-
-  Logger.log(
-    'Calendar sync trigger installed.'
-  );
-
-  Logger.log(
-    'Trigger ID: ' +
-      trigger.getUniqueId()
-  );
-
+  Logger.log("Trigger ID: " + trigger.getUniqueId());
 
   return {
     installed: true,
-    trigger_id:
-      trigger.getUniqueId(),
-    frequency:
-      'EVERY_1_HOUR',
-    handler:
-      'scheduledCalendarSync'
+    trigger_id: trigger.getUniqueId(),
+    frequency: "EVERY_1_HOUR",
+    handler: "scheduledCalendarSync",
   };
-
 }
-
 
 /**
  * Removes calendar synchronization triggers.
  */
 function removeCalendarSyncTrigger() {
+  const triggers = ScriptApp.getProjectTriggers();
 
-  const triggers =
-    ScriptApp
-      .getProjectTriggers();
+  let removed = 0;
 
-
-  let removed =
-    0;
-
-
-  triggers.forEach(trigger => {
-
-    if (
-      trigger.getHandlerFunction() ===
-      'scheduledCalendarSync'
-    ) {
-
-      ScriptApp.deleteTrigger(
-        trigger
-      );
+  triggers.forEach((trigger) => {
+    if (trigger.getHandlerFunction() === "scheduledCalendarSync") {
+      ScriptApp.deleteTrigger(trigger);
 
       removed++;
-
     }
-
   });
 
-
-  Logger.log(
-    'Calendar sync trigger(s) removed: ' +
-      removed
-  );
-
+  Logger.log("Calendar sync trigger(s) removed: " + removed);
 
   return removed;
-
 }
-
 
 /**
  * Shows currently installed project triggers.
  */
 function showInstalledTriggers() {
+  const triggers = ScriptApp.getProjectTriggers();
 
-  const triggers =
-    ScriptApp
-      .getProjectTriggers();
+  const result = triggers.map((trigger) => ({
+    handler: trigger.getHandlerFunction(),
 
+    event_type: String(trigger.getEventType()),
 
-  const result =
-    triggers.map(trigger => ({
-      handler:
-        trigger.getHandlerFunction(),
+    source: String(trigger.getTriggerSource()),
 
-      event_type:
-        String(
-          trigger.getEventType()
-        ),
+    trigger_id: trigger.getUniqueId(),
+  }));
 
-      source:
-        String(
-          trigger.getTriggerSource()
-        ),
-
-      trigger_id:
-        trigger.getUniqueId()
-    }));
-
-
-  Logger.log(
-    JSON.stringify(
-      result,
-      null,
-      2
-    )
-  );
-
+  Logger.log(JSON.stringify(result, null, 2));
 
   return result;
-
 }

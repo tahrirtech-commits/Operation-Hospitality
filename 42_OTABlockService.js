@@ -66,39 +66,23 @@
  */
 
 const OTABlockService = (() => {
-
-  const ENTITY_TYPE =
-    'OTA_BLOCK';
-
+  const ENTITY_TYPE = "OTA_BLOCK";
 
   const STATUS = {
+    PENDING: "PENDING",
 
-    PENDING:
-      'PENDING',
+    BLOCKED: "BLOCKED",
 
-    BLOCKED:
-      'BLOCKED',
-
-    CANCELLED:
-      'CANCELLED'
-
+    CANCELLED: "CANCELLED",
   };
 
+  const BLOCKING_STATUSES = new Set([STATUS.PENDING, STATUS.BLOCKED]);
 
-  const BLOCKING_STATUSES =
-    new Set([
-      STATUS.PENDING,
-      STATUS.BLOCKED
-    ]);
-
-
-  const VALID_STATUSES =
-    new Set([
-      STATUS.PENDING,
-      STATUS.BLOCKED,
-      STATUS.CANCELLED
-    ]);
-
+  const VALID_STATUSES = new Set([
+    STATUS.PENDING,
+    STATUS.BLOCKED,
+    STATUS.CANCELLED,
+  ]);
 
   /**
    * ----------------------------------------------------------
@@ -107,72 +91,40 @@ const OTABlockService = (() => {
    */
 
   function isBlank(value) {
-
-    return (
-      value === undefined ||
-      value === null ||
-      String(value).trim() === ''
-    );
-
+    return value === undefined || value === null || String(value).trim() === "";
   }
-
 
   function normalize(value) {
-
     if (isBlank(value)) {
-      return '';
+      return "";
     }
 
-
-    return String(value)
-      .trim()
-      .toUpperCase();
-
+    return String(value).trim().toUpperCase();
   }
-
 
   function normalizeText(value) {
-
     if (isBlank(value)) {
-      return '';
+      return "";
     }
 
-
     return String(value).trim();
-
   }
 
-
   function timestamp() {
-
     return Utilities.formatDate(
       new Date(),
       CONFIG.TIMEZONE,
-      CONFIG.DATE_FORMATS.DATETIME
+      CONFIG.DATE_FORMATS.DATETIME,
     );
-
   }
-
 
   function normalizeActorId(actorId) {
-
-    return (
-      normalizeText(actorId) ||
-      CONFIG.DEFAULTS.ACTOR_ID
-    );
-
+    return normalizeText(actorId) || CONFIG.DEFAULTS.ACTOR_ID;
   }
-
 
   function cloneObject(value) {
-
-    return Object.assign(
-      {},
-      value || {}
-    );
-
+    return Object.assign({}, value || {});
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -181,12 +133,8 @@ const OTABlockService = (() => {
    */
 
   function normalizeDate(value) {
-
-    return AvailabilityService
-      .normalizeDate(value);
-
+    return AvailabilityService.normalizeDate(value);
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -195,141 +143,48 @@ const OTABlockService = (() => {
    */
 
   function normalizeBlock(input) {
+    const block = cloneObject(input);
 
-    const block =
-      cloneObject(input);
-
-
-    if (
-      Object.prototype.hasOwnProperty.call(
-        block,
-        'ota_block_id'
-      )
-    ) {
-
-      block.ota_block_id =
-        normalizeText(
-          block.ota_block_id
-        );
-
+    if (Object.prototype.hasOwnProperty.call(block, "ota_block_id")) {
+      block.ota_block_id = normalizeText(block.ota_block_id);
     }
 
-
-    if (
-      Object.prototype.hasOwnProperty.call(
-        block,
-        'reservation_id'
-      )
-    ) {
-
-      block.reservation_id =
-        normalizeText(
-          block.reservation_id
-        );
-
+    if (Object.prototype.hasOwnProperty.call(block, "reservation_id")) {
+      block.reservation_id = normalizeText(block.reservation_id);
     }
 
-
-    if (
-      Object.prototype.hasOwnProperty.call(
-        block,
-        'unit_id'
-      )
-    ) {
-
-      block.unit_id =
-        normalizeText(
-          block.unit_id
-        );
-
+    if (Object.prototype.hasOwnProperty.call(block, "unit_id")) {
+      block.unit_id = normalizeText(block.unit_id);
     }
 
-
-    if (
-      Object.prototype.hasOwnProperty.call(
-        block,
-        'source'
-      )
-    ) {
-
-      block.source =
-        normalize(
-          block.source
-        );
-
+    if (Object.prototype.hasOwnProperty.call(block, "source")) {
+      block.source = normalize(block.source);
     }
 
-
-    if (
-      Object.prototype.hasOwnProperty.call(
-        block,
-        'status'
-      )
-    ) {
-
-      block.status =
-        normalize(
-          block.status
-        );
-
+    if (Object.prototype.hasOwnProperty.call(block, "status")) {
+      block.status = normalize(block.status);
     }
 
-
     if (
-      Object.prototype.hasOwnProperty.call(
-        block,
-        'start_date'
-      ) &&
-      !isBlank(
-        block.start_date
-      )
+      Object.prototype.hasOwnProperty.call(block, "start_date") &&
+      !isBlank(block.start_date)
     ) {
-
-      block.start_date =
-        normalizeDate(
-          block.start_date
-        );
-
+      block.start_date = normalizeDate(block.start_date);
     }
 
-
     if (
-      Object.prototype.hasOwnProperty.call(
-        block,
-        'end_date'
-      ) &&
-      !isBlank(
-        block.end_date
-      )
+      Object.prototype.hasOwnProperty.call(block, "end_date") &&
+      !isBlank(block.end_date)
     ) {
-
-      block.end_date =
-        normalizeDate(
-          block.end_date
-        );
-
+      block.end_date = normalizeDate(block.end_date);
     }
 
-
-    if (
-      Object.prototype.hasOwnProperty.call(
-        block,
-        'notes'
-      )
-    ) {
-
-      block.notes =
-        normalizeText(
-          block.notes
-        );
-
+    if (Object.prototype.hasOwnProperty.call(block, "notes")) {
+      block.notes = normalizeText(block.notes);
     }
-
 
     return block;
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -338,90 +193,47 @@ const OTABlockService = (() => {
    */
 
   function getAll() {
-
-    return BaseRepository.findAll(
-      CONFIG.SHEETS.OTA_BLOCKS
-    );
-
+    return BaseRepository.findAll(CONFIG.SHEETS.OTA_BLOCKS);
   }
 
-
   function getById(otaBlockId) {
-
-    otaBlockId =
-      normalizeText(
-        otaBlockId
-      );
-
+    otaBlockId = normalizeText(otaBlockId);
 
     if (!otaBlockId) {
       return null;
     }
 
-
     return BaseRepository.findById(
       CONFIG.SHEETS.OTA_BLOCKS,
-      'ota_block_id',
-      otaBlockId
+      "ota_block_id",
+      otaBlockId,
     );
-
   }
-
 
   function exists(otaBlockId) {
-
-    return !!getById(
-      otaBlockId
-    );
-
+    return !!getById(otaBlockId);
   }
 
-
-  function requireBlock(
-    otaBlockId
-  ) {
-
-    const block =
-      getById(
-        otaBlockId
-      );
-
+  function requireBlock(otaBlockId) {
+    const block = getById(otaBlockId);
 
     if (!block) {
-
-      throw new Error(
-        'OTA block not found: ' +
-          otaBlockId
-      );
-
+      throw new Error("OTA block not found: " + otaBlockId);
     }
 
-
     return block;
-
   }
-
 
   function getByUnit(unitId) {
-
     return BaseRepository.findByField(
       CONFIG.SHEETS.OTA_BLOCKS,
-      'unit_id',
-      normalizeText(unitId)
+      "unit_id",
+      normalizeText(unitId),
     );
-
   }
 
-
-  function getByReservation(
-    reservationId
-  ) {
-
-    reservationId =
-      normalizeText(
-        reservationId
-      );
-
+  function getByReservation(reservationId) {
+    reservationId = normalizeText(reservationId);
 
     /*
      * reservation_id is a recommended Phase 3 column.
@@ -430,65 +242,30 @@ const OTABlockService = (() => {
      * than silently using another field.
      */
 
-    const headers =
-      BaseRepository.getHeaders(
-        CONFIG.SHEETS.OTA_BLOCKS
-      );
+    const headers = BaseRepository.getHeaders(CONFIG.SHEETS.OTA_BLOCKS);
 
-
-    if (
-      !headers.includes(
-        'reservation_id'
-      )
-    ) {
-
+    if (!headers.includes("reservation_id")) {
       return [];
-
     }
-
 
     return BaseRepository.findByField(
       CONFIG.SHEETS.OTA_BLOCKS,
-      'reservation_id',
-      reservationId
+      "reservation_id",
+      reservationId,
     );
-
   }
-
 
   function getByStatus(status) {
+    status = normalize(status);
 
-    status =
-      normalize(status);
-
-
-    return getAll()
-      .filter(
-        block =>
-          normalize(
-            block.status
-          ) === status
-      );
-
+    return getAll().filter((block) => normalize(block.status) === status);
   }
-
 
   function getBySource(source) {
+    source = normalize(source);
 
-    source =
-      normalize(source);
-
-
-    return getAll()
-      .filter(
-        block =>
-          normalize(
-            block.source
-          ) === source
-      );
-
+    return getAll().filter((block) => normalize(block.source) === source);
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -497,38 +274,18 @@ const OTABlockService = (() => {
    */
 
   function isBlockingStatus(status) {
-
-    return BLOCKING_STATUSES.has(
-      normalize(status)
-    );
-
+    return BLOCKING_STATUSES.has(normalize(status));
   }
-
 
   function validateStatus(status) {
+    status = normalize(status);
 
-    status =
-      normalize(status);
-
-
-    if (
-      !VALID_STATUSES.has(
-        status
-      )
-    ) {
-
-      throw new Error(
-        'Invalid OTA block status: ' +
-          status
-      );
-
+    if (!VALID_STATUSES.has(status)) {
+      throw new Error("Invalid OTA block status: " + status);
     }
 
-
     return true;
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -536,70 +293,31 @@ const OTABlockService = (() => {
    * ----------------------------------------------------------
    */
 
-  function validateBlock(
-    block
-  ) {
-
-    if (
-      !block ||
-      typeof block !== 'object'
-    ) {
-
-      throw new Error(
-        'OTA block object is required.'
-      );
-
+  function validateBlock(block) {
+    if (!block || typeof block !== "object") {
+      throw new Error("OTA block object is required.");
     }
 
+    ValidationService.requireFields(block, [
+      "unit_id",
+      "source",
+      "start_date",
+      "end_date",
+      "status",
+    ]);
 
-    ValidationService.requireFields(
-      block,
-      [
-        'unit_id',
-        'source',
-        'start_date',
-        'end_date',
-        'status'
-      ]
-    );
+    ValidationService.validateUnitExists(block.unit_id);
 
+    validateStatus(block.status);
 
-    ValidationService
-      .validateUnitExists(
-        block.unit_id
-      );
+    AvailabilityService.validateDateRange(block.start_date, block.end_date);
 
-
-    validateStatus(
-      block.status
-    );
-
-
-    AvailabilityService
-      .validateDateRange(
-        block.start_date,
-        block.end_date
-      );
-
-
-    if (
-      !isBlank(
-        block.reservation_id
-      )
-    ) {
-
-      ReservationService
-        .requireReservation(
-          block.reservation_id
-        );
-
+    if (!isBlank(block.reservation_id)) {
+      ReservationService.requireReservation(block.reservation_id);
     }
-
 
     return true;
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -618,90 +336,37 @@ const OTABlockService = (() => {
    * ----------------------------------------------------------
    */
 
-  function findExistingBlockingBlock(
-    input
-  ) {
+  function findExistingBlockingBlock(input) {
+    const block = normalizeBlock(input);
 
-    const block =
-      normalizeBlock(input);
-
-
-    return getAll()
-      .find(existing => {
-
-        if (
-          !isBlockingStatus(
-            existing.status
-          )
-        ) {
-
+    return (
+      getAll().find((existing) => {
+        if (!isBlockingStatus(existing.status)) {
           return false;
-
         }
 
-
-        if (
-          normalize(
-            existing.source
-          ) !==
-          normalize(
-            block.source
-          )
-        ) {
-
+        if (normalize(existing.source) !== normalize(block.source)) {
           return false;
-
         }
 
-
         if (
-          !isBlank(
-            block.reservation_id
-          ) &&
-          !isBlank(
-            existing.reservation_id
-          )
+          !isBlank(block.reservation_id) &&
+          !isBlank(existing.reservation_id)
         ) {
-
           return (
-            normalizeText(
-              existing.reservation_id
-            ) ===
-            normalizeText(
-              block.reservation_id
-            )
+            normalizeText(existing.reservation_id) ===
+            normalizeText(block.reservation_id)
           );
-
         }
-
 
         return (
-          normalizeText(
-            existing.unit_id
-          ) ===
-            normalizeText(
-              block.unit_id
-            ) &&
-
-          String(
-            existing.start_date
-          ) ===
-            String(
-              block.start_date
-            ) &&
-
-          String(
-            existing.end_date
-          ) ===
-            String(
-              block.end_date
-            )
+          normalizeText(existing.unit_id) === normalizeText(block.unit_id) &&
+          String(existing.start_date) === String(block.start_date) &&
+          String(existing.end_date) === String(block.end_date)
         );
-
-      }) || null;
-
+      }) || null
+    );
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -709,94 +374,48 @@ const OTABlockService = (() => {
    * ----------------------------------------------------------
    */
 
-  function createBlock(
-    input,
-    actorId
-  ) {
+  function createBlock(input, actorId) {
+    actorId = normalizeActorId(actorId);
 
-    actorId =
-      normalizeActorId(
-        actorId
-      );
+    let block = normalizeBlock(input);
 
+    block.status = normalize(block.status || STATUS.PENDING);
 
-    let block =
-      normalizeBlock(
-        input
-      );
+    validateBlock(block);
 
-
-    block.status =
-      normalize(
-        block.status ||
-        STATUS.PENDING
-      );
-
-
-    validateBlock(
-      block
-    );
-
-
-    const duplicate =
-      findExistingBlockingBlock(
-        block
-      );
-
+    const duplicate = findExistingBlockingBlock(block);
 
     if (duplicate) {
-
       throw new Error(
-        'Active OTA block already exists: ' +
-          duplicate.ota_block_id
+        "Active OTA block already exists: " + duplicate.ota_block_id,
       );
-
     }
-
 
     /*
      * Validate before consuming ID.
      */
 
-    block.ota_block_id =
-      IdService.nextId(
-        ENTITY_TYPE
-      );
+    block.ota_block_id = IdService.nextId(ENTITY_TYPE);
 
+    const now = timestamp();
 
-    const now =
-      timestamp();
+    block.created_at = now;
 
+    block.updated_at = now;
 
-    block.created_at =
-      now;
+    block.updated_by = actorId;
 
-    block.updated_at =
-      now;
-
-    block.updated_by =
-      actorId;
-
-
-    const inserted =
-      BaseRepository.insert(
-        CONFIG.SHEETS.OTA_BLOCKS,
-        block
-      );
-
+    const inserted = BaseRepository.insert(CONFIG.SHEETS.OTA_BLOCKS, block);
 
     AuditService.logCreate(
       ENTITY_TYPE,
       inserted.ota_block_id,
       inserted,
-      actorId
+      actorId,
     );
 
-
     return inserted;
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -816,110 +435,62 @@ const OTABlockService = (() => {
    * ----------------------------------------------------------
    */
 
-  function createForReservation(
-    reservationId,
-    source,
-    actorId
-  ) {
+  function createForReservation(reservationId, source, actorId) {
+    actorId = normalizeActorId(actorId);
 
-    actorId =
-      normalizeActorId(
-        actorId
-      );
+    const reservation = ReservationService.requireReservation(reservationId);
 
-
-    const reservation =
-      ReservationService
-        .requireReservation(
-          reservationId
-        );
-
-
-    source =
-      normalize(source);
-
+    source = normalize(source);
 
     if (!source) {
-
-      throw new Error(
-        'OTA source is required.'
-      );
-
+      throw new Error("OTA source is required.");
     }
-
 
     /*
      * This workflow exists to protect DIRECT inventory.
      */
 
-    if (
-      normalize(
-        reservation.booking_source
-      ) !== 'DIRECT'
-    ) {
-
+    if (normalize(reservation.booking_source) !== "DIRECT") {
       throw new Error(
-        'OTA block requests can only be automatically created ' +
-        'for DIRECT reservations. Reservation ' +
-        reservationId +
-        ' source is ' +
-        reservation.booking_source +
-        '.'
-      );
-
-    }
-
-
-    if (
-      !ReservationService
-        .isBlockingStatus(
-          reservation.status
-        )
-    ) {
-
-      throw new Error(
-        'Cannot create OTA block for non-blocking reservation ' +
+        "OTA block requests can only be automatically created " +
+          "for DIRECT reservations. Reservation " +
           reservationId +
-          ' with status ' +
-          reservation.status +
-          '.'
+          " source is " +
+          reservation.booking_source +
+          ".",
       );
-
     }
 
+    if (!ReservationService.isBlockingStatus(reservation.status)) {
+      throw new Error(
+        "Cannot create OTA block for non-blocking reservation " +
+          reservationId +
+          " with status " +
+          reservation.status +
+          ".",
+      );
+    }
 
     return createBlock(
       {
+        reservation_id: reservation.reservation_id,
 
-        reservation_id:
-          reservation.reservation_id,
+        unit_id: reservation.unit_id,
 
-        unit_id:
-          reservation.unit_id,
+        source: source,
 
-        source:
-          source,
+        start_date: reservation.check_in_date,
 
-        start_date:
-          reservation.check_in_date,
+        end_date: reservation.check_out_date,
 
-        end_date:
-          reservation.check_out_date,
+        status: STATUS.PENDING,
 
-        status:
-          STATUS.PENDING,
-
-        notes:
-          'Created from direct reservation ' +
-          reservation.reservation_id
-
+        notes: "Created from direct reservation " + reservation.reservation_id,
       },
 
-      actorId
+      actorId,
     );
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -927,57 +498,23 @@ const OTABlockService = (() => {
    * ----------------------------------------------------------
    */
 
-  function createForReservationSources(
-    reservationId,
-    sources,
-    actorId
-  ) {
-
-    if (
-      !Array.isArray(sources) ||
-      sources.length === 0
-    ) {
-
-      throw new Error(
-        'At least one OTA source is required.'
-      );
-
+  function createForReservationSources(reservationId, sources, actorId) {
+    if (!Array.isArray(sources) || sources.length === 0) {
+      throw new Error("At least one OTA source is required.");
     }
 
-
-    const uniqueSources =
-      Array.from(
-        new Set(
-          sources
-            .map(normalize)
-            .filter(Boolean)
-        )
-      );
-
-
-    const created =
-      [];
-
-
-    uniqueSources.forEach(
-      source => {
-
-        created.push(
-          createForReservation(
-            reservationId,
-            source,
-            actorId
-          )
-        );
-
-      }
+    const uniqueSources = Array.from(
+      new Set(sources.map(normalize).filter(Boolean)),
     );
 
+    const created = [];
+
+    uniqueSources.forEach((source) => {
+      created.push(createForReservation(reservationId, source, actorId));
+    });
 
     return created;
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -986,78 +523,37 @@ const OTABlockService = (() => {
    */
 
   function getAllowedTransitions() {
-
     return {
+      PENDING: ["BLOCKED", "CANCELLED"],
 
-      PENDING: [
-        'BLOCKED',
-        'CANCELLED'
-      ],
+      BLOCKED: ["CANCELLED"],
 
-      BLOCKED: [
-        'CANCELLED'
-      ],
-
-      CANCELLED: []
-
+      CANCELLED: [],
     };
-
   }
 
+  function assertTransition(currentStatus, newStatus) {
+    currentStatus = normalize(currentStatus);
 
-  function assertTransition(
-    currentStatus,
-    newStatus
-  ) {
+    newStatus = normalize(newStatus);
 
-    currentStatus =
-      normalize(
-        currentStatus
-      );
-
-
-    newStatus =
-      normalize(
-        newStatus
-      );
-
-
-    if (
-      currentStatus ===
-      newStatus
-    ) {
-
+    if (currentStatus === newStatus) {
       return true;
-
     }
 
+    const allowed = getAllowedTransitions()[currentStatus] || [];
 
-    const allowed =
-      getAllowedTransitions()[
-        currentStatus
-      ] || [];
-
-
-    if (
-      !allowed.includes(
-        newStatus
-      )
-    ) {
-
+    if (!allowed.includes(newStatus)) {
       throw new Error(
-        'Invalid OTA block status transition: ' +
+        "Invalid OTA block status transition: " +
           currentStatus +
-          ' -> ' +
-          newStatus
+          " -> " +
+          newStatus,
       );
-
     }
-
 
     return true;
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -1065,125 +561,58 @@ const OTABlockService = (() => {
    * ----------------------------------------------------------
    */
 
-  function changeStatus(
-    otaBlockId,
-    newStatus,
-    actorId,
-    notes
-  ) {
+  function changeStatus(otaBlockId, newStatus, actorId, notes) {
+    actorId = normalizeActorId(actorId);
 
-    actorId =
-      normalizeActorId(
-        actorId
-      );
+    const existing = requireBlock(otaBlockId);
 
+    newStatus = normalize(newStatus);
 
-    const existing =
-      requireBlock(
-        otaBlockId
-      );
+    validateStatus(newStatus);
 
+    assertTransition(existing.status, newStatus);
 
-    newStatus =
-      normalize(
-        newStatus
-      );
-
-
-    validateStatus(
-      newStatus
-    );
-
-
-    assertTransition(
-      existing.status,
-      newStatus
-    );
-
-
-    if (
-      normalize(
-        existing.status
-      ) ===
-      newStatus
-    ) {
-
+    if (normalize(existing.status) === newStatus) {
       return existing;
-
     }
 
+    const updated = Object.assign({}, existing, {
+      status: newStatus,
 
-    const updated =
-      Object.assign(
-        {},
-        existing,
-        {
-          status:
-            newStatus,
+      updated_at: timestamp(),
 
-          updated_at:
-            timestamp(),
+      updated_by: actorId,
+    });
 
-          updated_by:
-            actorId
-        }
-      );
-
-
-    if (
-      !isBlank(notes)
-    ) {
-
-      updated.notes =
-        normalizeText(notes);
-
+    if (!isBlank(notes)) {
+      updated.notes = normalizeText(notes);
     }
 
-
-    if (
-      newStatus ===
-      STATUS.BLOCKED
-    ) {
-
-      updated.blocked_at =
-        timestamp();
-
+    if (newStatus === STATUS.BLOCKED) {
+      updated.blocked_at = timestamp();
     }
 
-
-    if (
-      newStatus ===
-      STATUS.CANCELLED
-    ) {
-
-      updated.cancelled_at =
-        timestamp();
-
+    if (newStatus === STATUS.CANCELLED) {
+      updated.cancelled_at = timestamp();
     }
 
-
-    const saved =
-      BaseRepository.update(
-        CONFIG.SHEETS.OTA_BLOCKS,
-        'ota_block_id',
-        otaBlockId,
-        updated
-      );
-
+    const saved = BaseRepository.update(
+      CONFIG.SHEETS.OTA_BLOCKS,
+      "ota_block_id",
+      otaBlockId,
+      updated,
+    );
 
     AuditService.logStatusChange(
       ENTITY_TYPE,
       otaBlockId,
       existing.status,
       newStatus,
-      actorId
+      actorId,
     );
 
-
     return saved;
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -1191,37 +620,13 @@ const OTABlockService = (() => {
    * ----------------------------------------------------------
    */
 
-  function markBlocked(
-    otaBlockId,
-    actorId,
-    notes
-  ) {
-
-    return changeStatus(
-      otaBlockId,
-      STATUS.BLOCKED,
-      actorId,
-      notes
-    );
-
+  function markBlocked(otaBlockId, actorId, notes) {
+    return changeStatus(otaBlockId, STATUS.BLOCKED, actorId, notes);
   }
 
-
-  function cancelBlock(
-    otaBlockId,
-    actorId,
-    notes
-  ) {
-
-    return changeStatus(
-      otaBlockId,
-      STATUS.CANCELLED,
-      actorId,
-      notes
-    );
-
+  function cancelBlock(otaBlockId, actorId, notes) {
+    return changeStatus(otaBlockId, STATUS.CANCELLED, actorId, notes);
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -1229,52 +634,28 @@ const OTABlockService = (() => {
    * ----------------------------------------------------------
    */
 
-  function cancelForReservation(
-    reservationId,
-    actorId,
-    notes
-  ) {
+  function cancelForReservation(reservationId, actorId, notes) {
+    const blocks = getByReservation(reservationId);
 
-    const blocks =
-      getByReservation(
-        reservationId
-      );
+    const cancelled = [];
 
-
-    const cancelled =
-      [];
-
-
-    blocks.forEach(block => {
-
-      if (
-        isBlockingStatus(
-          block.status
-        )
-      ) {
-
+    blocks.forEach((block) => {
+      if (isBlockingStatus(block.status)) {
         cancelled.push(
           cancelBlock(
             block.ota_block_id,
             actorId,
             notes ||
-              (
-                'Reservation ' +
+              "Reservation " +
                 reservationId +
-                ' no longer requires OTA blocking.'
-              )
-          )
+                " no longer requires OTA blocking.",
+          ),
         );
-
       }
-
     });
 
-
     return cancelled;
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -1283,68 +664,32 @@ const OTABlockService = (() => {
    */
 
   function getPendingBlocks() {
-
-    return getByStatus(
-      STATUS.PENDING
-    );
-
+    return getByStatus(STATUS.PENDING);
   }
-
 
   function getBlockedBlocks() {
-
-    return getByStatus(
-      STATUS.BLOCKED
-    );
-
+    return getByStatus(STATUS.BLOCKED);
   }
-
 
   function getCancelledBlocks() {
-
-    return getByStatus(
-      STATUS.CANCELLED
-    );
-
+    return getByStatus(STATUS.CANCELLED);
   }
-
 
   function getOutstandingWork() {
-
     return getPendingBlocks()
       .slice()
-      .sort(
-        (a, b) => {
+      .sort((a, b) => {
+        const aDate = String(a.start_date || "");
 
-          const aDate =
-            String(
-              a.start_date || ''
-            );
+        const bDate = String(b.start_date || "");
 
-
-          const bDate =
-            String(
-              b.start_date || ''
-            );
-
-
-          return aDate.localeCompare(
-            bDate
-          );
-
-        }
-      );
-
+        return aDate.localeCompare(bDate);
+      });
   }
-
 
   function getOutstandingCount() {
-
-    return getPendingBlocks()
-      .length;
-
+    return getPendingBlocks().length;
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -1352,93 +697,41 @@ const OTABlockService = (() => {
    * ----------------------------------------------------------
    */
 
-  function getConflictingBlocks(
-    unitId,
-    startDate,
-    endDate,
-    excludeBlockId
-  ) {
+  function getConflictingBlocks(unitId, startDate, endDate, excludeBlockId) {
+    unitId = normalizeText(unitId);
 
-    unitId =
-      normalizeText(
-        unitId
-      );
+    startDate = normalizeDate(startDate);
 
+    endDate = normalizeDate(endDate);
 
-    startDate =
-      normalizeDate(
-        startDate
-      );
+    AvailabilityService.validateDateRange(startDate, endDate);
 
+    excludeBlockId = normalizeText(excludeBlockId);
 
-    endDate =
-      normalizeDate(
-        endDate
-      );
-
-
-    AvailabilityService
-      .validateDateRange(
-        startDate,
-        endDate
-      );
-
-
-    excludeBlockId =
-      normalizeText(
-        excludeBlockId
-      );
-
-
-    return getByUnit(
-      unitId
-    )
-    .filter(block => {
-
+    return getByUnit(unitId).filter((block) => {
       if (
         excludeBlockId &&
-        normalizeText(
-          block.ota_block_id
-        ) ===
-          excludeBlockId
+        normalizeText(block.ota_block_id) === excludeBlockId
       ) {
-
         return false;
-
       }
 
-
-      if (
-        !isBlockingStatus(
-          block.status
-        )
-      ) {
-
+      if (!isBlockingStatus(block.status)) {
         return false;
-
       }
-
 
       try {
-
-        return AvailabilityService
-          .rangesOverlap(
-            block.start_date,
-            block.end_date,
-            startDate,
-            endDate
-          );
-
+        return AvailabilityService.rangesOverlap(
+          block.start_date,
+          block.end_date,
+          startDate,
+          endDate,
+        );
       } catch (err) {
-
         return false;
-
       }
-
     });
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -1451,254 +744,100 @@ const OTABlockService = (() => {
    * ----------------------------------------------------------
    */
 
-  function updateBlock(
-    otaBlockId,
-    changes,
-    actorId
-  ) {
+  function updateBlock(otaBlockId, changes, actorId) {
+    actorId = normalizeActorId(actorId);
 
-    actorId =
-      normalizeActorId(
-        actorId
-      );
+    const existing = requireBlock(otaBlockId);
 
-
-    const existing =
-      requireBlock(
-        otaBlockId
-      );
-
-
-    if (
-      !changes ||
-      typeof changes !== 'object'
-    ) {
-
-      throw new Error(
-        'OTA block changes are required.'
-      );
-
+    if (!changes || typeof changes !== "object") {
+      throw new Error("OTA block changes are required.");
     }
 
-
     if (
-      Object.prototype.hasOwnProperty.call(
-        changes,
-        'ota_block_id'
-      ) &&
-      normalizeText(
-        changes.ota_block_id
-      ) !==
-        normalizeText(
-          existing.ota_block_id
-        )
+      Object.prototype.hasOwnProperty.call(changes, "ota_block_id") &&
+      normalizeText(changes.ota_block_id) !==
+        normalizeText(existing.ota_block_id)
     ) {
-
-      throw new Error(
-        'ota_block_id cannot be changed.'
-      );
-
+      throw new Error("ota_block_id cannot be changed.");
     }
 
-
     if (
-      Object.prototype.hasOwnProperty.call(
-        changes,
-        'status'
-      ) &&
-      normalize(
-        changes.status
-      ) !==
-        normalize(
-          existing.status
-        )
+      Object.prototype.hasOwnProperty.call(changes, "status") &&
+      normalize(changes.status) !== normalize(existing.status)
     ) {
-
-      throw new Error(
-        'OTA block status must be changed using changeStatus().'
-      );
-
+      throw new Error("OTA block status must be changed using changeStatus().");
     }
 
+    let updated = Object.assign({}, existing, changes);
 
-    let updated =
-      Object.assign(
-        {},
-        existing,
-        changes
-      );
+    updated.ota_block_id = existing.ota_block_id;
 
-
-    updated.ota_block_id =
-      existing.ota_block_id;
-
-
-    if (
-      Object.prototype.hasOwnProperty.call(
-        existing,
-        'created_at'
-      )
-    ) {
-
-      updated.created_at =
-        existing.created_at;
-
+    if (Object.prototype.hasOwnProperty.call(existing, "created_at")) {
+      updated.created_at = existing.created_at;
     }
 
+    updated = normalizeBlock(updated);
 
-    updated =
-      normalizeBlock(
-        updated
-      );
-
-
-    validateBlock(
-      updated
-    );
-
+    validateBlock(updated);
 
     /*
      * Prevent an update from accidentally creating a
      * duplicate blocking request.
      */
 
-    if (
-      isBlockingStatus(
-        updated.status
-      )
-    ) {
+    if (isBlockingStatus(updated.status)) {
+      const duplicate = getAll().find((block) => {
+        if (normalizeText(block.ota_block_id) === normalizeText(otaBlockId)) {
+          return false;
+        }
 
-      const duplicate =
-        getAll()
-          .find(block => {
+        if (!isBlockingStatus(block.status)) {
+          return false;
+        }
 
-            if (
-              normalizeText(
-                block.ota_block_id
-              ) ===
-                normalizeText(
-                  otaBlockId
-                )
-            ) {
+        if (normalize(block.source) !== normalize(updated.source)) {
+          return false;
+        }
 
-              return false;
+        if (
+          !isBlank(updated.reservation_id) &&
+          !isBlank(block.reservation_id)
+        ) {
+          return (
+            normalizeText(block.reservation_id) ===
+            normalizeText(updated.reservation_id)
+          );
+        }
 
-            }
-
-
-            if (
-              !isBlockingStatus(
-                block.status
-              )
-            ) {
-
-              return false;
-
-            }
-
-
-            if (
-              normalize(
-                block.source
-              ) !==
-                normalize(
-                  updated.source
-                )
-            ) {
-
-              return false;
-
-            }
-
-
-            if (
-              !isBlank(
-                updated.reservation_id
-              ) &&
-              !isBlank(
-                block.reservation_id
-              )
-            ) {
-
-              return (
-                normalizeText(
-                  block.reservation_id
-                ) ===
-                normalizeText(
-                  updated.reservation_id
-                )
-              );
-
-            }
-
-
-            return (
-              normalizeText(
-                block.unit_id
-              ) ===
-                normalizeText(
-                  updated.unit_id
-                ) &&
-
-              String(
-                block.start_date
-              ) ===
-                String(
-                  updated.start_date
-                ) &&
-
-              String(
-                block.end_date
-              ) ===
-                String(
-                  updated.end_date
-                )
-            );
-
-          });
-
+        return (
+          normalizeText(block.unit_id) === normalizeText(updated.unit_id) &&
+          String(block.start_date) === String(updated.start_date) &&
+          String(block.end_date) === String(updated.end_date)
+        );
+      });
 
       if (duplicate) {
-
         throw new Error(
-          'Another active OTA block already exists: ' +
-            duplicate.ota_block_id
+          "Another active OTA block already exists: " + duplicate.ota_block_id,
         );
-
       }
-
     }
 
+    updated.updated_at = timestamp();
 
-    updated.updated_at =
-      timestamp();
+    updated.updated_by = actorId;
 
-    updated.updated_by =
-      actorId;
-
-
-    const saved =
-      BaseRepository.update(
-        CONFIG.SHEETS.OTA_BLOCKS,
-        'ota_block_id',
-        otaBlockId,
-        updated
-      );
-
-
-    AuditService.logUpdate(
-      ENTITY_TYPE,
+    const saved = BaseRepository.update(
+      CONFIG.SHEETS.OTA_BLOCKS,
+      "ota_block_id",
       otaBlockId,
-      existing,
-      saved,
-      actorId
+      updated,
     );
 
+    AuditService.logUpdate(ENTITY_TYPE, otaBlockId, existing, saved, actorId);
 
     return saved;
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -1707,252 +846,92 @@ const OTABlockService = (() => {
    */
 
   function findOrphanBlocks() {
+    const units = new Set(
+      UnitService.getAllUnits().map((unit) => normalizeText(unit.unit_id)),
+    );
 
-    const units =
-      new Set(
-        UnitService
-          .getAllUnits()
-          .map(
-            unit =>
-              normalizeText(
-                unit.unit_id
-              )
-          )
-      );
-
-
-    return getAll()
-      .filter(
-        block =>
-          !units.has(
-            normalizeText(
-              block.unit_id
-            )
-          )
-      );
-
+    return getAll().filter((block) => !units.has(normalizeText(block.unit_id)));
   }
-
 
   function findInvalidStatuses() {
-
-    return getAll()
-      .filter(
-        block =>
-          !VALID_STATUSES.has(
-            normalize(
-              block.status
-            )
-          )
-      );
-
+    return getAll().filter(
+      (block) => !VALID_STATUSES.has(normalize(block.status)),
+    );
   }
-
 
   function findInvalidDateRanges() {
+    return getAll().filter((block) => {
+      try {
+        AvailabilityService.validateDateRange(block.start_date, block.end_date);
 
-    return getAll()
-      .filter(block => {
-
-        try {
-
-          AvailabilityService
-            .validateDateRange(
-              block.start_date,
-              block.end_date
-            );
-
-
-          return false;
-
-        } catch (err) {
-
-          return true;
-
-        }
-
-      });
-
+        return false;
+      } catch (err) {
+        return true;
+      }
+    });
   }
-
 
   function findOrphanReservationLinks() {
+    const headers = BaseRepository.getHeaders(CONFIG.SHEETS.OTA_BLOCKS);
 
-    const headers =
-      BaseRepository.getHeaders(
-        CONFIG.SHEETS.OTA_BLOCKS
-      );
-
-
-    if (
-      !headers.includes(
-        'reservation_id'
-      )
-    ) {
-
+    if (!headers.includes("reservation_id")) {
       return [];
-
     }
 
-
-    return getAll()
-      .filter(block => {
-
-        if (
-          isBlank(
-            block.reservation_id
-          )
-        ) {
-
-          return false;
-
-        }
-
-
-        return !ReservationService.exists(
-          block.reservation_id
-        );
-
-      });
-
-  }
-
-
-  function findDuplicateBlockingBlocks() {
-
-    const blocks =
-      getAll()
-        .filter(
-          block =>
-            isBlockingStatus(
-              block.status
-            )
-        );
-
-
-    const duplicates =
-      [];
-
-
-    for (
-      let i = 0;
-      i < blocks.length;
-      i++
-    ) {
-
-      for (
-        let j = i + 1;
-        j < blocks.length;
-        j++
-      ) {
-
-        const a =
-          blocks[i];
-
-        const b =
-          blocks[j];
-
-
-        if (
-          normalize(
-            a.source
-          ) !==
-            normalize(
-              b.source
-            )
-        ) {
-
-          continue;
-
-        }
-
-
-        let duplicate =
-          false;
-
-
-        if (
-          !isBlank(
-            a.reservation_id
-          ) &&
-          !isBlank(
-            b.reservation_id
-          )
-        ) {
-
-          duplicate =
-            normalizeText(
-              a.reservation_id
-            ) ===
-            normalizeText(
-              b.reservation_id
-            );
-
-        } else {
-
-          duplicate =
-            (
-              normalizeText(
-                a.unit_id
-              ) ===
-                normalizeText(
-                  b.unit_id
-                )
-            ) &&
-            (
-              String(
-                a.start_date
-              ) ===
-                String(
-                  b.start_date
-                )
-            ) &&
-            (
-              String(
-                a.end_date
-              ) ===
-                String(
-                  b.end_date
-                )
-            );
-
-        }
-
-
-        if (duplicate) {
-
-          duplicates.push({
-
-            first_block_id:
-              a.ota_block_id,
-
-            second_block_id:
-              b.ota_block_id,
-
-            reservation_id:
-              a.reservation_id ||
-              b.reservation_id ||
-              '',
-
-            unit_id:
-              a.unit_id,
-
-            source:
-              a.source
-
-          });
-
-        }
-
+    return getAll().filter((block) => {
+      if (isBlank(block.reservation_id)) {
+        return false;
       }
 
-    }
-
-
-    return duplicates;
-
+      return !ReservationService.exists(block.reservation_id);
+    });
   }
 
+  function findDuplicateBlockingBlocks() {
+    const blocks = getAll().filter((block) => isBlockingStatus(block.status));
+
+    const duplicates = [];
+
+    for (let i = 0; i < blocks.length; i++) {
+      for (let j = i + 1; j < blocks.length; j++) {
+        const a = blocks[i];
+
+        const b = blocks[j];
+
+        if (normalize(a.source) !== normalize(b.source)) {
+          continue;
+        }
+
+        let duplicate = false;
+
+        if (!isBlank(a.reservation_id) && !isBlank(b.reservation_id)) {
+          duplicate =
+            normalizeText(a.reservation_id) === normalizeText(b.reservation_id);
+        } else {
+          duplicate =
+            normalizeText(a.unit_id) === normalizeText(b.unit_id) &&
+            String(a.start_date) === String(b.start_date) &&
+            String(a.end_date) === String(b.end_date);
+        }
+
+        if (duplicate) {
+          duplicates.push({
+            first_block_id: a.ota_block_id,
+
+            second_block_id: b.ota_block_id,
+
+            reservation_id: a.reservation_id || b.reservation_id || "",
+
+            unit_id: a.unit_id,
+
+            source: a.source,
+          });
+        }
+      }
+    }
+
+    return duplicates;
+  }
 
   /**
    * ----------------------------------------------------------
@@ -1961,86 +940,42 @@ const OTABlockService = (() => {
    */
 
   function getStatusSummary() {
-
-    const blocks =
-      getAll();
-
+    const blocks = getAll();
 
     const summary = {
+      total: blocks.length,
 
-      total:
-        blocks.length,
+      pending: 0,
 
-      pending:
-        0,
+      blocked: 0,
 
-      blocked:
-        0,
+      cancelled: 0,
 
-      cancelled:
-        0,
-
-      blocking:
-        0
-
+      blocking: 0,
     };
 
+    blocks.forEach((block) => {
+      const status = normalize(block.status);
 
-    blocks.forEach(block => {
-
-      const status =
-        normalize(
-          block.status
-        );
-
-
-      if (
-        status ===
-        STATUS.PENDING
-      ) {
-
+      if (status === STATUS.PENDING) {
         summary.pending++;
-
       }
 
-
-      if (
-        status ===
-        STATUS.BLOCKED
-      ) {
-
+      if (status === STATUS.BLOCKED) {
         summary.blocked++;
-
       }
 
-
-      if (
-        status ===
-        STATUS.CANCELLED
-      ) {
-
+      if (status === STATUS.CANCELLED) {
         summary.cancelled++;
-
       }
 
-
-      if (
-        isBlockingStatus(
-          status
-        )
-      ) {
-
+      if (isBlockingStatus(status)) {
         summary.blocking++;
-
       }
-
     });
 
-
     return summary;
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -2049,7 +984,6 @@ const OTABlockService = (() => {
    */
 
   return {
-
     createBlock,
 
     createForReservation,
@@ -2116,8 +1050,6 @@ const OTABlockService = (() => {
 
     findOrphanReservationLinks,
 
-    findDuplicateBlockingBlocks
-
+    findDuplicateBlockingBlocks,
   };
-
 })();

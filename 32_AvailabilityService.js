@@ -124,12 +124,7 @@
 
  */
 
-
-
 const AvailabilityService = (() => {
-
-
-
   /**
 
    * ==========================================================
@@ -140,81 +135,29 @@ const AvailabilityService = (() => {
 
    */
 
+  const UNIT_ACTIVE = "ACTIVE";
 
+  const OPERATIONAL_READY = "READY";
 
-  const UNIT_ACTIVE =
+  const BLOCKING_RESERVATION_STATUSES = new Set([
+    "PENDING",
 
-    'ACTIVE';
+    "CONFIRMED",
 
+    "CHECKED_IN",
+  ]);
 
+  const NON_BLOCKING_RESERVATION_STATUSES = new Set([
+    "COMPLETED",
 
+    "CANCELLED",
 
+    "NO_SHOW",
+  ]);
 
-  const OPERATIONAL_READY =
+  const BLOCKING_OTA_BLOCK_STATUSES = new Set(["PENDING", "BLOCKED"]);
 
-    'READY';
-
-
-
-
-
-  const BLOCKING_RESERVATION_STATUSES =
-
-    new Set([
-
-      'PENDING',
-
-      'CONFIRMED',
-
-      'CHECKED_IN'
-
-    ]);
-
-
-
-
-
-  const NON_BLOCKING_RESERVATION_STATUSES =
-
-    new Set([
-
-      'COMPLETED',
-
-      'CANCELLED',
-
-      'NO_SHOW'
-
-    ]);
-
-
-
-
-
-  const BLOCKING_OTA_BLOCK_STATUSES =
-
-    new Set([
-
-      'PENDING',
-
-      'BLOCKED'
-
-    ]);
-
-
-
-
-
-  const NON_BLOCKING_OTA_BLOCK_STATUSES =
-
-    new Set([
-
-      'CANCELLED'
-
-    ]);
-
-
-
-
+  const NON_BLOCKING_OTA_BLOCK_STATUSES = new Set(["CANCELLED"]);
 
   /**
 
@@ -226,57 +169,20 @@ const AvailabilityService = (() => {
 
    */
 
-
-
   function isBlank(value) {
-
-
-
-    return (
-
-      value === undefined ||
-
-      value === null ||
-
-      String(value).trim() === ''
-
-    );
-
-
-
+    return value === undefined || value === null || String(value).trim() === "";
   }
 
-
-
-
-
   function normalize(value) {
-
-
-
     if (isBlank(value)) {
-
-      return '';
-
+      return "";
     }
 
-
-
-
-
     return String(value)
-
       .trim()
 
       .toUpperCase();
-
-
-
   }
-
-
-
-
 
   /**
 
@@ -288,29 +194,10 @@ const AvailabilityService = (() => {
 
    */
 
-
-
   function normalizeDate(value) {
-
-
-
     if (isBlank(value)) {
-
-
-
-      throw new Error(
-
-        'Date value is required.'
-
-      );
-
-
-
+      throw new Error("Date value is required.");
     }
-
-
-
-
 
     /*
 
@@ -318,71 +205,21 @@ const AvailabilityService = (() => {
 
      */
 
-
-
-    if (
-
-      Object.prototype.toString.call(
-
-        value
-
-      ) === '[object Date]'
-
-    ) {
-
-
-
-      if (
-
-        isNaN(
-
-          value.getTime()
-
-        )
-
-      ) {
-
-
-
-        throw new Error(
-
-          'Invalid Date object.'
-
-        );
-
-
-
+    if (Object.prototype.toString.call(value) === "[object Date]") {
+      if (isNaN(value.getTime())) {
+        throw new Error("Invalid Date object.");
       }
 
-
-
-
-
       return Utilities.formatDate(
-
         value,
 
         CONFIG.TIMEZONE,
 
-        CONFIG.DATE_FORMATS.DATE
-
+        CONFIG.DATE_FORMATS.DATE,
       );
-
-
-
     }
 
-
-
-
-
-    const text =
-
-      String(value).trim();
-
-
-
-
+    const text = String(value).trim();
 
     /*
 
@@ -390,107 +227,35 @@ const AvailabilityService = (() => {
 
      */
 
+    if (/^\d{4}-\d{2}-\d{2}$/.test(text)) {
+      const parts = text.split("-");
 
+      const year = Number(parts[0]);
 
-    if (
+      const month = Number(parts[1]);
 
-      /^\d{4}-\d{2}-\d{2}$/.test(
+      const day = Number(parts[2]);
 
-        text
+      const date = new Date(
+        Date.UTC(
+          year,
 
-      )
+          month - 1,
 
-    ) {
-
-
-
-      const parts =
-
-        text.split('-');
-
-
-
-
-
-      const year =
-
-        Number(parts[0]);
-
-
-
-      const month =
-
-        Number(parts[1]);
-
-
-
-      const day =
-
-        Number(parts[2]);
-
-
-
-
-
-      const date =
-
-        new Date(
-
-          Date.UTC(
-
-            year,
-
-            month - 1,
-
-            day
-
-          )
-
-        );
-
-
-
-
+          day,
+        ),
+      );
 
       if (
-
         date.getUTCFullYear() !== year ||
-
-        date.getUTCMonth() !==
-
-          month - 1 ||
-
+        date.getUTCMonth() !== month - 1 ||
         date.getUTCDate() !== day
-
       ) {
-
-
-
-        throw new Error(
-
-          'Invalid date: ' +
-
-            text
-
-        );
-
-
-
+        throw new Error("Invalid date: " + text);
       }
 
-
-
-
-
       return text;
-
-
-
     }
-
-
-
-
 
     /*
 
@@ -498,61 +263,20 @@ const AvailabilityService = (() => {
 
      */
 
+    const parsed = new Date(value);
 
-
-    const parsed =
-
-      new Date(value);
-
-
-
-
-
-    if (
-
-      isNaN(
-
-        parsed.getTime()
-
-      )
-
-    ) {
-
-
-
-      throw new Error(
-
-        'Invalid date: ' +
-
-          value
-
-      );
-
-
-
+    if (isNaN(parsed.getTime())) {
+      throw new Error("Invalid date: " + value);
     }
 
-
-
-
-
     return Utilities.formatDate(
-
       parsed,
 
       CONFIG.TIMEZONE,
 
-      CONFIG.DATE_FORMATS.DATE
-
+      CONFIG.DATE_FORMATS.DATE,
     );
-
-
-
   }
-
-
-
-
 
   /**
 
@@ -566,49 +290,19 @@ const AvailabilityService = (() => {
 
    */
 
-
-
   function dateToNumber(value) {
+    const normalized = normalizeDate(value);
 
-
-
-    const normalized =
-
-      normalizeDate(
-
-        value
-
-      );
-
-
-
-
-
-    const parts =
-
-      normalized.split('-');
-
-
-
-
+    const parts = normalized.split("-");
 
     return Date.UTC(
-
       Number(parts[0]),
 
       Number(parts[1]) - 1,
 
-      Number(parts[2])
-
+      Number(parts[2]),
     );
-
-
-
   }
-
-
-
-
 
   /**
 
@@ -620,81 +314,25 @@ const AvailabilityService = (() => {
 
    */
 
-
-
   function validateDateRange(
-
     startDate,
 
-    endDate
-
+    endDate,
   ) {
+    const start = normalizeDate(startDate);
 
+    const end = normalizeDate(endDate);
 
-
-    const start =
-
-      normalizeDate(
-
-        startDate
-
-      );
-
-
-
-
-
-    const end =
-
-      normalizeDate(
-
-        endDate
-
-      );
-
-
-
-
-
-    if (
-
-      dateToNumber(start) >=
-
-      dateToNumber(end)
-
-    ) {
-
-
-
-      throw new Error(
-
-        'End date must be after start date.'
-
-      );
-
-
-
+    if (dateToNumber(start) >= dateToNumber(end)) {
+      throw new Error("End date must be after start date.");
     }
 
-
-
-
-
     return {
-
       start_date: start,
 
-      end_date: end
-
+      end_date: end,
     };
-
-
-
   }
-
-
-
-
 
   /**
 
@@ -726,87 +364,32 @@ const AvailabilityService = (() => {
 
    */
 
-
-
   function rangesOverlap(
-
     startA,
 
     endA,
 
     startB,
 
-    endB
-
+    endB,
   ) {
+    const rangeA = validateDateRange(
+      startA,
 
-
-
-    const rangeA =
-
-      validateDateRange(
-
-        startA,
-
-        endA
-
-      );
-
-
-
-
-
-    const rangeB =
-
-      validateDateRange(
-
-        startB,
-
-        endB
-
-      );
-
-
-
-
-
-    return (
-
-      dateToNumber(
-
-        rangeA.start_date
-
-      ) <
-
-      dateToNumber(
-
-        rangeB.end_date
-
-      ) &&
-
-
-
-      dateToNumber(
-
-        rangeA.end_date
-
-      ) >
-
-      dateToNumber(
-
-        rangeB.start_date
-
-      )
-
+      endA,
     );
 
+    const rangeB = validateDateRange(
+      startB,
 
+      endB,
+    );
 
+    return (
+      dateToNumber(rangeA.start_date) < dateToNumber(rangeB.end_date) &&
+      dateToNumber(rangeA.end_date) > dateToNumber(rangeB.start_date)
+    );
   }
-
-
-
-
 
   /**
 
@@ -818,79 +401,19 @@ const AvailabilityService = (() => {
 
    */
 
-
-
   function requireUnit(unitId) {
-
-
-
-    if (
-
-      isBlank(
-
-        unitId
-
-      )
-
-    ) {
-
-
-
-      throw new Error(
-
-        'unit_id is required.'
-
-      );
-
-
-
+    if (isBlank(unitId)) {
+      throw new Error("unit_id is required.");
     }
 
-
-
-
-
-    const unit =
-
-      UnitService.getUnitById(
-
-        String(unitId).trim()
-
-      );
-
-
-
-
+    const unit = UnitService.getUnitById(String(unitId).trim());
 
     if (!unit) {
-
-
-
-      throw new Error(
-
-        'Unit not found: ' +
-
-          unitId
-
-      );
-
-
-
+      throw new Error("Unit not found: " + unitId);
     }
 
-
-
-
-
     return unit;
-
-
-
   }
-
-
-
-
 
   /**
 
@@ -902,55 +425,15 @@ const AvailabilityService = (() => {
 
    */
 
-
-
-  function checkUnitMasterStatus(
-
-    unit
-
-  ) {
-
-
-
-    const status =
-
-      normalize(
-
-        unit.status
-
-      );
-
-
-
-
+  function checkUnitMasterStatus(unit) {
+    const status = normalize(unit.status);
 
     return {
+      active: status === UNIT_ACTIVE,
 
-
-
-      active:
-
-        status ===
-
-        UNIT_ACTIVE,
-
-
-
-      status:
-
-        status
-
-
-
+      status: status,
     };
-
-
-
   }
-
-
-
-
 
   /**
 
@@ -962,113 +445,29 @@ const AvailabilityService = (() => {
 
    */
 
-
-
-  function checkOperationalStatus(
-
-    unitId
-
-  ) {
-
-
-
-    const statusRecord =
-
-      OperationalStatusService
-
-        .getStatus(
-
-          unitId
-
-        );
-
-
-
-
+  function checkOperationalStatus(unitId) {
+    const statusRecord = OperationalStatusService.getStatus(unitId);
 
     if (!statusRecord) {
-
-
-
       return {
+        ready: false,
 
+        status: null,
 
-
-        ready:
-
-          false,
-
-
-
-        status:
-
-          null,
-
-
-
-        record:
-
-          null
-
-
-
+        record: null,
       };
-
-
-
     }
 
-
-
-
-
-    const status =
-
-      normalize(
-
-        statusRecord
-
-          .operational_status
-
-      );
-
-
-
-
+    const status = normalize(statusRecord.operational_status);
 
     return {
+      ready: status === OPERATIONAL_READY,
 
+      status: status,
 
-
-      ready:
-
-        status ===
-
-        OPERATIONAL_READY,
-
-
-
-      status:
-
-        status,
-
-
-
-      record:
-
-        statusRecord
-
-
-
+      record: statusRecord,
     };
-
-
-
   }
-
-
-
-
 
   /**
 
@@ -1080,85 +479,20 @@ const AvailabilityService = (() => {
 
    */
 
-
-
-  function isReservationBlocking(
-
-    reservation
-
-  ) {
-
-
-
+  function isReservationBlocking(reservation) {
     if (!reservation) {
-
       return false;
-
     }
 
+    const status = normalize(reservation.status);
 
-
-
-
-    const status =
-
-      normalize(
-
-        reservation.status
-
-      );
-
-
-
-
-
-    return (
-
-      BLOCKING_RESERVATION_STATUSES
-
-        .has(status)
-
-    );
-
-
-
+    return BLOCKING_RESERVATION_STATUSES.has(status);
   }
 
-
-
-
-
-  function getReservationStartDate(
-
-    reservation
-
-  ) {
-
-
-
-    if (
-
-      !isBlank(
-
-        reservation.check_in_date
-
-      )
-
-    ) {
-
-
-
-      return reservation
-
-        .check_in_date;
-
-
-
+  function getReservationStartDate(reservation) {
+    if (!isBlank(reservation.check_in_date)) {
+      return reservation.check_in_date;
     }
-
-
-
-
 
     /*
 
@@ -1166,51 +500,13 @@ const AvailabilityService = (() => {
 
      */
 
-
-
-    return reservation
-
-      .start_date;
-
-
-
+    return reservation.start_date;
   }
 
-
-
-
-
-  function getReservationEndDate(
-
-    reservation
-
-  ) {
-
-
-
-    if (
-
-      !isBlank(
-
-        reservation.check_out_date
-
-      )
-
-    ) {
-
-
-
-      return reservation
-
-        .check_out_date;
-
-
-
+  function getReservationEndDate(reservation) {
+    if (!isBlank(reservation.check_out_date)) {
+      return reservation.check_out_date;
     }
-
-
-
-
 
     /*
 
@@ -1218,19 +514,8 @@ const AvailabilityService = (() => {
 
      */
 
-
-
-    return reservation
-
-      .end_date;
-
-
-
+    return reservation.end_date;
   }
-
-
-
-
 
   /**
 
@@ -1242,167 +527,50 @@ const AvailabilityService = (() => {
 
    */
 
-
-
   function getConflictingReservations(
-
     unitId,
 
     startDate,
 
     endDate,
 
-    excludeReservationId
-
+    excludeReservationId,
   ) {
+    requireUnit(unitId);
 
+    const requestedRange = validateDateRange(
+      startDate,
 
-
-    requireUnit(
-
-      unitId
-
+      endDate,
     );
 
+    const reservations = BaseRepository.findByField(
+      CONFIG.SHEETS.RESERVATIONS,
 
+      "unit_id",
 
+      unitId,
+    );
 
+    return reservations.filter((reservation) => {
+      if (!isReservationBlocking(reservation)) {
+        return false;
+      }
 
-    const requestedRange =
+      if (
+        !isBlank(excludeReservationId) &&
+        String(reservation.reservation_id).trim() ===
+          String(excludeReservationId).trim()
+      ) {
+        return false;
+      }
 
-      validateDateRange(
+      const reservationStart = getReservationStartDate(reservation);
 
-        startDate,
+      const reservationEnd = getReservationEndDate(reservation);
 
-        endDate
-
-      );
-
-
-
-
-
-    const reservations =
-
-      BaseRepository.findByField(
-
-        CONFIG.SHEETS.RESERVATIONS,
-
-        'unit_id',
-
-        unitId
-
-      );
-
-
-
-
-
-    return reservations.filter(
-
-      reservation => {
-
-
-
-        if (
-
-          !isReservationBlocking(
-
-            reservation
-
-          )
-
-        ) {
-
-
-
-          return false;
-
-
-
-        }
-
-
-
-
-
-        if (
-
-          !isBlank(
-
-            excludeReservationId
-
-          ) &&
-
-          String(
-
-            reservation.reservation_id
-
-          ).trim() ===
-
-            String(
-
-              excludeReservationId
-
-            ).trim()
-
-        ) {
-
-
-
-          return false;
-
-
-
-        }
-
-
-
-
-
-        const reservationStart =
-
-          getReservationStartDate(
-
-            reservation
-
-          );
-
-
-
-
-
-        const reservationEnd =
-
-          getReservationEndDate(
-
-            reservation
-
-          );
-
-
-
-
-
-        if (
-
-          isBlank(
-
-            reservationStart
-
-          ) ||
-
-          isBlank(
-
-            reservationEnd
-
-          )
-
-        ) {
-
-
-
-          /*
+      if (isBlank(reservationStart) || isBlank(reservationEnd)) {
+        /*
 
            * Malformed records are handled by
 
@@ -1410,41 +578,21 @@ const AvailabilityService = (() => {
 
            */
 
+        return false;
+      }
 
+      try {
+        return rangesOverlap(
+          requestedRange.start_date,
 
-          return false;
+          requestedRange.end_date,
 
+          reservationStart,
 
-
-        }
-
-
-
-
-
-        try {
-
-
-
-          return rangesOverlap(
-
-            requestedRange.start_date,
-
-            requestedRange.end_date,
-
-            reservationStart,
-
-            reservationEnd
-
-          );
-
-
-
-        } catch (err) {
-
-
-
-          /*
+          reservationEnd,
+        );
+      } catch (err) {
+        /*
 
            * Invalid reservation ranges are handled
 
@@ -1452,27 +600,10 @@ const AvailabilityService = (() => {
 
            */
 
-
-
-          return false;
-
-
-
-        }
-
-
-
+        return false;
       }
-
-    );
-
-
-
+    });
   }
-
-
-
-
 
   /**
 
@@ -1484,63 +615,29 @@ const AvailabilityService = (() => {
 
    */
 
-
-
   function getConflictingExternalEvents(
-
     unitId,
 
     startDate,
 
-    endDate
-
+    endDate,
   ) {
+    requireUnit(unitId);
 
+    const range = validateDateRange(
+      startDate,
 
-
-    requireUnit(
-
-      unitId
-
+      endDate,
     );
 
+    return ExternalCalendarService.getConflictingEvents(
+      unitId,
 
+      range.start_date,
 
-
-
-    const range =
-
-      validateDateRange(
-
-        startDate,
-
-        endDate
-
-      );
-
-
-
-
-
-    return ExternalCalendarService
-
-      .getConflictingEvents(
-
-        unitId,
-
-        range.start_date,
-
-        range.end_date
-
-      );
-
-
-
+      range.end_date,
+    );
   }
-
-
-
-
 
   /**
 
@@ -1552,37 +649,12 @@ const AvailabilityService = (() => {
 
    */
 
-
-
-  function isOTABlockBlocking(
-
-    block
-
-  ) {
-
-
-
+  function isOTABlockBlocking(block) {
     if (!block) {
-
       return false;
-
     }
 
-
-
-
-
-    const status =
-
-      normalize(
-
-        block.status
-
-      );
-
-
-
-
+    const status = normalize(block.status);
 
     /*
 
@@ -1608,101 +680,27 @@ const AvailabilityService = (() => {
 
      */
 
-
-
-    return (
-
-      BLOCKING_OTA_BLOCK_STATUSES
-
-        .has(status)
-
-    );
-
-
-
+    return BLOCKING_OTA_BLOCK_STATUSES.has(status);
   }
 
-
-
-
-
-  function getOTABlockStartDate(
-
-    block
-
-  ) {
-
-
-
-    if (
-
-      !isBlank(
-
-        block.start_date
-
-      )
-
-    ) {
-
-
-
+  function getOTABlockStartDate(block) {
+    if (!isBlank(block.start_date)) {
       return block.start_date;
-
-
-
     }
-
-
-
-
 
     /*
 
      * Temporary backward compatibility.
 
      */
-
-
 
     return block.check_in_date;
-
-
-
   }
 
-
-
-
-
-  function getOTABlockEndDate(
-
-    block
-
-  ) {
-
-
-
-    if (
-
-      !isBlank(
-
-        block.end_date
-
-      )
-
-    ) {
-
-
-
+  function getOTABlockEndDate(block) {
+    if (!isBlank(block.end_date)) {
       return block.end_date;
-
-
-
     }
-
-
-
-
 
     /*
 
@@ -1710,17 +708,8 @@ const AvailabilityService = (() => {
 
      */
 
-
-
     return block.check_out_date;
-
-
-
   }
-
-
-
-
 
   /**
 
@@ -1732,163 +721,54 @@ const AvailabilityService = (() => {
 
    */
 
-
-
   function getConflictingOTABlocks(
-
     unitId,
 
     startDate,
 
-    endDate
-
+    endDate,
   ) {
+    requireUnit(unitId);
 
+    const requestedRange = validateDateRange(
+      startDate,
 
-
-    requireUnit(
-
-      unitId
-
+      endDate,
     );
 
+    const blocks = BaseRepository.findByField(
+      CONFIG.SHEETS.OTA_BLOCKS,
 
+      "unit_id",
 
+      unitId,
+    );
 
+    return blocks.filter((block) => {
+      if (!isOTABlockBlocking(block)) {
+        return false;
+      }
 
-    const requestedRange =
+      const blockStart = getOTABlockStartDate(block);
 
-      validateDateRange(
+      const blockEnd = getOTABlockEndDate(block);
 
-        startDate,
+      if (isBlank(blockStart) || isBlank(blockEnd)) {
+        return false;
+      }
 
-        endDate
+      try {
+        return rangesOverlap(
+          requestedRange.start_date,
 
-      );
+          requestedRange.end_date,
 
+          blockStart,
 
-
-
-
-    const blocks =
-
-      BaseRepository.findByField(
-
-        CONFIG.SHEETS.OTA_BLOCKS,
-
-        'unit_id',
-
-        unitId
-
-      );
-
-
-
-
-
-    return blocks.filter(
-
-      block => {
-
-
-
-        if (
-
-          !isOTABlockBlocking(
-
-            block
-
-          )
-
-        ) {
-
-
-
-          return false;
-
-
-
-        }
-
-
-
-
-
-        const blockStart =
-
-          getOTABlockStartDate(
-
-            block
-
-          );
-
-
-
-
-
-        const blockEnd =
-
-          getOTABlockEndDate(
-
-            block
-
-          );
-
-
-
-
-
-        if (
-
-          isBlank(
-
-            blockStart
-
-          ) ||
-
-          isBlank(
-
-            blockEnd
-
-          )
-
-        ) {
-
-
-
-          return false;
-
-
-
-        }
-
-
-
-
-
-        try {
-
-
-
-          return rangesOverlap(
-
-            requestedRange.start_date,
-
-            requestedRange.end_date,
-
-            blockStart,
-
-            blockEnd
-
-          );
-
-
-
-        } catch (err) {
-
-
-
-          /*
+          blockEnd,
+        );
+      } catch (err) {
+        /*
 
            * Invalid block records are handled
 
@@ -1896,27 +776,10 @@ const AvailabilityService = (() => {
 
            */
 
-
-
-          return false;
-
-
-
-        }
-
-
-
+        return false;
       }
-
-    );
-
-
-
+    });
   }
-
-
-
-
 
   /**
 
@@ -1928,405 +791,133 @@ const AvailabilityService = (() => {
 
    */
 
-
-
   function checkAvailability(
-
     unitId,
 
     startDate,
 
     endDate,
 
-    options
-
+    options,
   ) {
+    options = options || {};
 
+    const unit = requireUnit(unitId);
 
+    const requestedRange = validateDateRange(
+      startDate,
 
-    options =
+      endDate,
+    );
 
-      options || {};
+    const masterStatus = checkUnitMasterStatus(unit);
 
+    const operationalStatus = checkOperationalStatus(unit.unit_id);
 
+    const reservationConflicts = getConflictingReservations(
+      unit.unit_id,
 
+      requestedRange.start_date,
 
+      requestedRange.end_date,
 
-    const unit =
+      options.excludeReservationId || "",
+    );
 
-      requireUnit(
+    const externalConflicts = getConflictingExternalEvents(
+      unit.unit_id,
 
-        unitId
+      requestedRange.start_date,
 
-      );
+      requestedRange.end_date,
+    );
 
+    const otaBlockConflicts = getConflictingOTABlocks(
+      unit.unit_id,
 
+      requestedRange.start_date,
 
-
-
-    const requestedRange =
-
-      validateDateRange(
-
-        startDate,
-
-        endDate
-
-      );
-
-
-
-
-
-    const masterStatus =
-
-      checkUnitMasterStatus(
-
-        unit
-
-      );
-
-
-
-
-
-    const operationalStatus =
-
-      checkOperationalStatus(
-
-        unit.unit_id
-
-      );
-
-
-
-
-
-    const reservationConflicts =
-
-      getConflictingReservations(
-
-        unit.unit_id,
-
-        requestedRange.start_date,
-
-        requestedRange.end_date,
-
-        options.excludeReservationId ||
-
-          ''
-
-      );
-
-
-
-
-
-    const externalConflicts =
-
-      getConflictingExternalEvents(
-
-        unit.unit_id,
-
-        requestedRange.start_date,
-
-        requestedRange.end_date
-
-      );
-
-
-
-
-
-    const otaBlockConflicts =
-
-      getConflictingOTABlocks(
-
-        unit.unit_id,
-
-        requestedRange.start_date,
-
-        requestedRange.end_date
-
-      );
-
-
-
-
+      requestedRange.end_date,
+    );
 
     const reasons = [];
 
-
-
-
-
-    if (
-
-      !masterStatus.active
-
-    ) {
-
-
-
+    if (!masterStatus.active) {
       reasons.push({
+        code: "UNIT_NOT_ACTIVE",
 
-        code:
-
-          'UNIT_NOT_ACTIVE',
-
-
-
-        message:
-
-          'Unit master status is not ACTIVE.'
-
+        message: "Unit master status is not ACTIVE.",
       });
-
-
-
     }
 
-
-
-
-
-    if (
-
-      !operationalStatus.ready
-
-    ) {
-
-
-
+    if (!operationalStatus.ready) {
       reasons.push({
+        code: "UNIT_NOT_READY",
 
-        code:
-
-          'UNIT_NOT_READY',
-
-
-
-        message:
-
-          'Unit operational status is not READY.'
-
+        message: "Unit operational status is not READY.",
       });
-
-
-
     }
 
-
-
-
-
-    if (
-
-      reservationConflicts.length > 0
-
-    ) {
-
-
-
+    if (reservationConflicts.length > 0) {
       reasons.push({
+        code: "RESERVATION_CONFLICT",
 
-        code:
+        message: "Unit has a conflicting internal reservation.",
 
-          'RESERVATION_CONFLICT',
-
-
-
-        message:
-
-          'Unit has a conflicting internal reservation.',
-
-
-
-        count:
-
-          reservationConflicts.length
-
+        count: reservationConflicts.length,
       });
-
-
-
     }
 
-
-
-
-
-    if (
-
-      externalConflicts.length > 0
-
-    ) {
-
-
-
+    if (externalConflicts.length > 0) {
       reasons.push({
+        code: "EXTERNAL_CALENDAR_CONFLICT",
 
-        code:
+        message: "Unit has a conflicting external calendar event.",
 
-          'EXTERNAL_CALENDAR_CONFLICT',
-
-
-
-        message:
-
-          'Unit has a conflicting external calendar event.',
-
-
-
-        count:
-
-          externalConflicts.length
-
+        count: externalConflicts.length,
       });
-
-
-
     }
 
-
-
-
-
-    if (
-
-      otaBlockConflicts.length > 0
-
-    ) {
-
-
-
+    if (otaBlockConflicts.length > 0) {
       reasons.push({
+        code: "OTA_BLOCK_CONFLICT",
 
-        code:
+        message: "Unit has a conflicting OTA/Admin block.",
 
-          'OTA_BLOCK_CONFLICT',
-
-
-
-        message:
-
-          'Unit has a conflicting OTA/Admin block.',
-
-
-
-        count:
-
-          otaBlockConflicts.length
-
+        count: otaBlockConflicts.length,
       });
-
-
-
     }
-
-
-
-
 
     return {
+      available: reasons.length === 0,
 
+      unit_id: unit.unit_id,
 
+      property_id: unit.property_id || "",
 
-      available:
+      unit_code: unit.unit_code || "",
 
-        reasons.length === 0,
+      unit_name: unit.unit_name || "",
 
+      start_date: requestedRange.start_date,
 
+      end_date: requestedRange.end_date,
 
-      unit_id:
+      unit_status: masterStatus.status,
 
-        unit.unit_id,
+      operational_status: operationalStatus.status,
 
-
-
-      property_id:
-
-        unit.property_id || '',
-
-
-
-      unit_code:
-
-        unit.unit_code || '',
-
-
-
-      unit_name:
-
-        unit.unit_name || '',
-
-
-
-      start_date:
-
-        requestedRange.start_date,
-
-
-
-      end_date:
-
-        requestedRange.end_date,
-
-
-
-      unit_status:
-
-        masterStatus.status,
-
-
-
-      operational_status:
-
-        operationalStatus.status,
-
-
-
-      reasons:
-
-        reasons,
-
-
+      reasons: reasons,
 
       conflicts: {
+        reservations: reservationConflicts,
 
+        external_calendar_events: externalConflicts,
 
-
-        reservations:
-
-          reservationConflicts,
-
-
-
-        external_calendar_events:
-
-          externalConflicts,
-
-
-
-        ota_blocks:
-
-          otaBlockConflicts
-
-
-
-      }
-
-
-
+        ota_blocks: otaBlockConflicts,
+      },
     };
-
-
-
   }
-
-
-
-
 
   /**
 
@@ -2338,41 +929,25 @@ const AvailabilityService = (() => {
 
    */
 
-
-
   function isAvailable(
-
     unitId,
 
     startDate,
 
     endDate,
 
-    options
-
+    options,
   ) {
-
-
-
     return checkAvailability(
-
       unitId,
 
       startDate,
 
       endDate,
 
-      options
-
+      options,
     ).available;
-
-
-
   }
-
-
-
-
 
   /**
 
@@ -2384,49 +959,22 @@ const AvailabilityService = (() => {
 
    */
 
-
-
   function getAvailableUnits(
-
     startDate,
 
     endDate,
 
-    filters
-
+    filters,
   ) {
+    filters = filters || {};
 
+    const range = validateDateRange(
+      startDate,
 
+      endDate,
+    );
 
-    filters =
-
-      filters || {};
-
-
-
-
-
-    const range =
-
-      validateDateRange(
-
-        startDate,
-
-        endDate
-
-      );
-
-
-
-
-
-    let units =
-
-      UnitService.getActiveUnits();
-
-
-
-
+    let units = UnitService.getActiveUnits();
 
     /*
 
@@ -2434,47 +982,13 @@ const AvailabilityService = (() => {
 
      */
 
-
-
-    if (
-
-      !isBlank(
-
-        filters.property_id
-
-      )
-
-    ) {
-
-
-
-      units =
-
-        units.filter(
-
-          unit =>
-
-            String(
-
-              unit.property_id
-
-            ).trim() ===
-
-            String(
-
-              filters.property_id
-
-            ).trim()
-
-        );
-
-
-
+    if (!isBlank(filters.property_id)) {
+      units = units.filter(
+        (unit) =>
+          String(unit.property_id).trim() ===
+          String(filters.property_id).trim(),
+      );
     }
-
-
-
-
 
     /*
 
@@ -2482,55 +996,13 @@ const AvailabilityService = (() => {
 
      */
 
+    if (!isBlank(filters.unit_type)) {
+      const requestedType = normalize(filters.unit_type);
 
-
-    if (
-
-      !isBlank(
-
-        filters.unit_type
-
-      )
-
-    ) {
-
-
-
-      const requestedType =
-
-        normalize(
-
-          filters.unit_type
-
-        );
-
-
-
-
-
-      units =
-
-        units.filter(
-
-          unit =>
-
-            normalize(
-
-              unit.unit_type
-
-            ) ===
-
-            requestedType
-
-        );
-
-
-
+      units = units.filter(
+        (unit) => normalize(unit.unit_type) === requestedType,
+      );
     }
-
-
-
-
 
     /*
 
@@ -2538,171 +1010,42 @@ const AvailabilityService = (() => {
 
      */
 
+    if (!isBlank(filters.min_guests)) {
+      const minGuests = Number(filters.min_guests);
 
-
-    if (
-
-      !isBlank(
-
-        filters.min_guests
-
-      )
-
-    ) {
-
-
-
-      const minGuests =
-
-        Number(
-
-          filters.min_guests
-
-        );
-
-
-
-
-
-      if (
-
-        isNaN(minGuests) ||
-
-        minGuests < 0
-
-      ) {
-
-
-
-        throw new Error(
-
-          'filters.min_guests must be a non-negative number.'
-
-        );
-
-
-
+      if (isNaN(minGuests) || minGuests < 0) {
+        throw new Error("filters.min_guests must be a non-negative number.");
       }
 
+      units = units.filter((unit) => {
+        const capacity = Number(unit.max_guests || 0);
 
-
-
-
-      units =
-
-        units.filter(
-
-          unit => {
-
-
-
-            const capacity =
-
-              Number(
-
-                unit.max_guests || 0
-
-              );
-
-
-
-
-
-            return (
-
-              !isNaN(capacity) &&
-
-              capacity >= minGuests
-
-            );
-
-
-
-          }
-
-        );
-
-
-
+        return !isNaN(capacity) && capacity >= minGuests;
+      });
     }
-
-
-
-
 
     const availableUnits = [];
 
+    units.forEach((unit) => {
+      const availability = checkAvailability(
+        unit.unit_id,
 
+        range.start_date,
 
+        range.end_date,
+      );
 
+      if (availability.available) {
+        availableUnits.push({
+          unit: unit,
 
-    units.forEach(
-
-      unit => {
-
-
-
-        const availability =
-
-          checkAvailability(
-
-            unit.unit_id,
-
-            range.start_date,
-
-            range.end_date
-
-          );
-
-
-
-
-
-        if (
-
-          availability.available
-
-        ) {
-
-
-
-          availableUnits.push({
-
-            unit:
-
-              unit,
-
-
-
-            availability:
-
-              availability
-
-          });
-
-
-
-        }
-
-
-
+          availability: availability,
+        });
       }
-
-    );
-
-
-
-
+    });
 
     return availableUnits;
-
-
-
   }
-
-
-
-
 
   /**
    * ==========================================================
@@ -2719,158 +1062,115 @@ const AvailabilityService = (() => {
   function groupRowsByUnit(rows, unitSet) {
     const map = {};
 
-    unitSet.forEach(unitId => {
+    unitSet.forEach((unitId) => {
       map[unitId] = [];
     });
 
-    (Array.isArray(rows) ? rows : [])
-      .forEach(row => {
-        const unitId =
-          isBlank(row && row.unit_id)
-            ? ''
-            : String(row.unit_id).trim();
+    (Array.isArray(rows) ? rows : []).forEach((row) => {
+      const unitId = isBlank(row && row.unit_id)
+        ? ""
+        : String(row.unit_id).trim();
 
-        if (unitSet.has(unitId)) {
-          map[unitId].push(row);
-        }
-      });
+      if (unitSet.has(unitId)) {
+        map[unitId].push(row);
+      }
+    });
 
     return map;
   }
 
-
-  function buildOperationalStatusMap(
-    rows,
-    unitSet
-  ) {
+  function buildOperationalStatusMap(rows, unitSet) {
     const map = {};
 
-    (Array.isArray(rows) ? rows : [])
-      .forEach(row => {
-        const unitId =
-          isBlank(row && row.unit_id)
-            ? ''
-            : String(row.unit_id).trim();
+    (Array.isArray(rows) ? rows : []).forEach((row) => {
+      const unitId = isBlank(row && row.unit_id)
+        ? ""
+        : String(row.unit_id).trim();
 
-        if (
-          unitSet.has(unitId) &&
-          !map[unitId]
-        ) {
-          map[unitId] = row;
-        }
-      });
+      if (unitSet.has(unitId) && !map[unitId]) {
+        map[unitId] = row;
+      }
+    });
 
     return map;
   }
 
+  function getBatchReservationConflicts(reservations, requestedRange) {
+    return (reservations || []).filter((reservation) => {
+      if (!isReservationBlocking(reservation)) {
+        return false;
+      }
 
-  function getBatchReservationConflicts(
-    reservations,
-    requestedRange
-  ) {
-    return (reservations || [])
-      .filter(reservation => {
-        if (!isReservationBlocking(reservation)) {
-          return false;
-        }
+      const reservationStart = getReservationStartDate(reservation);
 
-        const reservationStart =
-          getReservationStartDate(reservation);
+      const reservationEnd = getReservationEndDate(reservation);
 
-        const reservationEnd =
-          getReservationEndDate(reservation);
+      if (isBlank(reservationStart) || isBlank(reservationEnd)) {
+        return false;
+      }
 
-        if (
-          isBlank(reservationStart) ||
-          isBlank(reservationEnd)
-        ) {
-          return false;
-        }
-
-        try {
-          return rangesOverlap(
-            requestedRange.start_date,
-            requestedRange.end_date,
-            reservationStart,
-            reservationEnd
-          );
-        } catch (err) {
-          return false;
-        }
-      });
+      try {
+        return rangesOverlap(
+          requestedRange.start_date,
+          requestedRange.end_date,
+          reservationStart,
+          reservationEnd,
+        );
+      } catch (err) {
+        return false;
+      }
+    });
   }
 
+  function getBatchExternalConflicts(events, requestedRange) {
+    return (events || []).filter((event) => {
+      if (normalize(event.status) !== "ACTIVE") {
+        return false;
+      }
 
-  function getBatchExternalConflicts(
-    events,
-    requestedRange
-  ) {
-    return (events || [])
-      .filter(event => {
-        if (
-          normalize(event.status) !==
-            'ACTIVE'
-        ) {
-          return false;
-        }
+      if (isBlank(event.start_date) || isBlank(event.end_date)) {
+        return false;
+      }
 
-        if (
-          isBlank(event.start_date) ||
-          isBlank(event.end_date)
-        ) {
-          return false;
-        }
-
-        try {
-          return rangesOverlap(
-            event.start_date,
-            event.end_date,
-            requestedRange.start_date,
-            requestedRange.end_date
-          );
-        } catch (err) {
-          return false;
-        }
-      });
+      try {
+        return rangesOverlap(
+          event.start_date,
+          event.end_date,
+          requestedRange.start_date,
+          requestedRange.end_date,
+        );
+      } catch (err) {
+        return false;
+      }
+    });
   }
 
+  function getBatchOTABlockConflicts(blocks, requestedRange) {
+    return (blocks || []).filter((block) => {
+      if (!isOTABlockBlocking(block)) {
+        return false;
+      }
 
-  function getBatchOTABlockConflicts(
-    blocks,
-    requestedRange
-  ) {
-    return (blocks || [])
-      .filter(block => {
-        if (!isOTABlockBlocking(block)) {
-          return false;
-        }
+      const blockStart = getOTABlockStartDate(block);
 
-        const blockStart =
-          getOTABlockStartDate(block);
+      const blockEnd = getOTABlockEndDate(block);
 
-        const blockEnd =
-          getOTABlockEndDate(block);
+      if (isBlank(blockStart) || isBlank(blockEnd)) {
+        return false;
+      }
 
-        if (
-          isBlank(blockStart) ||
-          isBlank(blockEnd)
-        ) {
-          return false;
-        }
-
-        try {
-          return rangesOverlap(
-            requestedRange.start_date,
-            requestedRange.end_date,
-            blockStart,
-            blockEnd
-          );
-        } catch (err) {
-          return false;
-        }
-      });
+      try {
+        return rangesOverlap(
+          requestedRange.start_date,
+          requestedRange.end_date,
+          blockStart,
+          blockEnd,
+        );
+      } catch (err) {
+        return false;
+      }
+    });
   }
-
 
   function buildAvailabilityFromBatchContext(
     unit,
@@ -2878,127 +1178,93 @@ const AvailabilityService = (() => {
     operationalStatusRecord,
     reservations,
     externalEvents,
-    otaBlocks
+    otaBlocks,
   ) {
-    const masterStatus =
-      checkUnitMasterStatus(unit);
+    const masterStatus = checkUnitMasterStatus(unit);
 
-    const operationalStatusValue =
-      operationalStatusRecord
-        ? normalize(
-            operationalStatusRecord
-              .operational_status
-          )
-        : null;
+    const operationalStatusValue = operationalStatusRecord
+      ? normalize(operationalStatusRecord.operational_status)
+      : null;
 
     const operationalStatus = {
-      ready:
-        operationalStatusValue ===
-          OPERATIONAL_READY,
-      status:
-        operationalStatusValue,
-      record:
-        operationalStatusRecord || null
+      ready: operationalStatusValue === OPERATIONAL_READY,
+      status: operationalStatusValue,
+      record: operationalStatusRecord || null,
     };
 
-    const reservationConflicts =
-      getBatchReservationConflicts(
-        reservations,
-        requestedRange
-      );
+    const reservationConflicts = getBatchReservationConflicts(
+      reservations,
+      requestedRange,
+    );
 
-    const externalConflicts =
-      getBatchExternalConflicts(
-        externalEvents,
-        requestedRange
-      );
+    const externalConflicts = getBatchExternalConflicts(
+      externalEvents,
+      requestedRange,
+    );
 
-    const otaBlockConflicts =
-      getBatchOTABlockConflicts(
-        otaBlocks,
-        requestedRange
-      );
+    const otaBlockConflicts = getBatchOTABlockConflicts(
+      otaBlocks,
+      requestedRange,
+    );
 
     const reasons = [];
 
     if (!masterStatus.active) {
       reasons.push({
-        code: 'UNIT_NOT_ACTIVE',
-        message:
-          'Unit master status is not ACTIVE.'
+        code: "UNIT_NOT_ACTIVE",
+        message: "Unit master status is not ACTIVE.",
       });
     }
 
     if (!operationalStatus.ready) {
       reasons.push({
-        code: 'UNIT_NOT_READY',
-        message:
-          'Unit operational status is not READY.'
+        code: "UNIT_NOT_READY",
+        message: "Unit operational status is not READY.",
       });
     }
 
     if (reservationConflicts.length > 0) {
       reasons.push({
-        code: 'RESERVATION_CONFLICT',
-        message:
-          'Unit has a conflicting internal reservation.',
-        count:
-          reservationConflicts.length
+        code: "RESERVATION_CONFLICT",
+        message: "Unit has a conflicting internal reservation.",
+        count: reservationConflicts.length,
       });
     }
 
     if (externalConflicts.length > 0) {
       reasons.push({
-        code: 'EXTERNAL_CALENDAR_CONFLICT',
-        message:
-          'Unit has a conflicting external calendar event.',
-        count:
-          externalConflicts.length
+        code: "EXTERNAL_CALENDAR_CONFLICT",
+        message: "Unit has a conflicting external calendar event.",
+        count: externalConflicts.length,
       });
     }
 
     if (otaBlockConflicts.length > 0) {
       reasons.push({
-        code: 'OTA_BLOCK_CONFLICT',
-        message:
-          'Unit has a conflicting OTA/Admin block.',
-        count:
-          otaBlockConflicts.length
+        code: "OTA_BLOCK_CONFLICT",
+        message: "Unit has a conflicting OTA/Admin block.",
+        count: otaBlockConflicts.length,
       });
     }
 
     return {
-      available:
-        reasons.length === 0,
-      unit_id:
-        unit.unit_id,
-      property_id:
-        unit.property_id || '',
-      unit_code:
-        unit.unit_code || '',
-      unit_name:
-        unit.unit_name || '',
-      start_date:
-        requestedRange.start_date,
-      end_date:
-        requestedRange.end_date,
-      unit_status:
-        masterStatus.status,
-      operational_status:
-        operationalStatus.status,
-      reasons:
-        reasons,
+      available: reasons.length === 0,
+      unit_id: unit.unit_id,
+      property_id: unit.property_id || "",
+      unit_code: unit.unit_code || "",
+      unit_name: unit.unit_name || "",
+      start_date: requestedRange.start_date,
+      end_date: requestedRange.end_date,
+      unit_status: masterStatus.status,
+      operational_status: operationalStatus.status,
+      reasons: reasons,
       conflicts: {
-        reservations:
-          reservationConflicts,
-        external_calendar_events:
-          externalConflicts,
-        ota_blocks:
-          otaBlockConflicts
-      }
+        reservations: reservationConflicts,
+        external_calendar_events: externalConflicts,
+        ota_blocks: otaBlockConflicts,
+      },
     };
   }
-
 
   /**
 
@@ -3010,115 +1276,68 @@ const AvailabilityService = (() => {
 
    */
 
-
-
-  function checkUnitsAvailability(
-    unitIds,
-    startDate,
-    endDate
-  ) {
+  function checkUnitsAvailability(unitIds, startDate, endDate) {
     if (!Array.isArray(unitIds)) {
-      throw new Error(
-        'unitIds must be an array.'
-      );
+      throw new Error("unitIds must be an array.");
     }
 
-    const requestedRange =
-      validateDateRange(
-        startDate,
-        endDate
-      );
+    const requestedRange = validateDateRange(startDate, endDate);
 
-    const normalizedUnitIds =
-      unitIds.map(unitId =>
-        isBlank(unitId)
-          ? ''
-          : String(unitId).trim()
-      );
+    const normalizedUnitIds = unitIds.map((unitId) =>
+      isBlank(unitId) ? "" : String(unitId).trim(),
+    );
 
-    const unitSet =
-      new Set(normalizedUnitIds);
+    const unitSet = new Set(normalizedUnitIds);
 
-    const allUnits =
-      BaseRepository.findAll(
-        CONFIG.SHEETS.UNITS
-      );
+    const allUnits = BaseRepository.findAll(CONFIG.SHEETS.UNITS);
 
     const unitMap = {};
 
-    allUnits.forEach(unit => {
-      const unitId =
-        isBlank(unit.unit_id)
-          ? ''
-          : String(unit.unit_id).trim();
+    allUnits.forEach((unit) => {
+      const unitId = isBlank(unit.unit_id) ? "" : String(unit.unit_id).trim();
 
       if (unitSet.has(unitId)) {
         unitMap[unitId] = unit;
       }
     });
 
-    normalizedUnitIds.forEach(unitId => {
+    normalizedUnitIds.forEach((unitId) => {
       if (!unitId || !unitMap[unitId]) {
-        throw new Error(
-          'Unit not found: ' + unitId
-        );
+        throw new Error("Unit not found: " + unitId);
       }
     });
 
-    const operationalStatusMap =
-      buildOperationalStatusMap(
-        BaseRepository.findAll(
-          CONFIG.SHEETS
-            .UNIT_OPERATIONAL_STATUS
-        ),
-        unitSet
-      );
-
-    const reservationsByUnit =
-      groupRowsByUnit(
-        BaseRepository.findAll(
-          CONFIG.SHEETS.RESERVATIONS
-        ),
-        unitSet
-      );
-
-    const externalEventsByUnit =
-      groupRowsByUnit(
-        BaseRepository.findAll(
-          CONFIG.SHEETS
-            .EXTERNAL_CALENDAR_EVENTS
-        ),
-        unitSet
-      );
-
-    const otaBlocksByUnit =
-      groupRowsByUnit(
-        BaseRepository.findAll(
-          CONFIG.SHEETS.OTA_BLOCKS
-        ),
-        unitSet
-      );
-
-    return normalizedUnitIds.map(
-      unitId =>
-        buildAvailabilityFromBatchContext(
-          unitMap[unitId],
-          requestedRange,
-          operationalStatusMap[
-            unitId
-          ] || null,
-          reservationsByUnit[
-            unitId
-          ] || [],
-          externalEventsByUnit[
-            unitId
-          ] || [],
-          otaBlocksByUnit[
-            unitId
-          ] || []
-        )
+    const operationalStatusMap = buildOperationalStatusMap(
+      BaseRepository.findAll(CONFIG.SHEETS.UNIT_OPERATIONAL_STATUS),
+      unitSet,
     );
-  }  /**
+
+    const reservationsByUnit = groupRowsByUnit(
+      BaseRepository.findAll(CONFIG.SHEETS.RESERVATIONS),
+      unitSet,
+    );
+
+    const externalEventsByUnit = groupRowsByUnit(
+      BaseRepository.findAll(CONFIG.SHEETS.EXTERNAL_CALENDAR_EVENTS),
+      unitSet,
+    );
+
+    const otaBlocksByUnit = groupRowsByUnit(
+      BaseRepository.findAll(CONFIG.SHEETS.OTA_BLOCKS),
+      unitSet,
+    );
+
+    return normalizedUnitIds.map((unitId) =>
+      buildAvailabilityFromBatchContext(
+        unitMap[unitId],
+        requestedRange,
+        operationalStatusMap[unitId] || null,
+        reservationsByUnit[unitId] || [],
+        externalEventsByUnit[unitId] || [],
+        otaBlocksByUnit[unitId] || [],
+      ),
+    );
+  } /**
 
    * ==========================================================
 
@@ -3136,189 +1355,74 @@ const AvailabilityService = (() => {
 
    */
 
-
-
   function getUnitCalendarConflicts(
-
     unitId,
 
     startDate,
 
-    endDate
-
+    endDate,
   ) {
+    requireUnit(unitId);
 
+    const range = validateDateRange(
+      startDate,
 
-
-    requireUnit(
-
-      unitId
-
+      endDate,
     );
 
+    const reservations = getConflictingReservations(
+      unitId,
 
+      range.start_date,
 
+      range.end_date,
+    );
 
+    const externalEvents = getConflictingExternalEvents(
+      unitId,
 
-    const range =
+      range.start_date,
 
-      validateDateRange(
+      range.end_date,
+    );
 
-        startDate,
+    const otaBlocks = getConflictingOTABlocks(
+      unitId,
 
-        endDate
+      range.start_date,
 
-      );
-
-
-
-
-
-    const reservations =
-
-      getConflictingReservations(
-
-        unitId,
-
-        range.start_date,
-
-        range.end_date
-
-      );
-
-
-
-
-
-    const externalEvents =
-
-      getConflictingExternalEvents(
-
-        unitId,
-
-        range.start_date,
-
-        range.end_date
-
-      );
-
-
-
-
-
-    const otaBlocks =
-
-      getConflictingOTABlocks(
-
-        unitId,
-
-        range.start_date,
-
-        range.end_date
-
-      );
-
-
-
-
+      range.end_date,
+    );
 
     return {
+      unit_id: unitId,
 
+      start_date: range.start_date,
 
-
-      unit_id:
-
-        unitId,
-
-
-
-      start_date:
-
-        range.start_date,
-
-
-
-      end_date:
-
-        range.end_date,
-
-
+      end_date: range.end_date,
 
       has_conflict:
-
-        (
-
-          reservations.length > 0 ||
-
-          externalEvents.length > 0 ||
-
-          otaBlocks.length > 0
-
-        ),
-
-
+        reservations.length > 0 ||
+        externalEvents.length > 0 ||
+        otaBlocks.length > 0,
 
       counts: {
+        reservations: reservations.length,
 
+        external_calendar_events: externalEvents.length,
 
-
-        reservations:
-
-          reservations.length,
-
-
-
-        external_calendar_events:
-
-          externalEvents.length,
-
-
-
-        ota_blocks:
-
-          otaBlocks.length
-
-
-
+        ota_blocks: otaBlocks.length,
       },
 
-
-
       conflicts: {
+        reservations: reservations,
 
+        external_calendar_events: externalEvents,
 
-
-        reservations:
-
-          reservations,
-
-
-
-        external_calendar_events:
-
-          externalEvents,
-
-
-
-        ota_blocks:
-
-          otaBlocks
-
-
-
-      }
-
-
-
+        ota_blocks: otaBlocks,
+      },
     };
-
-
-
   }
-
-
-
-
 
   /**
 
@@ -3338,260 +1442,62 @@ const AvailabilityService = (() => {
 
    */
 
-
-
   function findReservationConflicts() {
+    const reservations = BaseRepository.findAll(CONFIG.SHEETS.RESERVATIONS);
 
-
-
-    const reservations =
-
-      BaseRepository.findAll(
-
-        CONFIG.SHEETS.RESERVATIONS
-
-      );
-
-
-
-
-
-    const blocking =
-
-      reservations.filter(
-
-        reservation =>
-
-          isReservationBlocking(
-
-            reservation
-
-          )
-
-      );
-
-
-
-
+    const blocking = reservations.filter((reservation) =>
+      isReservationBlocking(reservation),
+    );
 
     const conflicts = [];
 
+    for (let i = 0; i < blocking.length; i++) {
+      const first = blocking[i];
 
+      const firstStart = getReservationStartDate(first);
 
+      const firstEnd = getReservationEndDate(first);
 
-
-    for (
-
-      let i = 0;
-
-      i < blocking.length;
-
-      i++
-
-    ) {
-
-
-
-      const first =
-
-        blocking[i];
-
-
-
-
-
-      const firstStart =
-
-        getReservationStartDate(
-
-          first
-
-        );
-
-
-
-
-
-      const firstEnd =
-
-        getReservationEndDate(
-
-          first
-
-        );
-
-
-
-
-
-      if (
-
-        isBlank(firstStart) ||
-
-        isBlank(firstEnd)
-
-      ) {
-
-
-
+      if (isBlank(firstStart) || isBlank(firstEnd)) {
         continue;
-
-
-
       }
 
+      for (let j = i + 1; j < blocking.length; j++) {
+        const second = blocking[j];
 
-
-
-
-      for (
-
-        let j = i + 1;
-
-        j < blocking.length;
-
-        j++
-
-      ) {
-
-
-
-        const second =
-
-          blocking[j];
-
-
-
-
-
-        if (
-
-          String(
-
-            first.unit_id
-
-          ).trim() !==
-
-          String(
-
-            second.unit_id
-
-          ).trim()
-
-        ) {
-
-
-
+        if (String(first.unit_id).trim() !== String(second.unit_id).trim()) {
           continue;
-
-
-
         }
 
+        const secondStart = getReservationStartDate(second);
 
+        const secondEnd = getReservationEndDate(second);
 
-
-
-        const secondStart =
-
-          getReservationStartDate(
-
-            second
-
-          );
-
-
-
-
-
-        const secondEnd =
-
-          getReservationEndDate(
-
-            second
-
-          );
-
-
-
-
-
-        if (
-
-          isBlank(secondStart) ||
-
-          isBlank(secondEnd)
-
-        ) {
-
-
-
+        if (isBlank(secondStart) || isBlank(secondEnd)) {
           continue;
-
-
-
         }
-
-
-
-
 
         try {
-
-
-
           if (
-
             rangesOverlap(
-
               firstStart,
 
               firstEnd,
 
               secondStart,
 
-              secondEnd
-
+              secondEnd,
             )
-
           ) {
-
-
-
             conflicts.push({
+              unit_id: first.unit_id,
 
+              reservation_1: first,
 
-
-              unit_id:
-
-                first.unit_id,
-
-
-
-              reservation_1:
-
-                first,
-
-
-
-              reservation_2:
-
-                second
-
-
-
+              reservation_2: second,
             });
-
-
-
           }
-
-
-
         } catch (err) {
-
-
-
           /*
 
            * Invalid records are reported separately
@@ -3599,32 +1505,12 @@ const AvailabilityService = (() => {
            * by IntegrityCheckService.
 
            */
-
-
-
         }
-
-
-
       }
-
-
-
     }
 
-
-
-
-
     return conflicts;
-
-
-
   }
-
-
-
-
 
   /**
 
@@ -3660,213 +1546,55 @@ const AvailabilityService = (() => {
 
    */
 
-
-
   function findReservationExternalConflicts() {
+    const reservations = BaseRepository.findAll(CONFIG.SHEETS.RESERVATIONS);
 
-
-
-    const reservations =
-
-      BaseRepository.findAll(
-
-        CONFIG.SHEETS.RESERVATIONS
-
-      );
-
-
-
-
-
-    const blockingReservations =
-
-      reservations.filter(
-
-        reservation =>
-
-          isReservationBlocking(
-
-            reservation
-
-          )
-
-      );
-
-
-
-
+    const blockingReservations = reservations.filter((reservation) =>
+      isReservationBlocking(reservation),
+    );
 
     const conflicts = [];
 
-
-
-
-
-    blockingReservations.forEach(
-
-      reservation => {
-
-
-
-        if (
-
-          isBlank(
-
-            reservation.unit_id
-
-          )
-
-        ) {
-
-
-
-          return;
-
-
-
-        }
-
-
-
-
-
-        const startDate =
-
-          getReservationStartDate(
-
-            reservation
-
-          );
-
-
-
-
-
-        const endDate =
-
-          getReservationEndDate(
-
-            reservation
-
-          );
-
-
-
-
-
-        if (
-
-          isBlank(startDate) ||
-
-          isBlank(endDate)
-
-        ) {
-
-
-
-          return;
-
-
-
-        }
-
-
-
-
-
-        let externalEvents;
-
-
-
-
-
-        try {
-
-
-
-          externalEvents =
-
-            getConflictingExternalEvents(
-
-              reservation.unit_id,
-
-              startDate,
-
-              endDate
-
-            );
-
-
-
-        } catch (err) {
-
-
-
-          return;
-
-
-
-        }
-
-
-
-
-
-        externalEvents.forEach(
-
-          externalEvent => {
-
-
-
-            conflicts.push({
-
-
-
-              unit_id:
-
-                reservation.unit_id,
-
-
-
-              reservation:
-
-                reservation,
-
-
-
-              external_event:
-
-                externalEvent
-
-
-
-            });
-
-
-
-          }
-
-        );
-
-
-
+    blockingReservations.forEach((reservation) => {
+      if (isBlank(reservation.unit_id)) {
+        return;
       }
 
-    );
+      const startDate = getReservationStartDate(reservation);
 
+      const endDate = getReservationEndDate(reservation);
 
+      if (isBlank(startDate) || isBlank(endDate)) {
+        return;
+      }
 
+      let externalEvents;
 
+      try {
+        externalEvents = getConflictingExternalEvents(
+          reservation.unit_id,
+
+          startDate,
+
+          endDate,
+        );
+      } catch (err) {
+        return;
+      }
+
+      externalEvents.forEach((externalEvent) => {
+        conflicts.push({
+          unit_id: reservation.unit_id,
+
+          reservation: reservation,
+
+          external_event: externalEvent,
+        });
+      });
+    });
 
     return conflicts;
-
-
-
   }
-
-
-
-
 
   /**
 
@@ -3880,153 +1608,49 @@ const AvailabilityService = (() => {
 
    */
 
-
-
   function getOTABlockStatusSummary() {
-
-
-
-    const blocks =
-
-      BaseRepository.findAll(
-
-        CONFIG.SHEETS.OTA_BLOCKS
-
-      );
-
-
-
-
+    const blocks = BaseRepository.findAll(CONFIG.SHEETS.OTA_BLOCKS);
 
     const summary = {
+      total: blocks.length,
 
+      pending: 0,
 
+      blocked: 0,
 
-      total:
+      cancelled: 0,
 
-        blocks.length,
-
-
-
-      pending:
-
-        0,
-
-
-
-      blocked:
-
-        0,
-
-
-
-      cancelled:
-
-        0,
-
-
-
-      invalid:
-
-        0
-
-
-
+      invalid: 0,
     };
 
+    blocks.forEach((block) => {
+      const status = normalize(block.status);
 
+      switch (status) {
+        case "PENDING":
+          summary.pending++;
 
+          break;
 
+        case "BLOCKED":
+          summary.blocked++;
 
-    blocks.forEach(
+          break;
 
-      block => {
+        case "CANCELLED":
+          summary.cancelled++;
 
+          break;
 
+        default:
+          summary.invalid++;
 
-        const status =
-
-          normalize(
-
-            block.status
-
-          );
-
-
-
-
-
-        switch (status) {
-
-
-
-          case 'PENDING':
-
-
-
-            summary.pending++;
-
-            break;
-
-
-
-
-
-          case 'BLOCKED':
-
-
-
-            summary.blocked++;
-
-            break;
-
-
-
-
-
-          case 'CANCELLED':
-
-
-
-            summary.cancelled++;
-
-            break;
-
-
-
-
-
-          default:
-
-
-
-            summary.invalid++;
-
-            break;
-
-
-
-        }
-
-
-
+          break;
       }
-
-    );
-
-
-
-
+    });
 
     return summary;
-
-
-
   }
-
-
-
-
 
   /**
 
@@ -4038,37 +1662,20 @@ const AvailabilityService = (() => {
 
    */
 
-
-
   return {
-
-
-
     /*
 
      * Date utilities
 
      */
 
-
-
     normalizeDate,
-
-
 
     dateToNumber,
 
-
-
     validateDateRange,
 
-
-
     rangesOverlap,
-
-
-
-
 
     /*
 
@@ -4076,17 +1683,9 @@ const AvailabilityService = (() => {
 
      */
 
-
-
     isReservationBlocking,
 
-
-
     isOTABlockBlocking,
-
-
-
-
 
     /*
 
@@ -4094,21 +1693,11 @@ const AvailabilityService = (() => {
 
      */
 
-
-
     getConflictingReservations,
-
-
 
     getConflictingExternalEvents,
 
-
-
     getConflictingOTABlocks,
-
-
-
-
 
     /*
 
@@ -4116,29 +1705,15 @@ const AvailabilityService = (() => {
 
      */
 
-
-
     checkAvailability,
-
-
 
     isAvailable,
 
-
-
     getAvailableUnits,
-
-
 
     checkUnitsAvailability,
 
-
-
     getUnitCalendarConflicts,
-
-
-
-
 
     /*
 
@@ -4146,22 +1721,10 @@ const AvailabilityService = (() => {
 
      */
 
-
-
     findReservationConflicts,
-
-
 
     findReservationExternalConflicts,
 
-
-
-    getOTABlockStatusSummary
-
-
-
+    getOTABlockStatusSummary,
   };
-
-
-
 })();

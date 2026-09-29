@@ -88,12 +88,7 @@
 
  */
 
-
-
 const IntegrityCheckService = (() => {
-
-
-
   /**
 
    * ----------------------------------------------------------
@@ -104,68 +99,30 @@ const IntegrityCheckService = (() => {
 
    */
 
-
-
   function isBlank(value) {
-
-    return (
-
-      value === undefined ||
-
-      value === null ||
-
-      String(value).trim() === ''
-
-    );
-
+    return value === undefined || value === null || String(value).trim() === "";
   }
 
-
-
-
-
   function normalize(value) {
-
     if (isBlank(value)) {
-
-      return '';
-
+      return "";
     }
 
-
-
     return String(value)
-
       .trim()
 
       .toUpperCase();
-
   }
-
-
-
-
 
   function normalizeText(value) {
-
     if (isBlank(value)) {
-
-      return '';
-
+      return "";
     }
 
-
-
     return String(value).trim();
-
   }
 
-
-
-
-
   function addFinding(
-
     findings,
 
     severity,
@@ -174,215 +131,104 @@ const IntegrityCheckService = (() => {
 
     message,
 
-    details
-
+    details,
   ) {
-
-
-
     findings.push({
-
       severity: normalize(severity),
 
       check: check,
 
       message: message,
 
-      details: details || null
-
+      details: details || null,
     });
-
-
-
   }
-
-
-
-
 
   function addError(
-
     findings,
 
     check,
 
     message,
 
-    details
-
+    details,
   ) {
-
-
-
     addFinding(
-
       findings,
 
-      'ERROR',
+      "ERROR",
 
       check,
 
       message,
 
-      details
-
+      details,
     );
-
-
-
   }
-
-
-
-
 
   function addWarning(
-
     findings,
 
     check,
 
     message,
 
-    details
-
+    details,
   ) {
-
-
-
     addFinding(
-
       findings,
 
-      'WARNING',
+      "WARNING",
 
       check,
 
       message,
 
-      details
-
+      details,
     );
-
-
-
   }
-
-
-
-
 
   function addInfo(
-
     findings,
 
     check,
 
     message,
 
-    details
-
+    details,
   ) {
-
-
-
     addFinding(
-
       findings,
 
-      'INFO',
+      "INFO",
 
       check,
 
       message,
 
-      details
-
+      details,
     );
-
-
-
   }
-
-
-
-
 
   function getSheetHeaders(sheetName) {
-
-
-
-    return BaseRepository.getHeaders(
-
-      sheetName
-
-    );
-
-
-
+    return BaseRepository.getHeaders(sheetName);
   }
-
-
-
-
 
   function sheetHasHeader(
-
     sheetName,
 
-    header
-
+    header,
   ) {
-
-
-
-    return getSheetHeaders(
-
-      sheetName
-
-    ).includes(header);
-
-
-
+    return getSheetHeaders(sheetName).includes(header);
   }
-
-
-
-
 
   function safeFindAll(sheetName) {
-
-
-
     try {
-
-
-
-      return BaseRepository.findAll(
-
-        sheetName
-
-      );
-
-
-
+      return BaseRepository.findAll(sheetName);
     } catch (err) {
-
-
-
       return [];
-
-
-
     }
-
-
-
   }
-
-
-
-
 
   /**
 
@@ -394,14 +240,8 @@ const IntegrityCheckService = (() => {
 
    */
 
-
-
   function getRequiredSheets() {
-
-
-
     return [
-
       CONFIG.SHEETS.REFERENCE_DATA,
 
       CONFIG.SHEETS.PROPERTIES,
@@ -446,101 +286,41 @@ const IntegrityCheckService = (() => {
 
       CONFIG.SHEETS.UNIT_OPERATIONAL_STATUS,
 
-      CONFIG.SHEETS.AUDIT_LOG
-
+      CONFIG.SHEETS.AUDIT_LOG,
     ];
-
-
-
   }
-
-
-
-
 
   function checkRequiredSheets(findings) {
+    const spreadsheet = BaseRepository.getSpreadsheet();
 
+    const existing = new Set(
+      spreadsheet
 
+        .getSheets()
 
-    const spreadsheet =
-
-      BaseRepository.getSpreadsheet();
-
-
-
-
-
-    const existing =
-
-      new Set(
-
-        spreadsheet
-
-          .getSheets()
-
-          .map(sheet => sheet.getName())
-
-      );
-
-
-
-
-
-    getRequiredSheets()
-
-      .forEach(sheetName => {
-
-
-
-        if (
-
-          !existing.has(sheetName)
-
-        ) {
-
-
-
-          addError(
-
-            findings,
-
-            'REQUIRED_SHEET',
-
-            'Missing required sheet: ' +
-
-              sheetName
-
-          );
-
-
-
-        }
-
-
-
-      });
-
-
-
-
-
-    addInfo(
-
-      findings,
-
-      'REQUIRED_SHEET',
-
-      'Required sheet check completed.'
-
+        .map((sheet) => sheet.getName()),
     );
 
+    getRequiredSheets().forEach((sheetName) => {
+      if (!existing.has(sheetName)) {
+        addError(
+          findings,
 
+          "REQUIRED_SHEET",
 
+          "Missing required sheet: " + sheetName,
+        );
+      }
+    });
+
+    addInfo(
+      findings,
+
+      "REQUIRED_SHEET",
+
+      "Required sheet check completed.",
+    );
   }
-
-
-
-
 
   /**
 
@@ -552,519 +332,397 @@ const IntegrityCheckService = (() => {
 
    */
 
-
-
   function getRequiredHeaders() {
-
-
-
     return {
-
-
-
       [CONFIG.SHEETS.PROPERTIES]: [
+        "property_id",
 
-        'property_id',
+        "property_code",
 
-        'property_code',
+        "name",
 
-        'name',
+        "property_type",
 
-        'property_type',
+        "location_id",
 
-        'location_id',
-
-        'status'
-
+        "status",
       ],
-
-
 
       [CONFIG.SHEETS.UNITS]: [
+        "unit_id",
 
-        'unit_id',
+        "property_id",
 
-        'property_id',
+        "unit_code",
 
-        'unit_code',
+        "unit_name",
 
-        'unit_name',
+        "unit_type",
 
-        'unit_type',
-
-        'status'
-
+        "status",
       ],
 
+      [CONFIG.SHEETS.CUSTOMERS]: ["customer_id"],
 
-
-      [CONFIG.SHEETS.CUSTOMERS]: [
-
-        'customer_id'
-
-      ],
-
-
-
-      [CONFIG.SHEETS.GUESTS]: [
-
-        'guest_id'
-
-      ],
-
-
+      [CONFIG.SHEETS.GUESTS]: ["guest_id"],
 
       [CONFIG.SHEETS.STAFF]: [
+        "staff_id",
 
-        'staff_id',
+        "name",
 
-        'name',
+        "role",
 
-        'role',
+        "property_id",
 
-        'property_id',
-
-        'status'
-
+        "status",
       ],
 
       [CONFIG.SHEETS.HOUSEKEEPING_TASKS]: [
+        "task_id",
 
+        "unit_id",
 
+        "reservation_id",
 
-        'task_id',
+        "task_type",
 
-        'unit_id',
+        "priority",
 
-        'reservation_id',
+        "scheduled_date",
 
-        'task_type',
+        "scheduled_start",
 
-        'priority',
+        "scheduled_end",
 
-        'scheduled_date',
+        "assigned_to",
 
-        'scheduled_start',
+        "status",
 
-        'scheduled_end',
+        "started_at",
 
-        'assigned_to',
+        "completed_at",
 
-        'status',
+        "inspection_required",
 
-        'started_at',
-
-        'completed_at',
-
-        'inspection_required',
-
-        'notes'
-
-
-
+        "notes",
       ],
 
       [CONFIG.SHEETS.HOUSEKEEPING_SCHEDULES]: [
+        "schedule_id",
 
+        "unit_id",
 
+        "task_type",
 
-      'schedule_id',
+        "frequency",
 
-      'unit_id',
+        "interval_value",
 
-      'task_type',
+        "day_of_week",
 
-      'frequency',
+        "day_of_month",
 
-      'interval_value',
+        "last_completed",
 
-      'day_of_week',
+        "next_due",
 
-      'day_of_month',
+        "assigned_to",
 
-      'last_completed',
-
-      'next_due',
-
-      'assigned_to',
-
-      'active'
-
-
-
+        "active",
       ],
 
       [CONFIG.SHEETS.MAINTENANCE_ASSETS]: [
-        'asset_id',
-        'unit_id',
-        'asset_type',
-        'name',
-        'brand',
-        'model',
-        'serial_number',
-        'purchase_date',
-        'warranty_until',
-        'expected_life_years',
-        'status'
+        "asset_id",
+        "unit_id",
+        "asset_type",
+        "name",
+        "brand",
+        "model",
+        "serial_number",
+        "purchase_date",
+        "warranty_until",
+        "expected_life_years",
+        "status",
       ],
 
       [CONFIG.SHEETS.MAINTENANCE_SCHEDULES]: [
-        'schedule_id',
-        'asset_id',
-        'maintenance_type',
-        'frequency',
-        'interval_value',
-        'last_completed',
-        'next_due',
-        'assigned_to',
-        'estimated_duration',
-        'estimated_cost',
-        'active'
+        "schedule_id",
+        "asset_id",
+        "maintenance_type",
+        "frequency",
+        "interval_value",
+        "last_completed",
+        "next_due",
+        "assigned_to",
+        "estimated_duration",
+        "estimated_cost",
+        "active",
       ],
 
       [CONFIG.SHEETS.MAINTENANCE_WORK_ORDERS]: [
-        'work_order_id',
-        'unit_id',
-        'asset_id',
-        'reservation_id',
-        'source',
-        'issue_type',
-        'description',
-        'priority',
-        'assigned_to',
-        'scheduled_date',
-        'status',
-        'started_at',
-        'completed_at',
-        'cost',
-        'resolution'
+        "work_order_id",
+        "unit_id",
+        "asset_id",
+        "reservation_id",
+        "source",
+        "issue_type",
+        "description",
+        "priority",
+        "assigned_to",
+        "scheduled_date",
+        "status",
+        "started_at",
+        "completed_at",
+        "cost",
+        "resolution",
       ],
 
       [CONFIG.SHEETS.INSPECTIONS]: [
-        'inspection_id',
-        'unit_id',
-        'reservation_id',
-        'inspection_type',
-        'scheduled_at',
-        'inspector_id',
-        'status',
-        'cleanliness_score',
-        'maintenance_score',
-        'overall_result',
-        'notes'
+        "inspection_id",
+        "unit_id",
+        "reservation_id",
+        "inspection_type",
+        "scheduled_at",
+        "inspector_id",
+        "status",
+        "cleanliness_score",
+        "maintenance_score",
+        "overall_result",
+        "notes",
       ],
 
       [CONFIG.SHEETS.INSPECTION_CHECKLIST]: [
-        'checklist_item_id',
-        'inspection_id',
-        'category',
-        'item',
-        'result',
-        'notes'
+        "checklist_item_id",
+        "inspection_id",
+        "category",
+        "item",
+        "result",
+        "notes",
       ],
 
       [CONFIG.SHEETS.INVENTORY_ITEMS]: [
-        'item_id',
-        'item_code',
-        'name',
-        'category',
-        'unit_of_measure',
-        'item_type',
-        'reorder_level',
-        'target_stock_level',
-        'unit_cost',
-        'preferred_vendor_id',
-        'active',
-        'notes',
-        'created_at',
-        'updated_at'
+        "item_id",
+        "item_code",
+        "name",
+        "category",
+        "unit_of_measure",
+        "item_type",
+        "reorder_level",
+        "target_stock_level",
+        "unit_cost",
+        "preferred_vendor_id",
+        "active",
+        "notes",
+        "created_at",
+        "updated_at",
       ],
 
       [CONFIG.SHEETS.INVENTORY_LOCATIONS]: [
-        'location_id',
-        'property_id',
-        'unit_id',
-        'name',
-        'location_type',
-        'active',
-        'notes',
-        'created_at',
-        'updated_at'
+        "location_id",
+        "property_id",
+        "unit_id",
+        "name",
+        "location_type",
+        "active",
+        "notes",
+        "created_at",
+        "updated_at",
       ],
 
       [CONFIG.SHEETS.INVENTORY_STOCK]: [
-        'stock_id',
-        'item_id',
-        'location_id',
-        'quantity_on_hand',
-        'reserved_quantity',
-        'minimum_quantity',
-        'maximum_quantity',
-        'last_counted_at',
-        'updated_at'
+        "stock_id",
+        "item_id",
+        "location_id",
+        "quantity_on_hand",
+        "reserved_quantity",
+        "minimum_quantity",
+        "maximum_quantity",
+        "last_counted_at",
+        "updated_at",
       ],
 
       [CONFIG.SHEETS.INVENTORY_TRANSACTIONS]: [
-        'transaction_id',
-        'item_id',
-        'transaction_type',
-        'quantity',
-        'from_location_id',
-        'to_location_id',
-        'unit_id',
-        'reservation_id',
-        'housekeeping_task_id',
-        'maintenance_work_order_id',
-        'reference_type',
-        'reference_id',
-        'unit_cost',
-        'notes',
-        'performed_by',
-        'transaction_at'
+        "transaction_id",
+        "item_id",
+        "transaction_type",
+        "quantity",
+        "from_location_id",
+        "to_location_id",
+        "unit_id",
+        "reservation_id",
+        "housekeeping_task_id",
+        "maintenance_work_order_id",
+        "reference_type",
+        "reference_id",
+        "unit_cost",
+        "notes",
+        "performed_by",
+        "transaction_at",
       ],
 
       [CONFIG.SHEETS.UNIT_OPERATIONAL_STATUS]: [
+        "unit_id",
 
-        'unit_id',
-
-        'operational_status'
-
+        "operational_status",
       ],
-
-
 
       [CONFIG.SHEETS.RESERVATIONS]: [
+        "reservation_id",
 
-        'reservation_id',
+        "unit_id",
 
-        'unit_id',
+        "customer_id",
 
-        'customer_id',
+        "booking_source",
 
-        'booking_source',
+        "check_in_date",
 
-        'check_in_date',
+        "check_out_date",
 
-        'check_out_date',
-
-        'status'
-
+        "status",
       ],
 
-
-
       [CONFIG.SHEETS.RESERVATION_GUESTS]: [
+        "reservation_guest_id",
 
-        'reservation_guest_id',
+        "reservation_id",
 
-        'reservation_id',
+        "guest_id",
 
-        'guest_id',
-
-        'role'
-
+        "role",
       ],
 
       [CONFIG.SHEETS.EXTERNAL_CALENDAR_EVENTS]: [
+        "external_event_id",
 
-        'external_event_id',
+        "unit_id",
 
-        'unit_id',
+        "source",
 
-        'source',
+        "external_uid",
 
-        'external_uid',
+        "start_date",
 
-        'start_date',
+        "end_date",
 
-        'end_date',
-
-        'status'
-
+        "status",
       ],
-
-
 
       [CONFIG.SHEETS.OTA_BLOCKS]: [
+        "ota_block_id",
 
-        'ota_block_id',
+        "reservation_id",
 
-        'reservation_id',
+        "unit_id",
 
-        'unit_id',
+        "source",
 
-        'source',
+        "start_date",
 
-        'start_date',
+        "end_date",
 
-        'end_date',
-
-        'status'
-
+        "status",
       ],
 
-
-
       [CONFIG.SHEETS.UTILITIES]: [
-        'utility_id','property_id','unit_id','utility_type','provider',
-        'account_number','meter_number','billing_frequency','currency','status'
+        "utility_id",
+        "property_id",
+        "unit_id",
+        "utility_type",
+        "provider",
+        "account_number",
+        "meter_number",
+        "billing_frequency",
+        "currency",
+        "status",
       ],
 
       [CONFIG.SHEETS.UTILITY_BILLS]: [
-        'bill_id','utility_id','billing_period_start','billing_period_end',
-        'bill_date','due_date','amount','tax_amount','total_amount',
-        'payment_status','paid_date','notes'
+        "bill_id",
+        "utility_id",
+        "billing_period_start",
+        "billing_period_end",
+        "bill_date",
+        "due_date",
+        "amount",
+        "tax_amount",
+        "total_amount",
+        "payment_status",
+        "paid_date",
+        "notes",
       ],
 
       [CONFIG.SHEETS.INTERNET_SERVICES]: [
-        'internet_service_id','property_id','unit_id','provider','account_number',
-        'package_name','monthly_fee','installation_fee','billing_cycle',
-        'contract_start','contract_end','status'
+        "internet_service_id",
+        "property_id",
+        "unit_id",
+        "provider",
+        "account_number",
+        "package_name",
+        "monthly_fee",
+        "installation_fee",
+        "billing_cycle",
+        "contract_start",
+        "contract_end",
+        "status",
       ],
 
       [CONFIG.SHEETS.OPERATING_EXPENSES]: [
-        'expense_id','property_id','unit_id','reservation_id','expense_date',
-        'category','description','amount','currency','payment_method',
-        'vendor','receipt_url','notes'
+        "expense_id",
+        "property_id",
+        "unit_id",
+        "reservation_id",
+        "expense_date",
+        "category",
+        "description",
+        "amount",
+        "currency",
+        "payment_method",
+        "vendor",
+        "receipt_url",
+        "notes",
       ],
 
-      [CONFIG.SHEETS.AUDIT_LOG]: [
-
-        'audit_id'
-
-      ]
-
-
-
+      [CONFIG.SHEETS.AUDIT_LOG]: ["audit_id"],
     };
-
-
-
   }
 
-
-
-
-
   function checkRequiredHeaders(findings) {
-
-
-
-    const requirements =
-
-      getRequiredHeaders();
-
-
-
-
+    const requirements = getRequiredHeaders();
 
     Object.keys(requirements)
 
-      .forEach(sheetName => {
-
-
-
+      .forEach((sheetName) => {
         let headers;
 
-
-
         try {
-
-
-
-          headers =
-
-            getSheetHeaders(
-
-              sheetName
-
-            );
-
-
-
+          headers = getSheetHeaders(sheetName);
         } catch (err) {
-
-
-
           return;
-
-
-
         }
 
-
-
-
-
-        requirements[
-
-          sheetName
-
-        ].forEach(header => {
-
-
-
-          if (
-
-            !headers.includes(
-
-              header
-
-            )
-
-          ) {
-
-
-
+        requirements[sheetName].forEach((header) => {
+          if (!headers.includes(header)) {
             addError(
-
               findings,
 
-              'REQUIRED_HEADER',
+              "REQUIRED_HEADER",
 
-              'Missing required header "' +
-
-                header +
-
-                '" in ' +
-
-                sheetName
-
+              'Missing required header "' + header + '" in ' + sheetName,
             );
-
-
-
           }
-
-
-
         });
-
-
-
       });
 
-
-
-
-
     addInfo(
-
       findings,
 
-      'REQUIRED_HEADER',
+      "REQUIRED_HEADER",
 
-      'Required header check completed.'
-
+      "Required header check completed.",
     );
-
-
-
   }
-
-
-
-
 
   /**
 
@@ -1076,161 +734,71 @@ const IntegrityCheckService = (() => {
 
    */
 
-
-
-  function checkReferenceCategories(
-
-    findings
-
-  ) {
-
-
-
+  function checkReferenceCategories(findings) {
     const categories = [
+      "PROPERTY_TYPE",
 
-      'PROPERTY_TYPE',
+      "UNIT_TYPE",
 
-      'UNIT_TYPE',
+      "UNIT_STATUS",
 
-      'UNIT_STATUS',
+      "STAFF_ROLE",
 
-      'STAFF_ROLE',
+      "OPERATIONAL_STATUS",
 
-      'OPERATIONAL_STATUS',
+      "RESERVATION_STATUS",
 
-      'RESERVATION_STATUS',
+      "BOOKING_SOURCE",
 
-      'BOOKING_SOURCE',
+      "INVENTORY_ITEM_TYPE",
 
-      'INVENTORY_ITEM_TYPE',
+      "INVENTORY_CATEGORY",
 
-      'INVENTORY_CATEGORY',
+      "INVENTORY_LOCATION_TYPE",
 
-      'INVENTORY_LOCATION_TYPE',
+      "INVENTORY_TRANSACTION_TYPE",
 
-      'INVENTORY_TRANSACTION_TYPE',
-
-      'INVENTORY_UOM',
-      'EXPENSE_CATEGORY',
-      'CURRENCY',
-      'PAYMENT_METHOD',
-      'UTILITY_TYPE',
-      'FREQUENCY',
-      'PAYMENT_STATUS'
-
+      "INVENTORY_UOM",
+      "EXPENSE_CATEGORY",
+      "CURRENCY",
+      "PAYMENT_METHOD",
+      "UTILITY_TYPE",
+      "FREQUENCY",
+      "PAYMENT_STATUS",
     ];
 
-
-
-
-
-    categories.forEach(category => {
-
-
-
+    categories.forEach((category) => {
       try {
+        const values = ValidationService.getReferenceValues(category);
 
-
-
-        const values =
-
-          ValidationService
-
-            .getReferenceValues(
-
-              category
-
-            );
-
-
-
-
-
-        if (
-
-          !values ||
-
-          values.length === 0
-
-        ) {
-
-
-
+        if (!values || values.length === 0) {
           addError(
-
             findings,
 
-            'REFERENCE_DATA',
+            "REFERENCE_DATA",
 
-            'Reference category has no active values: ' +
-
-              category
-
+            "Reference category has no active values: " + category,
           );
-
-
-
         } else {
-
-
-
           addInfo(
-
             findings,
 
-            'REFERENCE_DATA',
+            "REFERENCE_DATA",
 
-            category +
-
-              ': ' +
-
-              values.length +
-
-              ' active value(s).'
-
+            category + ": " + values.length + " active value(s).",
           );
-
-
-
         }
-
-
-
       } catch (err) {
-
-
-
         addError(
-
           findings,
 
-          'REFERENCE_DATA',
+          "REFERENCE_DATA",
 
-          'Unable to read reference category ' +
-
-            category +
-
-            ': ' +
-
-            err.message
-
+          "Unable to read reference category " + category + ": " + err.message,
         );
-
-
-
       }
-
-
-
     });
-
-
-
   }
-
-
-
-
 
   /**
 
@@ -1242,748 +810,330 @@ const IntegrityCheckService = (() => {
 
    */
 
-
-
   function getIdEntities() {
-
-
-
     return [
-
       {
-
-        entity_type: 'PROPERTY',
+        entity_type: "PROPERTY",
 
         sheet: CONFIG.SHEETS.PROPERTIES,
 
-        id_field: 'property_id'
-
+        id_field: "property_id",
       },
 
       {
-
-        entity_type: 'UNIT',
+        entity_type: "UNIT",
 
         sheet: CONFIG.SHEETS.UNITS,
 
-        id_field: 'unit_id'
-
+        id_field: "unit_id",
       },
 
       {
-
-        entity_type: 'LOCATION',
+        entity_type: "LOCATION",
 
         sheet: CONFIG.SHEETS.LOCATIONS,
 
-        id_field: 'location_id'
-
+        id_field: "location_id",
       },
 
       {
-
-        entity_type: 'CUSTOMER',
+        entity_type: "CUSTOMER",
 
         sheet: CONFIG.SHEETS.CUSTOMERS,
 
-        id_field: 'customer_id'
-
+        id_field: "customer_id",
       },
 
       {
-
-        entity_type: 'GUEST',
+        entity_type: "GUEST",
 
         sheet: CONFIG.SHEETS.GUESTS,
 
-        id_field: 'guest_id'
-
+        id_field: "guest_id",
       },
 
       {
-
-        entity_type: 'STAFF',
+        entity_type: "STAFF",
 
         sheet: CONFIG.SHEETS.STAFF,
 
-        id_field: 'staff_id'
-
+        id_field: "staff_id",
       },
 
       {
+        entity_type: "HOUSEKEEPING_TASK",
 
-        entity_type:
+        sheet: CONFIG.SHEETS.HOUSEKEEPING_TASKS,
 
-          'HOUSEKEEPING_TASK',
-
-
-
-        sheet:
-
-          CONFIG.SHEETS.HOUSEKEEPING_TASKS,
-
-
-
-        id_field:
-
-          'task_id'
-
+        id_field: "task_id",
       },
 
       {
+        entity_type: "HOUSEKEEPING_SCHEDULE",
 
-        entity_type:
+        sheet: CONFIG.SHEETS.HOUSEKEEPING_SCHEDULES,
 
-          'HOUSEKEEPING_SCHEDULE',
-
-
-
-        sheet:
-
-          CONFIG.SHEETS.HOUSEKEEPING_SCHEDULES,
-
-
-
-        id_field:
-
-          'schedule_id'
-
+        id_field: "schedule_id",
       },
       {
-  entity_type:
-    'MAINTENANCE_ASSET',
+        entity_type: "MAINTENANCE_ASSET",
 
-  sheet:
-    CONFIG.SHEETS.MAINTENANCE_ASSETS,
+        sheet: CONFIG.SHEETS.MAINTENANCE_ASSETS,
 
-  id_field:
-    'asset_id'
-},
-
-{
-  entity_type:
-    'MAINTENANCE_SCHEDULE',
-
-  sheet:
-    CONFIG.SHEETS.MAINTENANCE_SCHEDULES,
-
-  id_field:
-    'schedule_id'
-},
-
-{
-  entity_type:
-    'MAINTENANCE_WORK_ORDER',
-
-  sheet:
-    CONFIG.SHEETS.MAINTENANCE_WORK_ORDERS,
-
-  id_field:
-    'work_order_id'
-},
-
-{
-  entity_type:
-    'INSPECTION',
-
-  sheet:
-    CONFIG.SHEETS.INSPECTIONS,
-
-  id_field:
-    'inspection_id'
-},
-
-{
-  entity_type:
-    'INSPECTION_CHECKLIST_ITEM',
-
-  sheet:
-    CONFIG.SHEETS.INSPECTION_CHECKLIST,
-
-  id_field:
-    'checklist_item_id'
-},
-
-{
-  entity_type:
-    'INVENTORY_ITEM',
-
-  sheet:
-    CONFIG.SHEETS.INVENTORY_ITEMS,
-
-  id_field:
-    'item_id'
-},
-
-{
-  entity_type:
-    'INVENTORY_LOCATION',
-
-  sheet:
-    CONFIG.SHEETS.INVENTORY_LOCATIONS,
-
-  id_field:
-    'location_id'
-},
-
-{
-  entity_type:
-    'INVENTORY_STOCK',
-
-  sheet:
-    CONFIG.SHEETS.INVENTORY_STOCK,
-
-  id_field:
-    'stock_id'
-},
-
-{
-  entity_type:
-    'INVENTORY_TRANSACTION',
-
-  sheet:
-    CONFIG.SHEETS.INVENTORY_TRANSACTIONS,
-
-  id_field:
-    'transaction_id'
-},
+        id_field: "asset_id",
+      },
 
       {
-        entity_type: 'OPERATING_EXPENSE',
+        entity_type: "MAINTENANCE_SCHEDULE",
+
+        sheet: CONFIG.SHEETS.MAINTENANCE_SCHEDULES,
+
+        id_field: "schedule_id",
+      },
+
+      {
+        entity_type: "MAINTENANCE_WORK_ORDER",
+
+        sheet: CONFIG.SHEETS.MAINTENANCE_WORK_ORDERS,
+
+        id_field: "work_order_id",
+      },
+
+      {
+        entity_type: "INSPECTION",
+
+        sheet: CONFIG.SHEETS.INSPECTIONS,
+
+        id_field: "inspection_id",
+      },
+
+      {
+        entity_type: "INSPECTION_CHECKLIST_ITEM",
+
+        sheet: CONFIG.SHEETS.INSPECTION_CHECKLIST,
+
+        id_field: "checklist_item_id",
+      },
+
+      {
+        entity_type: "INVENTORY_ITEM",
+
+        sheet: CONFIG.SHEETS.INVENTORY_ITEMS,
+
+        id_field: "item_id",
+      },
+
+      {
+        entity_type: "INVENTORY_LOCATION",
+
+        sheet: CONFIG.SHEETS.INVENTORY_LOCATIONS,
+
+        id_field: "location_id",
+      },
+
+      {
+        entity_type: "INVENTORY_STOCK",
+
+        sheet: CONFIG.SHEETS.INVENTORY_STOCK,
+
+        id_field: "stock_id",
+      },
+
+      {
+        entity_type: "INVENTORY_TRANSACTION",
+
+        sheet: CONFIG.SHEETS.INVENTORY_TRANSACTIONS,
+
+        id_field: "transaction_id",
+      },
+
+      {
+        entity_type: "OPERATING_EXPENSE",
         sheet: CONFIG.SHEETS.OPERATING_EXPENSES,
-        id_field: 'expense_id'
+        id_field: "expense_id",
       },
       {
-        entity_type: 'UTILITY',
+        entity_type: "UTILITY",
         sheet: CONFIG.SHEETS.UTILITIES,
-        id_field: 'utility_id'
+        id_field: "utility_id",
       },
       {
-        entity_type: 'UTILITY_BILL',
+        entity_type: "UTILITY_BILL",
         sheet: CONFIG.SHEETS.UTILITY_BILLS,
-        id_field: 'bill_id'
+        id_field: "bill_id",
       },
       {
-        entity_type: 'INTERNET_SERVICE',
+        entity_type: "INTERNET_SERVICE",
         sheet: CONFIG.SHEETS.INTERNET_SERVICES,
-        id_field: 'internet_service_id'
+        id_field: "internet_service_id",
       },
 
       {
-
-        entity_type: 'RESERVATION',
+        entity_type: "RESERVATION",
 
         sheet: CONFIG.SHEETS.RESERVATIONS,
 
-        id_field: 'reservation_id'
-
+        id_field: "reservation_id",
       },
 
       {
-
-        entity_type:'RESERVATION_GUEST',
+        entity_type: "RESERVATION_GUEST",
 
         sheet: CONFIG.SHEETS.RESERVATION_GUESTS,
 
-        id_field:'reservation_guest_id'
-
+        id_field: "reservation_guest_id",
       },
 
       {
+        entity_type: "EXTERNAL_CALENDAR_EVENT",
 
-        entity_type:
+        sheet: CONFIG.SHEETS.EXTERNAL_CALENDAR_EVENTS,
 
-          'EXTERNAL_CALENDAR_EVENT',
-
-        sheet:
-
-          CONFIG.SHEETS
-
-            .EXTERNAL_CALENDAR_EVENTS,
-
-        id_field:
-
-          'external_event_id'
-
+        id_field: "external_event_id",
       },
 
       {
-
-        entity_type: 'OTA_BLOCK',
+        entity_type: "OTA_BLOCK",
 
         sheet: CONFIG.SHEETS.OTA_BLOCKS,
 
-        id_field: 'ota_block_id'
-
+        id_field: "ota_block_id",
       },
 
       {
-
-        entity_type: 'AUDIT',
+        entity_type: "AUDIT",
 
         sheet: CONFIG.SHEETS.AUDIT_LOG,
 
-        id_field: 'audit_id'
-
-      }
-
+        id_field: "audit_id",
+      },
     ];
-
-
-
   }
-
-
-
-
 
   function checkMissingIds(findings) {
-
-
-
-    getIdEntities()
-
-      .forEach(entity => {
-
-
-
-        const rows =
-
-          safeFindAll(
-
-            entity.sheet
-
-          );
-
-
-
-
-
-        rows.forEach(
-
-          (row, index) => {
-
-
-
-            if (
-
-              isBlank(
-
-                row[
-
-                  entity.id_field
-
-                ]
-
-              )
-
-            ) {
-
-
-
-              addError(
-
-                findings,
-
-                'MISSING_ID',
-
-                entity.sheet +
-
-                  ' row ' +
-
-                  (index + 2) +
-
-                  ' has no ' +
-
-                  entity.id_field
-
-              );
-
-
-
-            }
-
-
-
-          }
-
-        );
-
-
-
-      });
-
-
-
-  }
-
-
-
-
-
-  function checkDuplicateIds(findings) {
-
-
-
-    getIdEntities()
-
-      .forEach(entity => {
-
-
-
-        const seen =
-
-          new Set();
-
-
-
-
-
-        safeFindAll(
-
-          entity.sheet
-
-        )
-
-        .forEach(row => {
-
-
-
-          const id =
-
-            normalizeText(
-
-              row[
-
-                entity.id_field
-
-              ]
-
-            );
-
-
-
-
-
-          if (!id) {
-
-            return;
-
-          }
-
-
-
-
-
-          if (
-
-            seen.has(id)
-
-          ) {
-
-
-
-            addError(
-
-              findings,
-
-              'DUPLICATE_ID',
-
-              'Duplicate ID ' +
-
-                id +
-
-                ' in ' +
-
-                entity.sheet
-
-            );
-
-
-
-          }
-
-
-
-
-
-          seen.add(id);
-
-
-
-        });
-
-
-
-      });
-
-
-
-  }
-
-
-
-
-
-  function checkIdFormats(findings) {
-
-
-
-    getIdEntities()
-
-      .forEach(entity => {
-
-
-
-        let prefix;
-
-
-
-        try {
-
-
-
-          prefix =
-
-            CONFIG.ID_PREFIXES[
-
-              entity.entity_type
-
-            ];
-
-
-
-        } catch (err) {
-
-
-
-          prefix = null;
-
-
-
-        }
-
-
-
-
-
-        if (!prefix) {
-
-          return;
-
-        }
-
-
-
-
-
-        const regex =
-
-          new RegExp(
-
-            '^' +
-
-              prefix +
-
-              '-\\\d{' +
-
-              CONFIG.ID.PADDING +
-
-              '}$'
-
-          );
-
-
-
-
-
-        safeFindAll(
-
-          entity.sheet
-
-        )
-
-        .forEach(row => {
-
-
-
-          const id =
-
-            normalizeText(
-
-              row[
-
-                entity.id_field
-
-              ]
-
-            );
-
-
-
-
-
-          if (
-
-            id &&
-
-            !regex.test(id)
-
-          ) {
-
-
-
-            addError(
-
-              findings,
-
-              'ID_FORMAT',
-
-              'Invalid ID format: ' +
-
-                id +
-
-                ' in ' +
-
-                entity.sheet
-
-            );
-
-
-
-          }
-
-
-
-        });
-
-
-
-      });
-
-
-
-  }
-
-
-
-
-
-  function checkIdSequences(findings) {
-
-
-
-    getIdEntities()
-
-      .forEach(entity => {
-
-
-
-        try {
-
-
-
-          const status =
-
-            IdService
-
-              .getSequenceStatus(
-
-                entity.entity_type,
-
-                entity.sheet,
-
-                entity.id_field
-
-              );
-
-
-
-
-
-          if (
-
-            !status.valid
-
-          ) {
-
-
-
-            addError(
-
-              findings,
-
-              'ID_SEQUENCE',
-
-              entity.entity_type +
-
-                ' sequence is behind sheet data.',
-
-              status
-
-            );
-
-
-
-          } else {
-
-
-
-            addInfo(
-
-              findings,
-
-              'ID_SEQUENCE',
-
-              entity.entity_type +
-
-                ' sequence valid.',
-
-              status
-
-            );
-
-
-
-          }
-
-
-
-        } catch (err) {
-
-
-
+    getIdEntities().forEach((entity) => {
+      const rows = safeFindAll(entity.sheet);
+
+      rows.forEach((row, index) => {
+        if (isBlank(row[entity.id_field])) {
           addError(
-
             findings,
 
-            'ID_SEQUENCE',
+            "MISSING_ID",
 
-            'Unable to validate sequence for ' +
-
-              entity.entity_type +
-
-              ': ' +
-
-              err.message
-
+            entity.sheet + " row " + (index + 2) + " has no " + entity.id_field,
           );
-
-
-
         }
-
-
-
       });
-
-
-
+    });
   }
 
+  function checkDuplicateIds(findings) {
+    getIdEntities().forEach((entity) => {
+      const seen = new Set();
 
+      safeFindAll(entity.sheet).forEach((row) => {
+        const id = normalizeText(row[entity.id_field]);
 
+        if (!id) {
+          return;
+        }
 
+        if (seen.has(id)) {
+          addError(
+            findings,
+
+            "DUPLICATE_ID",
+
+            "Duplicate ID " + id + " in " + entity.sheet,
+          );
+        }
+
+        seen.add(id);
+      });
+    });
+  }
+
+  function checkIdFormats(findings) {
+    getIdEntities().forEach((entity) => {
+      let prefix;
+
+      try {
+        prefix = CONFIG.ID_PREFIXES[entity.entity_type];
+      } catch (err) {
+        prefix = null;
+      }
+
+      if (!prefix) {
+        return;
+      }
+
+      const regex = new RegExp(
+        "^" + prefix + "-\\\d{" + CONFIG.ID.PADDING + "}$",
+      );
+
+      safeFindAll(entity.sheet).forEach((row) => {
+        const id = normalizeText(row[entity.id_field]);
+
+        if (id && !regex.test(id)) {
+          addError(
+            findings,
+
+            "ID_FORMAT",
+
+            "Invalid ID format: " + id + " in " + entity.sheet,
+          );
+        }
+      });
+    });
+  }
+
+  function checkIdSequences(findings) {
+    getIdEntities().forEach((entity) => {
+      try {
+        const status = IdService.getSequenceStatus(
+          entity.entity_type,
+
+          entity.sheet,
+
+          entity.id_field,
+        );
+
+        if (!status.valid) {
+          addError(
+            findings,
+
+            "ID_SEQUENCE",
+
+            entity.entity_type + " sequence is behind sheet data.",
+
+            status,
+          );
+        } else {
+          addInfo(
+            findings,
+
+            "ID_SEQUENCE",
+
+            entity.entity_type + " sequence valid.",
+
+            status,
+          );
+        }
+      } catch (err) {
+        addError(
+          findings,
+
+          "ID_SEQUENCE",
+
+          "Unable to validate sequence for " +
+            entity.entity_type +
+            ": " +
+            err.message,
+        );
+      }
+    });
+  }
 
   /**
 
@@ -1995,167 +1145,51 @@ const IntegrityCheckService = (() => {
 
    */
 
-
-
   function checkProperties(findings) {
-
-
-
-    safeFindAll(
-
-      CONFIG.SHEETS.PROPERTIES
-
-    )
-
-    .forEach(property => {
-
-
-
+    safeFindAll(CONFIG.SHEETS.PROPERTIES).forEach((property) => {
       try {
+        ValidationService.validateReference(
+          "PROPERTY_TYPE",
 
-
-
-        ValidationService
-
-          .validateReference(
-
-            'PROPERTY_TYPE',
-
-            property.property_type
-
-          );
-
-
-
+          property.property_type,
+        );
       } catch (err) {
-
-
-
         addError(
-
           findings,
 
-          'PROPERTY',
+          "PROPERTY",
 
-          property.property_id +
-
-            ': ' +
-
-            err.message
-
+          property.property_id + ": " + err.message,
         );
-
-
-
       }
-
-
-
-
 
       try {
-
-
-
-        ValidationService
-
-          .validateActiveInactiveStatus(
-
-            property.status
-
-          );
-
-
-
+        ValidationService.validateActiveInactiveStatus(property.status);
       } catch (err) {
-
-
-
         addError(
-
           findings,
 
-          'PROPERTY',
+          "PROPERTY",
 
-          property.property_id +
-
-            ': ' +
-
-            err.message
-
+          property.property_id + ": " + err.message,
         );
-
-
-
       }
 
-
-
-
-
-      if (
-
-        !isBlank(
-
-          property.location_id
-
-        )
-
-      ) {
-
-
-
+      if (!isBlank(property.location_id)) {
         try {
-
-
-
-          ValidationService
-
-            .validateLocationExists(
-
-              property.location_id
-
-            );
-
-
-
+          ValidationService.validateLocationExists(property.location_id);
         } catch (err) {
-
-
-
           addError(
-
             findings,
 
-            'PROPERTY',
+            "PROPERTY",
 
-            property.property_id +
-
-              ': ' +
-
-              err.message
-
+            property.property_id + ": " + err.message,
           );
-
-
-
         }
-
-
-
       }
-
-
-
     });
-
-
-
   }
-
-
-
-
 
   /**
 
@@ -2167,153 +1201,53 @@ const IntegrityCheckService = (() => {
 
    */
 
-
-
   function checkUnits(findings) {
-
-
-
-    safeFindAll(
-
-      CONFIG.SHEETS.UNITS
-
-    )
-
-    .forEach(unit => {
-
-
-
+    safeFindAll(CONFIG.SHEETS.UNITS).forEach((unit) => {
       try {
-
-
-
-        ValidationService
-
-          .validatePropertyExists(
-
-            unit.property_id
-
-          );
-
-
-
+        ValidationService.validatePropertyExists(unit.property_id);
       } catch (err) {
-
-
-
         addError(
-
           findings,
 
-          'UNIT',
+          "UNIT",
 
-          unit.unit_id +
-
-            ': ' +
-
-            err.message
-
+          unit.unit_id + ": " + err.message,
         );
-
-
-
       }
-
-
-
-
 
       try {
+        ValidationService.validateReference(
+          "UNIT_TYPE",
 
-
-
-        ValidationService
-
-          .validateReference(
-
-            'UNIT_TYPE',
-
-            unit.unit_type
-
-          );
-
-
-
+          unit.unit_type,
+        );
       } catch (err) {
-
-
-
         addError(
-
           findings,
 
-          'UNIT',
+          "UNIT",
 
-          unit.unit_id +
-
-            ': ' +
-
-            err.message
-
+          unit.unit_id + ": " + err.message,
         );
-
-
-
       }
-
-
-
-
 
       try {
+        ValidationService.validateReference(
+          "UNIT_STATUS",
 
-
-
-        ValidationService
-
-          .validateReference(
-
-            'UNIT_STATUS',
-
-            unit.status
-
-          );
-
-
-
+          unit.status,
+        );
       } catch (err) {
-
-
-
         addError(
-
           findings,
 
-          'UNIT',
+          "UNIT",
 
-          unit.unit_id +
-
-            ': ' +
-
-            err.message
-
+          unit.unit_id + ": " + err.message,
         );
-
-
-
       }
-
-
-
     });
-
-
-
   }
-
-
-
-
 
   /**
 
@@ -2325,153 +1259,47 @@ const IntegrityCheckService = (() => {
 
    */
 
-
-
   function checkCustomers(findings) {
+    const customers = safeFindAll(CONFIG.SHEETS.CUSTOMERS);
 
+    const emails = new Set();
 
+    const phones = new Set();
 
-    const customers =
+    customers.forEach((customer) => {
+      const email = normalizeText(customer.email).toLowerCase();
 
-      safeFindAll(
-
-        CONFIG.SHEETS.CUSTOMERS
-
-      );
-
-
-
-
-
-    const emails =
-
-      new Set();
-
-
-
-    const phones =
-
-      new Set();
-
-
-
-
-
-    customers.forEach(customer => {
-
-
-
-      const email =
-
-        normalizeText(
-
-          customer.email
-
-        ).toLowerCase();
-
-
-
-
-
-      const phone =
-
-        normalizeText(
-
-          customer.phone
-
-        );
-
-
-
-
+      const phone = normalizeText(customer.phone);
 
       if (email) {
-
-
-
-        if (
-
-          emails.has(email)
-
-        ) {
-
-
-
+        if (emails.has(email)) {
           addError(
-
             findings,
 
-            'CUSTOMER',
+            "CUSTOMER",
 
-            'Duplicate customer email: ' +
-
-              email
-
+            "Duplicate customer email: " + email,
           );
-
-
-
         }
-
-
 
         emails.add(email);
-
-
-
       }
-
-
-
-
 
       if (phone) {
-
-
-
-        if (
-
-          phones.has(phone)
-
-        ) {
-
-
-
+        if (phones.has(phone)) {
           addError(
-
             findings,
 
-            'CUSTOMER',
+            "CUSTOMER",
 
-            'Duplicate customer phone: ' +
-
-              phone
-
+            "Duplicate customer phone: " + phone,
           );
-
-
-
         }
 
-
-
         phones.add(phone);
-
-
-
       }
-
-
-
     });
-
-
-
   }
-
-
-
-
 
   /**
 
@@ -2483,111 +1311,37 @@ const IntegrityCheckService = (() => {
 
    */
 
-
-
   function checkStaff(findings) {
-
-
-
-    safeFindAll(
-
-      CONFIG.SHEETS.STAFF
-
-    )
-
-    .forEach(staff => {
-
-
-
+    safeFindAll(CONFIG.SHEETS.STAFF).forEach((staff) => {
       try {
-
-
-
-        ValidationService
-
-          .validatePropertyExists(
-
-            staff.property_id
-
-          );
-
-
-
+        ValidationService.validatePropertyExists(staff.property_id);
       } catch (err) {
-
-
-
         addError(
-
           findings,
 
-          'STAFF',
+          "STAFF",
 
-          staff.staff_id +
-
-            ': ' +
-
-            err.message
-
+          staff.staff_id + ": " + err.message,
         );
-
-
-
       }
-
-
-
-
 
       try {
+        ValidationService.validateReference(
+          "STAFF_ROLE",
 
-
-
-        ValidationService
-
-          .validateReference(
-
-            'STAFF_ROLE',
-
-            staff.role
-
-          );
-
-
-
+          staff.role,
+        );
       } catch (err) {
-
-
-
         addError(
-
           findings,
 
-          'STAFF',
+          "STAFF",
 
-          staff.staff_id +
-
-            ': ' +
-
-            err.message
-
+          staff.staff_id + ": " + err.message,
         );
-
-
-
       }
-
-
-
     });
-
-
-
   }
-
-
-
-
 
   /**
 
@@ -2599,167 +1353,71 @@ const IntegrityCheckService = (() => {
 
    */
 
-
-
-  function checkOperationalStatuses(
-
-    findings
-
-  ) {
-
-
-
+  function checkOperationalStatuses(findings) {
     try {
+      OperationalStatusService.findUnitsWithoutStatus()
 
-
-
-      OperationalStatusService
-
-        .findUnitsWithoutStatus()
-
-        .forEach(unit => {
-
-
-
+        .forEach((unit) => {
           addError(
-
             findings,
 
-            'OPERATIONAL_STATUS',
+            "OPERATIONAL_STATUS",
 
-            'Unit has no operational status: ' +
-
-              unit.unit_id
-
+            "Unit has no operational status: " + unit.unit_id,
           );
-
-
-
         });
 
+      OperationalStatusService.findOrphanStatuses()
 
-
-
-
-      OperationalStatusService
-
-        .findOrphanStatuses()
-
-        .forEach(status => {
-
-
-
+        .forEach((status) => {
           addError(
-
             findings,
 
-            'OPERATIONAL_STATUS',
+            "OPERATIONAL_STATUS",
 
-            'Operational status references missing unit: ' +
-
-              status.unit_id
-
+            "Operational status references missing unit: " + status.unit_id,
           );
-
-
-
         });
 
+      OperationalStatusService.findDuplicateStatuses()
 
-
-
-
-      OperationalStatusService
-
-        .findDuplicateStatuses()
-
-        .forEach(item => {
-
-
-
+        .forEach((item) => {
           addError(
-
             findings,
 
-            'OPERATIONAL_STATUS',
+            "OPERATIONAL_STATUS",
 
-            'Multiple operational status rows for unit: ' +
+            "Multiple operational status rows for unit: " +
+              (item.unit_id || JSON.stringify(item)),
 
-              (
-
-                item.unit_id ||
-
-                JSON.stringify(item)
-
-              ),
-
-            item
-
+            item,
           );
-
-
-
         });
 
+      OperationalStatusService.findInvalidStatuses()
 
-
-
-
-      OperationalStatusService
-
-        .findInvalidStatuses()
-
-        .forEach(status => {
-
-
-
+        .forEach((status) => {
           addError(
-
             findings,
 
-            'OPERATIONAL_STATUS',
+            "OPERATIONAL_STATUS",
 
-            'Invalid operational status for unit ' +
-
+            "Invalid operational status for unit " +
               status.unit_id +
-
-              ': ' +
-
-              status.operational_status
-
+              ": " +
+              status.operational_status,
           );
-
-
-
         });
-
-
-
     } catch (err) {
-
-
-
       addError(
-
         findings,
 
-        'OPERATIONAL_STATUS',
+        "OPERATIONAL_STATUS",
 
-        err.message
-
+        err.message,
       );
-
-
-
     }
-
-
-
   }
-
-
-
-
 
   /**
 
@@ -2771,189 +1429,88 @@ const IntegrityCheckService = (() => {
 
    */
 
-
-
-  function checkExternalCalendarEvents(
-
-    findings
-
-  ) {
-
-
-
+  function checkExternalCalendarEvents(findings) {
     try {
+      ExternalCalendarService.findOrphanEvents()
 
-
-
-      ExternalCalendarService
-
-        .findOrphanEvents()
-
-        .forEach(event => {
-
-
-
+        .forEach((event) => {
           addError(
-
             findings,
 
-            'EXTERNAL_CALENDAR',
+            "EXTERNAL_CALENDAR",
 
-            'External event references missing unit: ' +
-
+            "External event references missing unit: " +
               event.external_event_id,
 
-            event
-
+            event,
           );
-
-
-
         });
 
+      ExternalCalendarService.findDuplicateEvents()
 
-
-
-
-      ExternalCalendarService
-
-        .findDuplicateEvents()
-
-        .forEach(event => {
-
-
-
+        .forEach((event) => {
           addError(
-
             findings,
 
-            'EXTERNAL_CALENDAR',
+            "EXTERNAL_CALENDAR",
 
-            'Duplicate external calendar event detected.',
+            "Duplicate external calendar event detected.",
 
-            event
-
+            event,
           );
-
-
-
         });
 
+      ExternalCalendarService.findInvalidDateRanges()
 
-
-
-
-      ExternalCalendarService
-
-        .findInvalidDateRanges()
-
-        .forEach(event => {
-
-
-
+        .forEach((event) => {
           addError(
-
             findings,
 
-            'EXTERNAL_CALENDAR',
+            "EXTERNAL_CALENDAR",
 
-            'Invalid external event date range: ' +
+            "Invalid external event date range: " + event.external_event_id,
 
-              event.external_event_id,
-
-            event
-
+            event,
           );
-
-
-
         });
 
+      ExternalCalendarService.findInvalidStatuses()
 
-
-
-
-      ExternalCalendarService
-
-        .findInvalidStatuses()
-
-        .forEach(event => {
-
-
-
+        .forEach((event) => {
           addError(
-
             findings,
 
-            'EXTERNAL_CALENDAR',
+            "EXTERNAL_CALENDAR",
 
-            'Invalid external event status: ' +
+            "Invalid external event status: " + event.external_event_id,
 
-              event.external_event_id,
-
-            event
-
+            event,
           );
-
-
-
         });
 
+      ExternalCalendarService.findMissingNaturalKeys()
 
-
-
-
-      ExternalCalendarService
-
-        .findMissingNaturalKeys()
-
-        .forEach(event => {
-
-
-
+        .forEach((event) => {
           addError(
-
             findings,
 
-            'EXTERNAL_CALENDAR',
+            "EXTERNAL_CALENDAR",
 
-            'External event missing natural key fields.',
+            "External event missing natural key fields.",
 
-            event
-
+            event,
           );
-
-
-
         });
-
-
-
     } catch (err) {
-
-
-
       addError(
-
         findings,
 
-        'EXTERNAL_CALENDAR',
+        "EXTERNAL_CALENDAR",
 
-        err.message
-
+        err.message,
       );
-
-
-
     }
-
-
-
   }
-
-
-
-
 
   /**
 
@@ -2965,337 +1522,131 @@ const IntegrityCheckService = (() => {
 
    */
 
-
-
   function checkReservations(findings) {
+    const reservations = safeFindAll(CONFIG.SHEETS.RESERVATIONS);
 
+    reservations.forEach((reservation) => {
+      const id = reservation.reservation_id;
 
-
-    const reservations =
-
-      safeFindAll(
-
-        CONFIG.SHEETS.RESERVATIONS
-
-      );
-
-
-
-
-
-    reservations.forEach(
-
-      reservation => {
-
-
-
-        const id =
-
-          reservation.reservation_id;
-
-
-
-
-
-        /*
+      /*
 
          * Unit FK
 
          */
 
+      try {
+        ValidationService.validateUnitExists(reservation.unit_id);
+      } catch (err) {
+        addError(
+          findings,
 
+          "RESERVATION",
 
-        try {
+          id + ": " + err.message,
+        );
+      }
 
-
-
-          ValidationService
-
-            .validateUnitExists(
-
-              reservation.unit_id
-
-            );
-
-
-
-        } catch (err) {
-
-
-
-          addError(
-
-            findings,
-
-            'RESERVATION',
-
-            id +
-
-              ': ' +
-
-              err.message
-
-          );
-
-
-
-        }
-
-
-
-
-
-        /*
+      /*
 
          * Customer FK
 
          */
 
+      if (!isBlank(reservation.customer_id)) {
+        try {
+          ValidationService.validateCustomerExists(reservation.customer_id);
+        } catch (err) {
+          addError(
+            findings,
 
+            "RESERVATION",
 
-        if (
-
-          !isBlank(
-
-            reservation.customer_id
-
-          )
-
-        ) {
-
-
-
-          try {
-
-
-
-            ValidationService
-
-              .validateCustomerExists(
-
-                reservation.customer_id
-
-              );
-
-
-
-          } catch (err) {
-
-
-
-            addError(
-
-              findings,
-
-              'RESERVATION',
-
-              id +
-
-                ': ' +
-
-                err.message
-
-            );
-
-
-
-          }
-
-
-
+            id + ": " + err.message,
+          );
         }
+      }
 
-
-
-
-
-        /*
+      /*
 
          * Booking source
 
          */
 
+      try {
+        ValidationService.validateReference(
+          "BOOKING_SOURCE",
 
+          reservation.booking_source,
+        );
+      } catch (err) {
+        addError(
+          findings,
 
-        try {
+          "RESERVATION",
 
+          id + ": invalid booking source " + reservation.booking_source,
+        );
+      }
 
-
-          ValidationService
-
-            .validateReference(
-
-              'BOOKING_SOURCE',
-
-              reservation.booking_source
-
-            );
-
-
-
-        } catch (err) {
-
-
-
-          addError(
-
-            findings,
-
-            'RESERVATION',
-
-            id +
-
-              ': invalid booking source ' +
-
-              reservation.booking_source
-
-          );
-
-
-
-        }
-
-
-
-
-
-        /*
+      /*
 
          * Reservation status
 
          */
 
+      try {
+        ValidationService.validateReference(
+          "RESERVATION_STATUS",
 
+          reservation.status,
+        );
+      } catch (err) {
+        addError(
+          findings,
 
-        try {
+          "RESERVATION",
 
+          id + ": invalid reservation status " + reservation.status,
+        );
+      }
 
-
-          ValidationService
-
-            .validateReference(
-
-              'RESERVATION_STATUS',
-
-              reservation.status
-
-            );
-
-
-
-        } catch (err) {
-
-
-
-          addError(
-
-            findings,
-
-            'RESERVATION',
-
-            id +
-
-              ': invalid reservation status ' +
-
-              reservation.status
-
-          );
-
-
-
-        }
-
-
-
-
-
-        /*
+      /*
 
          * Date range
 
          */
 
+      try {
+        AvailabilityService.validateDateRange(
+          reservation.check_in_date,
 
+          reservation.check_out_date,
+        );
+      } catch (err) {
+        addError(
+          findings,
 
-        try {
+          "RESERVATION",
 
+          id + ": invalid reservation date range.",
 
+          {
+            check_in_date: reservation.check_in_date,
 
-          AvailabilityService
-
-            .validateDateRange(
-
-              reservation.check_in_date,
-
-              reservation.check_out_date
-
-            );
-
-
-
-        } catch (err) {
-
-
-
-          addError(
-
-            findings,
-
-            'RESERVATION',
-
-            id +
-
-              ': invalid reservation date range.',
-
-            {
-
-              check_in_date:
-
-                reservation.check_in_date,
-
-
-
-              check_out_date:
-
-                reservation.check_out_date
-
-            }
-
-          );
-
-
-
-        }
-
-
-
+            check_out_date: reservation.check_out_date,
+          },
+        );
       }
-
-    );
-
-
-
-
+    });
 
     addInfo(
-
       findings,
 
-      'RESERVATION',
+      "RESERVATION",
 
-      reservations.length +
-
-        ' reservation(s) checked.'
-
+      reservations.length + " reservation(s) checked.",
     );
-
-
-
   }
-
-
-
-
 
   /**
 
@@ -3307,61 +1658,22 @@ const IntegrityCheckService = (() => {
 
    */
 
-
-
-  function checkReservationGuests(
-
-    findings
-
-  ) {
-
-
-
+  function checkReservationGuests(findings) {
     let assignments;
 
-
-
-
-
     try {
-
-
-
-      assignments =
-
-        ReservationGuestService
-
-          .getAll();
-
-
-
+      assignments = ReservationGuestService.getAll();
     } catch (err) {
-
-
-
       addError(
-
         findings,
 
-        'RESERVATION_GUEST',
+        "RESERVATION_GUEST",
 
-        'Unable to read reservation guest relationships: ' +
-
-          err.message
-
+        "Unable to read reservation guest relationships: " + err.message,
       );
 
-
-
       return;
-
-
-
     }
-
-
-
-
 
     /*
 
@@ -3369,63 +1681,31 @@ const IntegrityCheckService = (() => {
 
      */
 
-
-
     try {
+      ReservationGuestService.findOrphanReservationLinks()
 
-
-
-      ReservationGuestService
-
-        .findOrphanReservationLinks()
-
-        .forEach(record => {
-
-
-
+        .forEach((record) => {
           addError(
-
             findings,
 
-            'RESERVATION_GUEST',
+            "RESERVATION_GUEST",
 
-            'Reservation guest relationship references missing reservation: ' +
-
+            "Reservation guest relationship references missing reservation: " +
               record.reservation_id,
 
-            record
-
+            record,
           );
-
-
-
         });
-
-
-
     } catch (err) {
-
-
-
       addError(
-
         findings,
 
-        'RESERVATION_GUEST',
+        "RESERVATION_GUEST",
 
-        'Unable to check reservation guest reservation references: ' +
-
-          err.message
-
+        "Unable to check reservation guest reservation references: " +
+          err.message,
       );
-
-
-
     }
-
-
-
-
 
     /*
 
@@ -3433,63 +1713,30 @@ const IntegrityCheckService = (() => {
 
      */
 
-
-
     try {
+      ReservationGuestService.findOrphanGuestLinks()
 
-
-
-      ReservationGuestService
-
-        .findOrphanGuestLinks()
-
-        .forEach(record => {
-
-
-
+        .forEach((record) => {
           addError(
-
             findings,
 
-            'RESERVATION_GUEST',
+            "RESERVATION_GUEST",
 
-            'Reservation guest relationship references missing guest: ' +
-
+            "Reservation guest relationship references missing guest: " +
               record.guest_id,
 
-            record
-
+            record,
           );
-
-
-
         });
-
-
-
     } catch (err) {
-
-
-
       addError(
-
         findings,
 
-        'RESERVATION_GUEST',
+        "RESERVATION_GUEST",
 
-        'Unable to check reservation guest guest references: ' +
-
-          err.message
-
+        "Unable to check reservation guest guest references: " + err.message,
       );
-
-
-
     }
-
-
-
-
 
     /*
 
@@ -3497,119 +1744,57 @@ const IntegrityCheckService = (() => {
 
      */
 
-
-
     try {
+      ReservationGuestService.findDuplicateAssignments()
 
-
-
-      ReservationGuestService
-
-        .findDuplicateAssignments()
-
-        .forEach(record => {
-
-
-
+        .forEach((record) => {
           addError(
-
             findings,
 
-            'RESERVATION_GUEST',
+            "RESERVATION_GUEST",
 
-            'Duplicate reservation/guest assignment: ' +
+            "Duplicate reservation/guest assignment: " + record.key,
 
-              record.key,
-
-            record
-
+            record,
           );
-
-
-
         });
-
-
-
     } catch (err) {
-
-
-
       addError(
-
         findings,
 
-        'RESERVATION_GUEST',
+        "RESERVATION_GUEST",
 
-        'Unable to check duplicate reservation guest assignments: ' +
-
-          err.message
-
+        "Unable to check duplicate reservation guest assignments: " +
+          err.message,
       );
-
-
-
     }
 
-
-
     try {
+      ReservationGuestService.findInvalidRoles()
 
-
-
-      ReservationGuestService
-
-        .findInvalidRoles()
-
-        .forEach(record => {
-
-
-
+        .forEach((record) => {
           addError(
-
             findings,
 
-            'RESERVATION_GUEST',
+            "RESERVATION_GUEST",
 
-            'Invalid reservation guest role: ' +
-
+            "Invalid reservation guest role: " +
               record.reservation_guest_id +
-
-              ' / ' +
-
+              " / " +
               record.role,
 
-            record
-
+            record,
           );
-
-
-
         });
-
-
-
     } catch (err) {
-
-
-
       addError(
-
         findings,
 
-        'RESERVATION_GUEST',
+        "RESERVATION_GUEST",
 
-        'Unable to check reservation guest roles: ' +
-
-          err.message
-
+        "Unable to check reservation guest roles: " + err.message,
       );
-
-
-
     }
-
-
 
     /*
 
@@ -3617,63 +1802,29 @@ const IntegrityCheckService = (() => {
 
      */
 
-
-
     try {
+      ReservationGuestService.findReservationsWithMultiplePrimaryGuests()
 
-
-
-      ReservationGuestService
-
-        .findReservationsWithMultiplePrimaryGuests()
-
-        .forEach(record => {
-
-
-
+        .forEach((record) => {
           addError(
-
             findings,
 
-            'RESERVATION_GUEST',
+            "RESERVATION_GUEST",
 
-            'Reservation has multiple primary guests: ' +
+            "Reservation has multiple primary guests: " + record.reservation_id,
 
-              record.reservation_id,
-
-            record
-
+            record,
           );
-
-
-
         });
-
-
-
     } catch (err) {
-
-
-
       addError(
-
         findings,
 
-        'RESERVATION_GUEST',
+        "RESERVATION_GUEST",
 
-        'Unable to check multiple primary guests: ' +
-
-          err.message
-
+        "Unable to check multiple primary guests: " + err.message,
       );
-
-
-
     }
-
-
-
-
 
     /*
 
@@ -3683,83 +1834,39 @@ const IntegrityCheckService = (() => {
 
      */
 
-
-
     try {
+      ReservationGuestService.findReservationsWithoutPrimaryGuest()
 
-
-
-      ReservationGuestService
-
-        .findReservationsWithoutPrimaryGuest()
-
-        .forEach(record => {
-
-
-
+        .forEach((record) => {
           addError(
-
             findings,
 
-            'RESERVATION_GUEST',
+            "RESERVATION_GUEST",
 
-            'Reservation has guests but no primary guest: ' +
-
+            "Reservation has guests but no primary guest: " +
               record.reservation_id,
 
-            record
-
+            record,
           );
-
-
-
         });
-
-
-
     } catch (err) {
-
-
-
       addError(
-
         findings,
 
-        'RESERVATION_GUEST',
+        "RESERVATION_GUEST",
 
-        'Unable to check primary guest integrity: ' +
-
-          err.message
-
+        "Unable to check primary guest integrity: " + err.message,
       );
-
-
-
     }
 
-
-
-
-
     addInfo(
-
       findings,
 
-      'RESERVATION_GUEST',
+      "RESERVATION_GUEST",
 
-      assignments.length +
-
-        ' reservation guest relationship(s) checked.'
-
+      assignments.length + " reservation guest relationship(s) checked.",
     );
-
-
-
   }
-
-
-
-
 
   /**
 
@@ -3771,34 +1878,12 @@ const IntegrityCheckService = (() => {
 
    */
 
-
-
   function checkOTABlocks(findings) {
-
-
-
     let blocks;
 
-
-
-
-
     try {
-
-
-
-      blocks =
-
-        OTABlockService
-
-          .getAll();
-
-
-
+      blocks = OTABlockService.getAll();
     } catch (err) {
-
-
-
       /*
 
        * Fallback allows integrity checking before service
@@ -3807,23 +1892,8 @@ const IntegrityCheckService = (() => {
 
        */
 
-
-
-      blocks =
-
-        safeFindAll(
-
-          CONFIG.SHEETS.OTA_BLOCKS
-
-        );
-
-
-
+      blocks = safeFindAll(CONFIG.SHEETS.OTA_BLOCKS);
     }
-
-
-
-
 
     /*
 
@@ -3831,63 +1901,21 @@ const IntegrityCheckService = (() => {
 
      */
 
+    blocks.forEach((block) => {
+      const status = normalize(block.status);
 
-
-    blocks.forEach(block => {
-
-
-
-      const status =
-
-        normalize(
-
-          block.status
-
-        );
-
-
-
-
-
-      if (
-
-        ![
-
-          'PENDING',
-
-          'BLOCKED',
-
-          'CANCELLED'
-
-        ].includes(status)
-
-      ) {
-
-
-
+      if (!["PENDING", "BLOCKED", "CANCELLED"].includes(status)) {
         addError(
-
           findings,
 
-          'OTA_BLOCK',
+          "OTA_BLOCK",
 
-          'Invalid OTA block status: ' +
-
+          "Invalid OTA block status: " +
             block.ota_block_id +
-
-            ' / ' +
-
-            block.status
-
+            " / " +
+            block.status,
         );
-
-
-
       }
-
-
-
-
 
       /*
 
@@ -3895,47 +1923,17 @@ const IntegrityCheckService = (() => {
 
        */
 
-
-
       try {
-
-
-
-        ValidationService
-
-          .validateUnitExists(
-
-            block.unit_id
-
-          );
-
-
-
+        ValidationService.validateUnitExists(block.unit_id);
       } catch (err) {
-
-
-
         addError(
-
           findings,
 
-          'OTA_BLOCK',
+          "OTA_BLOCK",
 
-          block.ota_block_id +
-
-            ': ' +
-
-            err.message
-
+          block.ota_block_id + ": " + err.message,
         );
-
-
-
       }
-
-
-
-
 
       /*
 
@@ -3943,53 +1941,24 @@ const IntegrityCheckService = (() => {
 
        */
 
-
-
       try {
+        AvailabilityService.validateDateRange(
+          block.start_date,
 
-
-
-        AvailabilityService
-
-          .validateDateRange(
-
-            block.start_date,
-
-            block.end_date
-
-          );
-
-
-
+          block.end_date,
+        );
       } catch (err) {
-
-
-
         addError(
-
           findings,
 
-          'OTA_BLOCK',
+          "OTA_BLOCK",
 
-          block.ota_block_id +
+          block.ota_block_id + ": invalid date range.",
 
-            ': invalid date range.',
-
-          block
-
+          block,
         );
-
-
-
       }
-
-
-
     });
-
-
-
-
 
     /*
 
@@ -3997,67 +1966,32 @@ const IntegrityCheckService = (() => {
 
      */
 
-
-
     try {
+      OTABlockService.findOrphanReservationLinks()
 
-
-
-      OTABlockService
-
-        .findOrphanReservationLinks()
-
-        .forEach(block => {
-
-
-
+        .forEach((block) => {
           addError(
-
             findings,
 
-            'OTA_BLOCK',
+            "OTA_BLOCK",
 
-            'OTA block references missing reservation: ' +
-
+            "OTA block references missing reservation: " +
               block.ota_block_id +
-
-              ' -> ' +
-
+              " -> " +
               block.reservation_id,
 
-            block
-
+            block,
           );
-
-
-
         });
-
-
-
     } catch (err) {
-
-
-
       addError(
-
         findings,
 
-        'OTA_BLOCK',
+        "OTA_BLOCK",
 
-        'Unable to check OTA block reservation relationships: ' +
-
-          err.message
-
+        "Unable to check OTA block reservation relationships: " + err.message,
       );
-
-
-
     }
-
-
-
-
 
     /*
 
@@ -4065,61 +1999,29 @@ const IntegrityCheckService = (() => {
 
      */
 
-
-
     try {
+      OTABlockService.findDuplicateBlockingBlocks()
 
-
-
-      OTABlockService
-
-        .findDuplicateBlockingBlocks()
-
-        .forEach(block => {
-
-
-
+        .forEach((block) => {
           addError(
-
             findings,
 
-            'OTA_BLOCK',
+            "OTA_BLOCK",
 
-            'Duplicate active OTA block relationship detected.',
+            "Duplicate active OTA block relationship detected.",
 
-            block
-
+            block,
           );
-
-
-
         });
-
-
-
     } catch (err) {
-
-
-
       addError(
-
         findings,
 
-        'OTA_BLOCK',
+        "OTA_BLOCK",
 
-        'Unable to check duplicate OTA blocks: ' +
-
-          err.message
-
+        "Unable to check duplicate OTA blocks: " + err.message,
       );
-
-
-
     }
-
-
-
-
 
     /*
 
@@ -4127,24 +2029,8 @@ const IntegrityCheckService = (() => {
 
      */
 
-
-
-    blocks.forEach(block => {
-
-
-
-      if (
-
-        isBlank(
-
-          block.reservation_id
-
-        )
-
-      ) {
-
-
-
+    blocks.forEach((block) => {
+      if (isBlank(block.reservation_id)) {
         /*
 
          * Existing Phase 2 records may predate the
@@ -4153,41 +2039,14 @@ const IntegrityCheckService = (() => {
 
          */
 
-
-
         return;
-
-
-
       }
 
-
-
-
-
-      const reservation =
-
-        ReservationService
-
-          .getById(
-
-            block.reservation_id
-
-          );
-
-
-
-
+      const reservation = ReservationService.getById(block.reservation_id);
 
       if (!reservation) {
-
         return;
-
       }
-
-
-
-
 
       /*
 
@@ -4195,65 +2054,24 @@ const IntegrityCheckService = (() => {
 
        */
 
-
-
-      if (
-
-        normalizeText(
-
-          block.unit_id
-
-        ) !==
-
-        normalizeText(
-
-          reservation.unit_id
-
-        )
-
-      ) {
-
-
-
+      if (normalizeText(block.unit_id) !== normalizeText(reservation.unit_id)) {
         addError(
-
           findings,
 
-          'OTA_BLOCK',
+          "OTA_BLOCK",
 
-          'OTA block unit does not match reservation unit: ' +
-
+          "OTA block unit does not match reservation unit: " +
             block.ota_block_id,
 
           {
+            ota_block_unit: block.unit_id,
 
-            ota_block_unit:
+            reservation_unit: reservation.unit_id,
 
-              block.unit_id,
-
-
-
-            reservation_unit:
-
-              reservation.unit_id,
-
-
-
-            reservation_id:
-
-              reservation.reservation_id
-
-          }
-
+            reservation_id: reservation.reservation_id,
+          },
         );
-
-
-
       }
-
-
-
-
 
       /*
 
@@ -4261,83 +2079,29 @@ const IntegrityCheckService = (() => {
 
        */
 
-
-
       if (
-
-        String(
-
-          block.start_date
-
-        ) !==
-
-          String(
-
-            reservation.check_in_date
-
-          ) ||
-
-        String(
-
-          block.end_date
-
-        ) !==
-
-          String(
-
-            reservation.check_out_date
-
-          )
-
+        String(block.start_date) !== String(reservation.check_in_date) ||
+        String(block.end_date) !== String(reservation.check_out_date)
       ) {
-
-
-
         addError(
-
           findings,
 
-          'OTA_BLOCK',
+          "OTA_BLOCK",
 
-          'OTA block dates do not match reservation dates: ' +
-
+          "OTA block dates do not match reservation dates: " +
             block.ota_block_id,
 
           {
+            ota_block_start: block.start_date,
 
-            ota_block_start:
+            ota_block_end: block.end_date,
 
-              block.start_date,
+            reservation_start: reservation.check_in_date,
 
-
-
-            ota_block_end:
-
-              block.end_date,
-
-
-
-            reservation_start:
-
-              reservation.check_in_date,
-
-
-
-            reservation_end:
-
-              reservation.check_out_date
-
-          }
-
+            reservation_end: reservation.check_out_date,
+          },
         );
-
-
-
       }
-
-
-
-
 
       /*
 
@@ -4347,55 +2111,22 @@ const IntegrityCheckService = (() => {
 
        */
 
-
-
-      if (
-
-        normalize(
-
-          reservation.booking_source
-
-        ) !==
-
-        'DIRECT'
-
-      ) {
-
-
-
+      if (normalize(reservation.booking_source) !== "DIRECT") {
         addWarning(
-
           findings,
 
-          'OTA_BLOCK',
+          "OTA_BLOCK",
 
-          'Reservation-linked OTA block belongs to a non-DIRECT reservation: ' +
-
+          "Reservation-linked OTA block belongs to a non-DIRECT reservation: " +
             block.ota_block_id,
 
           {
+            reservation_id: reservation.reservation_id,
 
-            reservation_id:
-
-              reservation.reservation_id,
-
-
-
-            booking_source:
-
-              reservation.booking_source
-
-          }
-
+            booking_source: reservation.booking_source,
+          },
         );
-
-
-
       }
-
-
-
-
 
       /*
 
@@ -4405,93 +2136,37 @@ const IntegrityCheckService = (() => {
 
        */
 
-
-
       if (
-
-        ReservationService
-
-          .isTerminalStatus(
-
-            reservation.status
-
-          ) &&
-
-        OTABlockService
-
-          .isBlockingStatus(
-
-            block.status
-
-          )
-
+        ReservationService.isTerminalStatus(reservation.status) &&
+        OTABlockService.isBlockingStatus(block.status)
       ) {
-
-
-
         addError(
-
           findings,
 
-          'OTA_BLOCK',
+          "OTA_BLOCK",
 
-          'Terminal reservation still has blocking OTA record: ' +
-
+          "Terminal reservation still has blocking OTA record: " +
             block.ota_block_id,
 
           {
+            reservation_id: reservation.reservation_id,
 
-            reservation_id:
+            reservation_status: reservation.status,
 
-              reservation.reservation_id,
-
-
-
-            reservation_status:
-
-              reservation.status,
-
-
-
-            ota_block_status:
-
-              block.status
-
-          }
-
+            ota_block_status: block.status,
+          },
         );
-
-
-
       }
-
-
-
     });
 
-
-
-
-
     addInfo(
-
       findings,
 
-      'OTA_BLOCK',
+      "OTA_BLOCK",
 
-      blocks.length +
-
-        ' OTA block(s) checked.'
-
+      blocks.length + " OTA block(s) checked.",
     );
-
-
-
   }
-
-
-
-
 
   /**
 
@@ -4503,69 +2178,29 @@ const IntegrityCheckService = (() => {
 
    */
 
-
-
-  function checkCalendarFeedConfiguration(
-
-    findings
-
-  ) {
-
-
-
+  function checkCalendarFeedConfiguration(findings) {
     try {
-
-
-
-      const configuration =
-
-        CalendarSyncService
-
-          .getSyncConfiguration();
-
-
-
-
+      const configuration = CalendarSyncService.getSyncConfiguration();
 
       addInfo(
-
         findings,
 
-        'CALENDAR_CONFIGURATION',
+        "CALENDAR_CONFIGURATION",
 
-        'Calendar synchronization configuration checked.',
+        "Calendar synchronization configuration checked.",
 
-        configuration
-
+        configuration,
       );
-
-
-
     } catch (err) {
-
-
-
       addError(
-
         findings,
 
-        'CALENDAR_CONFIGURATION',
+        "CALENDAR_CONFIGURATION",
 
-        err.message
-
+        err.message,
       );
-
-
-
     }
-
-
-
   }
-
-
-
-
 
   /**
 
@@ -4601,215 +2236,74 @@ const IntegrityCheckService = (() => {
 
    */
 
-
-
-  function checkCalendarConflicts(
-
-    findings
-
-  ) {
-
-
-
-    const reservations =
-
-      safeFindAll(
-
-        CONFIG.SHEETS.RESERVATIONS
-
-      )
-
-      .filter(reservation => {
-
-
-
+  function checkCalendarConflicts(findings) {
+    const reservations = safeFindAll(CONFIG.SHEETS.RESERVATIONS).filter(
+      (reservation) => {
         try {
-
-
-
-          return AvailabilityService
-
-            .isReservationBlocking(
-
-              reservation.status
-
-            );
-
-
-
+          return AvailabilityService.isReservationBlocking(reservation.status);
         } catch (err) {
-
-
-
           return false;
-
-
-
         }
-
-
-
-      });
-
-
-
-
-
-    reservations.forEach(
-
-      reservation => {
-
-
-
-        let conflicts;
-
-
-
-
-
-        try {
-
-
-
-          conflicts =
-
-            ExternalCalendarService
-
-              .getConflictingEvents(
-
-                reservation.unit_id,
-
-                reservation.check_in_date,
-
-                reservation.check_out_date
-
-              );
-
-
-
-        } catch (err) {
-
-
-
-          addError(
-
-            findings,
-
-            'CALENDAR_CONFLICT',
-
-            'Unable to check reservation ' +
-
-              reservation.reservation_id +
-
-              ': ' +
-
-              err.message
-
-          );
-
-
-
-          return;
-
-
-
-        }
-
-
-
-
-
-        conflicts.forEach(
-
-          event => {
-
-
-
-            addWarning(
-
-              findings,
-
-              'CALENDAR_CONFLICT',
-
-              'Reservation overlaps external calendar event.',
-
-              {
-
-                reservation_id:
-
-                  reservation.reservation_id,
-
-
-
-                unit_id:
-
-                  reservation.unit_id,
-
-
-
-                reservation_source:
-
-                  reservation.booking_source,
-
-
-
-                reservation_start:
-
-                  reservation.check_in_date,
-
-
-
-                reservation_end:
-
-                  reservation.check_out_date,
-
-
-
-                external_event_id:
-
-                  event.external_event_id,
-
-
-
-                external_source:
-
-                  event.source,
-
-
-
-                external_start:
-
-                  event.start_date,
-
-
-
-                external_end:
-
-                  event.end_date
-
-              }
-
-            );
-
-
-
-          }
-
-        );
-
-
-
-      }
-
+      },
     );
 
+    reservations.forEach((reservation) => {
+      let conflicts;
 
+      try {
+        conflicts = ExternalCalendarService.getConflictingEvents(
+          reservation.unit_id,
 
+          reservation.check_in_date,
+
+          reservation.check_out_date,
+        );
+      } catch (err) {
+        addError(
+          findings,
+
+          "CALENDAR_CONFLICT",
+
+          "Unable to check reservation " +
+            reservation.reservation_id +
+            ": " +
+            err.message,
+        );
+
+        return;
+      }
+
+      conflicts.forEach((event) => {
+        addWarning(
+          findings,
+
+          "CALENDAR_CONFLICT",
+
+          "Reservation overlaps external calendar event.",
+
+          {
+            reservation_id: reservation.reservation_id,
+
+            unit_id: reservation.unit_id,
+
+            reservation_source: reservation.booking_source,
+
+            reservation_start: reservation.check_in_date,
+
+            reservation_end: reservation.check_out_date,
+
+            external_event_id: event.external_event_id,
+
+            external_source: event.source,
+
+            external_start: event.start_date,
+
+            external_end: event.end_date,
+          },
+        );
+      });
+    });
   }
-
-
-
-
 
   /**
 
@@ -4821,91 +2315,31 @@ const IntegrityCheckService = (() => {
 
    */
 
-
-
   function checkAuditLog(findings) {
+    const rows = safeFindAll(CONFIG.SHEETS.AUDIT_LOG);
 
+    rows.forEach((row, index) => {
+      if (isBlank(row.audit_id)) {
+        addError(
+          findings,
 
+          "AUDIT",
 
-    const rows =
-
-      safeFindAll(
-
-        CONFIG.SHEETS.AUDIT_LOG
-
-      );
-
-
-
-
-
-    rows.forEach(
-
-      (row, index) => {
-
-
-
-        if (
-
-          isBlank(
-
-            row.audit_id
-
-          )
-
-        ) {
-
-
-
-          addError(
-
-            findings,
-
-            'AUDIT',
-
-            'Audit row ' +
-
-              (index + 2) +
-
-              ' has no audit_id.'
-
-          );
-
-
-
-        }
-
-
-
+          "Audit row " + (index + 2) + " has no audit_id.",
+        );
       }
-
-    );
-
-
-
-
+    });
 
     addInfo(
-
       findings,
 
-      'AUDIT',
+      "AUDIT",
 
-      rows.length +
-
-        ' audit record(s) checked.'
-
+      rows.length + " audit record(s) checked.",
     );
-
-
-
   }
 
-
-
-
-
-/**
+  /**
 
  * ----------------------------------------------------------
 
@@ -4915,61 +2349,24 @@ const IntegrityCheckService = (() => {
 
  */
 
+  function checkHousekeepingTasks(findings) {
+    let tasks;
 
+    try {
+      tasks = HousekeepingService.getAll();
+    } catch (err) {
+      addError(
+        findings,
 
-function checkHousekeepingTasks(
+        "HOUSEKEEPING",
 
-  findings
+        "Unable to read housekeeping tasks: " + err.message,
+      );
 
-) {
+      return;
+    }
 
-
-
-  let tasks;
-
-
-
-
-
-  try {
-
-
-
-    tasks =
-
-      HousekeepingService.getAll();
-
-
-
-  } catch (err) {
-
-
-
-    addError(
-
-      findings,
-
-      'HOUSEKEEPING',
-
-      'Unable to read housekeeping tasks: ' +
-
-        err.message
-
-    );
-
-
-
-    return;
-
-
-
-  }
-
-
-
-
-
-  /*
+    /*
 
    * --------------------------------------------------------
 
@@ -4979,69 +2376,34 @@ function checkHousekeepingTasks(
 
    */
 
+    try {
+      HousekeepingService.findOrphanUnitLinks()
 
+        .forEach((task) => {
+          addError(
+            findings,
 
-  try {
+            "HOUSEKEEPING",
 
+            "Housekeeping task references missing unit: " +
+              task.task_id +
+              " -> " +
+              task.unit_id,
 
+            task,
+          );
+        });
+    } catch (err) {
+      addError(
+        findings,
 
-    HousekeepingService
+        "HOUSEKEEPING",
 
-      .findOrphanUnitLinks()
+        "Unable to check housekeeping unit references: " + err.message,
+      );
+    }
 
-      .forEach(task => {
-
-
-
-        addError(
-
-          findings,
-
-          'HOUSEKEEPING',
-
-          'Housekeeping task references missing unit: ' +
-
-            task.task_id +
-
-            ' -> ' +
-
-            task.unit_id,
-
-          task
-
-        );
-
-
-
-      });
-
-
-
-  } catch (err) {
-
-
-
-    addError(
-
-      findings,
-
-      'HOUSEKEEPING',
-
-      'Unable to check housekeeping unit references: ' +
-
-        err.message
-
-    );
-
-
-
-  }
-
-
-
-
-
-  /*
+    /*
 
    * --------------------------------------------------------
 
@@ -5051,69 +2413,34 @@ function checkHousekeepingTasks(
 
    */
 
+    try {
+      HousekeepingService.findOrphanReservationLinks()
 
+        .forEach((task) => {
+          addError(
+            findings,
 
-  try {
+            "HOUSEKEEPING",
 
+            "Housekeeping task references missing reservation: " +
+              task.task_id +
+              " -> " +
+              task.reservation_id,
 
+            task,
+          );
+        });
+    } catch (err) {
+      addError(
+        findings,
 
-    HousekeepingService
+        "HOUSEKEEPING",
 
-      .findOrphanReservationLinks()
+        "Unable to check housekeeping reservation references: " + err.message,
+      );
+    }
 
-      .forEach(task => {
-
-
-
-        addError(
-
-          findings,
-
-          'HOUSEKEEPING',
-
-          'Housekeeping task references missing reservation: ' +
-
-            task.task_id +
-
-            ' -> ' +
-
-            task.reservation_id,
-
-          task
-
-        );
-
-
-
-      });
-
-
-
-  } catch (err) {
-
-
-
-    addError(
-
-      findings,
-
-      'HOUSEKEEPING',
-
-      'Unable to check housekeeping reservation references: ' +
-
-        err.message
-
-    );
-
-
-
-  }
-
-
-
-
-
-  /*
+    /*
 
    * --------------------------------------------------------
 
@@ -5123,69 +2450,34 @@ function checkHousekeepingTasks(
 
    */
 
+    try {
+      HousekeepingService.findOrphanStaffLinks()
 
+        .forEach((task) => {
+          addError(
+            findings,
 
-  try {
+            "HOUSEKEEPING",
 
+            "Housekeeping task references missing staff: " +
+              task.task_id +
+              " -> " +
+              task.assigned_to,
 
+            task,
+          );
+        });
+    } catch (err) {
+      addError(
+        findings,
 
-    HousekeepingService
+        "HOUSEKEEPING",
 
-      .findOrphanStaffLinks()
+        "Unable to check housekeeping staff references: " + err.message,
+      );
+    }
 
-      .forEach(task => {
-
-
-
-        addError(
-
-          findings,
-
-          'HOUSEKEEPING',
-
-          'Housekeeping task references missing staff: ' +
-
-            task.task_id +
-
-            ' -> ' +
-
-            task.assigned_to,
-
-          task
-
-        );
-
-
-
-      });
-
-
-
-  } catch (err) {
-
-
-
-    addError(
-
-      findings,
-
-      'HOUSEKEEPING',
-
-      'Unable to check housekeeping staff references: ' +
-
-        err.message
-
-    );
-
-
-
-  }
-
-
-
-
-
-  /*
+    /*
 
    * --------------------------------------------------------
 
@@ -5195,69 +2487,34 @@ function checkHousekeepingTasks(
 
    */
 
+    try {
+      HousekeepingService.findInvalidTaskTypes()
 
+        .forEach((task) => {
+          addError(
+            findings,
 
-  try {
+            "HOUSEKEEPING",
 
+            "Invalid housekeeping task type: " +
+              task.task_id +
+              " / " +
+              task.task_type,
 
+            task,
+          );
+        });
+    } catch (err) {
+      addError(
+        findings,
 
-    HousekeepingService
+        "HOUSEKEEPING",
 
-      .findInvalidTaskTypes()
+        "Unable to validate housekeeping task types: " + err.message,
+      );
+    }
 
-      .forEach(task => {
-
-
-
-        addError(
-
-          findings,
-
-          'HOUSEKEEPING',
-
-          'Invalid housekeeping task type: ' +
-
-            task.task_id +
-
-            ' / ' +
-
-            task.task_type,
-
-          task
-
-        );
-
-
-
-      });
-
-
-
-  } catch (err) {
-
-
-
-    addError(
-
-      findings,
-
-      'HOUSEKEEPING',
-
-      'Unable to validate housekeeping task types: ' +
-
-        err.message
-
-    );
-
-
-
-  }
-
-
-
-
-
-  /*
+    /*
 
    * --------------------------------------------------------
 
@@ -5267,69 +2524,34 @@ function checkHousekeepingTasks(
 
    */
 
+    try {
+      HousekeepingService.findInvalidPriorities()
 
+        .forEach((task) => {
+          addError(
+            findings,
 
-  try {
+            "HOUSEKEEPING",
 
+            "Invalid housekeeping priority: " +
+              task.task_id +
+              " / " +
+              task.priority,
 
+            task,
+          );
+        });
+    } catch (err) {
+      addError(
+        findings,
 
-    HousekeepingService
+        "HOUSEKEEPING",
 
-      .findInvalidPriorities()
+        "Unable to validate housekeeping priorities: " + err.message,
+      );
+    }
 
-      .forEach(task => {
-
-
-
-        addError(
-
-          findings,
-
-          'HOUSEKEEPING',
-
-          'Invalid housekeeping priority: ' +
-
-            task.task_id +
-
-            ' / ' +
-
-            task.priority,
-
-          task
-
-        );
-
-
-
-      });
-
-
-
-  } catch (err) {
-
-
-
-    addError(
-
-      findings,
-
-      'HOUSEKEEPING',
-
-      'Unable to validate housekeeping priorities: ' +
-
-        err.message
-
-    );
-
-
-
-  }
-
-
-
-
-
-  /*
+    /*
 
    * --------------------------------------------------------
 
@@ -5339,69 +2561,34 @@ function checkHousekeepingTasks(
 
    */
 
+    try {
+      HousekeepingService.findInvalidStatuses()
 
+        .forEach((task) => {
+          addError(
+            findings,
 
-  try {
+            "HOUSEKEEPING",
 
+            "Invalid housekeeping status: " +
+              task.task_id +
+              " / " +
+              task.status,
 
+            task,
+          );
+        });
+    } catch (err) {
+      addError(
+        findings,
 
-    HousekeepingService
+        "HOUSEKEEPING",
 
-      .findInvalidStatuses()
+        "Unable to validate housekeeping statuses: " + err.message,
+      );
+    }
 
-      .forEach(task => {
-
-
-
-        addError(
-
-          findings,
-
-          'HOUSEKEEPING',
-
-          'Invalid housekeeping status: ' +
-
-            task.task_id +
-
-            ' / ' +
-
-            task.status,
-
-          task
-
-        );
-
-
-
-      });
-
-
-
-  } catch (err) {
-
-
-
-    addError(
-
-      findings,
-
-      'HOUSEKEEPING',
-
-      'Unable to validate housekeeping statuses: ' +
-
-        err.message
-
-    );
-
-
-
-  }
-
-
-
-
-
-  /*
+    /*
 
    * --------------------------------------------------------
 
@@ -5419,7 +2606,7 @@ function checkHousekeepingTasks(
 
    */
 
-/*
+    /*
 
   try {
 
@@ -5479,13 +2666,7 @@ function checkHousekeepingTasks(
 
 */
 
-
-
-
-
-
-
-/*
+    /*
 
  * --------------------------------------------------------
 
@@ -5507,83 +2688,31 @@ function checkHousekeepingTasks(
 
  */
 
+    try {
+      const staff = StaffService.getAllStaff();
 
+      const staffById = new Map(
+        staff.map((member) => [normalizeText(member.staff_id), member]),
+      );
 
-try {
+      tasks
 
+        .filter((task) => {
+          const staffId = normalizeText(task.assigned_to);
 
-
-  const staff =
-
-    StaffService.getAllStaff();
-
-
-
-
-
-  const staffById =
-
-    new Map(
-
-      staff.map(member => [
-
-        normalizeText(member.staff_id),
-
-        member
-
-      ])
-
-    );
-
-
-
-
-
-  tasks
-
-    .filter(task => {
-
-
-
-      const staffId =
-
-        normalizeText(
-
-          task.assigned_to
-
-        );
-
-
-
-
-
-      /*
+          /*
 
        * Unassigned housekeeping task is valid.
 
        */
 
+          if (!staffId) {
+            return false;
+          }
 
+          const member = staffById.get(staffId);
 
-      if (!staffId) {
-
-        return false;
-
-      }
-
-
-
-
-
-      const member =
-
-        staffById.get(staffId);
-
-
-
-
-
-      /*
+          /*
 
        * Missing staff is already reported by
 
@@ -5595,139 +2724,51 @@ try {
 
        */
 
+          if (!member) {
+            return false;
+          }
 
+          const role = normalize(member.role);
 
-      if (!member) {
+          const status = normalize(member.status);
 
-        return false;
+          return (
+            status !== "ACTIVE" || !["HOUSEKEEPER", "SUPERVISOR"].includes(role)
+          );
+        })
 
-      }
+        .forEach((task) => {
+          const member = staffById.get(normalizeText(task.assigned_to));
 
+          addError(
+            findings,
 
+            "HOUSEKEEPING",
 
+            "Invalid housekeeping staff assignment: " +
+              task.task_id +
+              " -> " +
+              task.assigned_to +
+              " (role=" +
+              normalize(member.role) +
+              ", status=" +
+              normalize(member.status) +
+              ")",
 
-
-      const role =
-
-        normalize(
-
-          member.role
-
-        );
-
-
-
-
-
-      const status =
-
-        normalize(
-
-          member.status
-
-        );
-
-
-
-
-
-      return (
-
-        status !== 'ACTIVE' ||
-
-        ![
-
-          'HOUSEKEEPER',
-
-          'SUPERVISOR'
-
-        ].includes(role)
-
-      );
-
-
-
-    })
-
-    .forEach(task => {
-
-
-
-      const member =
-
-        staffById.get(
-
-          normalizeText(
-
-            task.assigned_to
-
-          )
-
-        );
-
-
-
-
-
+            task,
+          );
+        });
+    } catch (err) {
       addError(
-
         findings,
 
-        'HOUSEKEEPING',
+        "HOUSEKEEPING",
 
-        'Invalid housekeeping staff assignment: ' +
-
-          task.task_id +
-
-          ' -> ' +
-
-          task.assigned_to +
-
-          ' (role=' +
-
-          normalize(member.role) +
-
-          ', status=' +
-
-          normalize(member.status) +
-
-          ')',
-
-        task
-
+        "Unable to validate housekeeping staff assignments: " + err.message,
       );
+    }
 
-
-
-    });
-
-
-
-
-
-} catch (err) {
-
-
-
-  addError(
-
-    findings,
-
-    'HOUSEKEEPING',
-
-    'Unable to validate housekeeping staff assignments: ' +
-
-      err.message
-
-  );
-
-
-
-}
-
-
-
-  /*
+    /*
 
    * --------------------------------------------------------
 
@@ -5737,65 +2778,31 @@ try {
 
    */
 
+    try {
+      HousekeepingService.findCompletedWithoutTimestamp()
 
+        .forEach((task) => {
+          addError(
+            findings,
 
-  try {
+            "HOUSEKEEPING",
 
+            "Completed housekeeping task has no completed_at: " + task.task_id,
 
+            task,
+          );
+        });
+    } catch (err) {
+      addError(
+        findings,
 
-    HousekeepingService
+        "HOUSEKEEPING",
 
-      .findCompletedWithoutTimestamp()
+        "Unable to validate housekeeping completion timestamps: " + err.message,
+      );
+    }
 
-      .forEach(task => {
-
-
-
-        addError(
-
-          findings,
-
-          'HOUSEKEEPING',
-
-          'Completed housekeeping task has no completed_at: ' +
-
-            task.task_id,
-
-          task
-
-        );
-
-
-
-      });
-
-
-
-  } catch (err) {
-
-
-
-    addError(
-
-      findings,
-
-      'HOUSEKEEPING',
-
-      'Unable to validate housekeeping completion timestamps: ' +
-
-        err.message
-
-    );
-
-
-
-  }
-
-
-
-
-
-  /*
+    /*
 
    * --------------------------------------------------------
 
@@ -5811,55 +2818,27 @@ try {
 
    */
 
+    tasks
 
+      .filter((task) => {
+        return (
+          normalize(task.status) === "IN_PROGRESS" && isBlank(task.started_at)
+        );
+      })
 
-  tasks
+      .forEach((task) => {
+        addError(
+          findings,
 
-    .filter(task => {
+          "HOUSEKEEPING",
 
+          "IN_PROGRESS housekeeping task has no started_at: " + task.task_id,
 
+          task,
+        );
+      });
 
-      return (
-
-        normalize(task.status) ===
-
-          'IN_PROGRESS' &&
-
-        isBlank(task.started_at)
-
-      );
-
-
-
-    })
-
-    .forEach(task => {
-
-
-
-      addError(
-
-        findings,
-
-        'HOUSEKEEPING',
-
-        'IN_PROGRESS housekeeping task has no started_at: ' +
-
-          task.task_id,
-
-        task
-
-      );
-
-
-
-    });
-
-
-
-
-
-  /*
+    /*
 
    * --------------------------------------------------------
 
@@ -5869,89 +2848,39 @@ try {
 
    */
 
+    tasks
 
+      .filter((task) => {
+        const start = normalizeText(task.scheduled_start);
 
-  tasks
+        const end = normalizeText(task.scheduled_end);
 
-    .filter(task => {
+        if (!start || !end) {
+          return false;
+        }
 
+        return end <= start;
+      })
 
+      .forEach((task) => {
+        addError(
+          findings,
 
-      const start =
+          "HOUSEKEEPING",
 
-        normalizeText(
+          "Invalid housekeeping scheduled time range: " +
+            task.task_id +
+            " (" +
+            task.scheduled_start +
+            " - " +
+            task.scheduled_end +
+            ")",
 
-          task.scheduled_start
-
+          task,
         );
+      });
 
-
-
-      const end =
-
-        normalizeText(
-
-          task.scheduled_end
-
-        );
-
-
-
-
-
-      if (!start || !end) {
-
-        return false;
-
-      }
-
-
-
-
-
-      return end <= start;
-
-
-
-    })
-
-    .forEach(task => {
-
-
-
-      addError(
-
-        findings,
-
-        'HOUSEKEEPING',
-
-        'Invalid housekeeping scheduled time range: ' +
-
-          task.task_id +
-
-          ' (' +
-
-          task.scheduled_start +
-
-          ' - ' +
-
-          task.scheduled_end +
-
-          ')',
-
-        task
-
-      );
-
-
-
-    });
-
-
-
-
-
-  /*
+    /*
 
    * --------------------------------------------------------
 
@@ -5961,63 +2890,31 @@ try {
 
    */
 
+    try {
+      HousekeepingService.findDuplicateActiveTasks()
 
+        .forEach((record) => {
+          addError(
+            findings,
 
-  try {
+            "HOUSEKEEPING",
 
+            "Duplicate active housekeeping task detected.",
 
+            record,
+          );
+        });
+    } catch (err) {
+      addError(
+        findings,
 
-    HousekeepingService
+        "HOUSEKEEPING",
 
-      .findDuplicateActiveTasks()
+        "Unable to check duplicate active housekeeping tasks: " + err.message,
+      );
+    }
 
-      .forEach(record => {
-
-
-
-        addError(
-
-          findings,
-
-          'HOUSEKEEPING',
-
-          'Duplicate active housekeeping task detected.',
-
-          record
-
-        );
-
-
-
-      });
-
-
-
-  } catch (err) {
-
-
-
-    addError(
-
-      findings,
-
-      'HOUSEKEEPING',
-
-      'Unable to check duplicate active housekeeping tasks: ' +
-
-        err.message
-
-    );
-
-
-
-  }
-
-
-
-
-
-  /*
+    /*
 
    * --------------------------------------------------------
 
@@ -6027,26 +2924,16 @@ try {
 
    */
 
+    addInfo(
+      findings,
 
+      "HOUSEKEEPING",
 
-  addInfo(
+      tasks.length + " housekeeping task(s) checked.",
+    );
+  }
 
-    findings,
-
-    'HOUSEKEEPING',
-
-    tasks.length +
-
-      ' housekeeping task(s) checked.'
-
-  );
-
-
-
-}
-
-
-/**
+  /**
 
  * ----------------------------------------------------------
 
@@ -6056,29 +2943,10 @@ try {
 
  */
 
+  function checkHousekeepingSchedules(findings) {
+    const schedules = safeFindAll(CONFIG.SHEETS.HOUSEKEEPING_SCHEDULES);
 
-
-function checkHousekeepingSchedules(
-
-  findings
-
-) {
-
-
-
-  const schedules =
-
-    safeFindAll(
-
-      CONFIG.SHEETS.HOUSEKEEPING_SCHEDULES
-
-    );
-
-
-
-
-
-  /*
+    /*
 
    * --------------------------------------------------------
 
@@ -6088,69 +2956,34 @@ function checkHousekeepingSchedules(
 
    */
 
+    try {
+      HousekeepingScheduleService.findOrphanUnitLinks()
 
+        .forEach((schedule) => {
+          addError(
+            findings,
 
-  try {
+            "HOUSEKEEPING_SCHEDULE",
 
+            "Housekeeping schedule references missing unit: " +
+              schedule.schedule_id +
+              " -> " +
+              schedule.unit_id,
 
+            schedule,
+          );
+        });
+    } catch (err) {
+      addError(
+        findings,
 
-    HousekeepingScheduleService
+        "HOUSEKEEPING_SCHEDULE",
 
-      .findOrphanUnitLinks()
+        "Unable to validate housekeeping schedule unit links: " + err.message,
+      );
+    }
 
-      .forEach(schedule => {
-
-
-
-        addError(
-
-          findings,
-
-          'HOUSEKEEPING_SCHEDULE',
-
-          'Housekeeping schedule references missing unit: ' +
-
-            schedule.schedule_id +
-
-            ' -> ' +
-
-            schedule.unit_id,
-
-          schedule
-
-        );
-
-
-
-      });
-
-
-
-  } catch (err) {
-
-
-
-    addError(
-
-      findings,
-
-      'HOUSEKEEPING_SCHEDULE',
-
-      'Unable to validate housekeeping schedule unit links: ' +
-
-        err.message
-
-    );
-
-
-
-  }
-
-
-
-
-
-  /*
+    /*
 
    * --------------------------------------------------------
 
@@ -6160,69 +2993,34 @@ function checkHousekeepingSchedules(
 
    */
 
+    try {
+      HousekeepingScheduleService.findOrphanStaffLinks()
 
+        .forEach((schedule) => {
+          addError(
+            findings,
 
-  try {
+            "HOUSEKEEPING_SCHEDULE",
 
+            "Housekeeping schedule references missing staff: " +
+              schedule.schedule_id +
+              " -> " +
+              schedule.assigned_to,
 
+            schedule,
+          );
+        });
+    } catch (err) {
+      addError(
+        findings,
 
-    HousekeepingScheduleService
+        "HOUSEKEEPING_SCHEDULE",
 
-      .findOrphanStaffLinks()
+        "Unable to validate housekeeping schedule staff links: " + err.message,
+      );
+    }
 
-      .forEach(schedule => {
-
-
-
-        addError(
-
-          findings,
-
-          'HOUSEKEEPING_SCHEDULE',
-
-          'Housekeeping schedule references missing staff: ' +
-
-            schedule.schedule_id +
-
-            ' -> ' +
-
-            schedule.assigned_to,
-
-          schedule
-
-        );
-
-
-
-      });
-
-
-
-  } catch (err) {
-
-
-
-    addError(
-
-      findings,
-
-      'HOUSEKEEPING_SCHEDULE',
-
-      'Unable to validate housekeeping schedule staff links: ' +
-
-        err.message
-
-    );
-
-
-
-  }
-
-
-
-
-
-  /*
+    /*
 
    * --------------------------------------------------------
 
@@ -6246,69 +3044,35 @@ function checkHousekeepingSchedules(
 
    */
 
+    try {
+      HousekeepingScheduleService.findInvalidStaffAssignments()
 
+        .forEach((schedule) => {
+          addError(
+            findings,
 
-  try {
+            "HOUSEKEEPING_SCHEDULE",
 
+            "Invalid housekeeping schedule staff assignment: " +
+              schedule.schedule_id +
+              " -> " +
+              schedule.assigned_to,
 
+            schedule,
+          );
+        });
+    } catch (err) {
+      addError(
+        findings,
 
-    HousekeepingScheduleService
+        "HOUSEKEEPING_SCHEDULE",
 
-      .findInvalidStaffAssignments()
+        "Unable to validate housekeeping schedule staff assignments: " +
+          err.message,
+      );
+    }
 
-      .forEach(schedule => {
-
-
-
-        addError(
-
-          findings,
-
-          'HOUSEKEEPING_SCHEDULE',
-
-          'Invalid housekeeping schedule staff assignment: ' +
-
-            schedule.schedule_id +
-
-            ' -> ' +
-
-            schedule.assigned_to,
-
-          schedule
-
-        );
-
-
-
-      });
-
-
-
-  } catch (err) {
-
-
-
-    addError(
-
-      findings,
-
-      'HOUSEKEEPING_SCHEDULE',
-
-      'Unable to validate housekeeping schedule staff assignments: ' +
-
-        err.message
-
-    );
-
-
-
-  }
-
-
-
-
-
-  /*
+    /*
 
    * --------------------------------------------------------
 
@@ -6318,69 +3082,34 @@ function checkHousekeepingSchedules(
 
    */
 
+    try {
+      HousekeepingScheduleService.findInvalidTaskTypes()
 
+        .forEach((schedule) => {
+          addError(
+            findings,
 
-  try {
+            "HOUSEKEEPING_SCHEDULE",
 
+            "Invalid housekeeping schedule task type: " +
+              schedule.schedule_id +
+              " -> " +
+              schedule.task_type,
 
+            schedule,
+          );
+        });
+    } catch (err) {
+      addError(
+        findings,
 
-    HousekeepingScheduleService
+        "HOUSEKEEPING_SCHEDULE",
 
-      .findInvalidTaskTypes()
+        "Unable to validate housekeeping schedule task types: " + err.message,
+      );
+    }
 
-      .forEach(schedule => {
-
-
-
-        addError(
-
-          findings,
-
-          'HOUSEKEEPING_SCHEDULE',
-
-          'Invalid housekeeping schedule task type: ' +
-
-            schedule.schedule_id +
-
-            ' -> ' +
-
-            schedule.task_type,
-
-          schedule
-
-        );
-
-
-
-      });
-
-
-
-  } catch (err) {
-
-
-
-    addError(
-
-      findings,
-
-      'HOUSEKEEPING_SCHEDULE',
-
-      'Unable to validate housekeeping schedule task types: ' +
-
-        err.message
-
-    );
-
-
-
-  }
-
-
-
-
-
-  /*
+    /*
 
    * --------------------------------------------------------
 
@@ -6390,69 +3119,34 @@ function checkHousekeepingSchedules(
 
    */
 
+    try {
+      HousekeepingScheduleService.findInvalidFrequencies()
 
+        .forEach((schedule) => {
+          addError(
+            findings,
 
-  try {
+            "HOUSEKEEPING_SCHEDULE",
 
+            "Invalid housekeeping schedule frequency: " +
+              schedule.schedule_id +
+              " -> " +
+              schedule.frequency,
 
+            schedule,
+          );
+        });
+    } catch (err) {
+      addError(
+        findings,
 
-    HousekeepingScheduleService
+        "HOUSEKEEPING_SCHEDULE",
 
-      .findInvalidFrequencies()
+        "Unable to validate housekeeping schedule frequencies: " + err.message,
+      );
+    }
 
-      .forEach(schedule => {
-
-
-
-        addError(
-
-          findings,
-
-          'HOUSEKEEPING_SCHEDULE',
-
-          'Invalid housekeeping schedule frequency: ' +
-
-            schedule.schedule_id +
-
-            ' -> ' +
-
-            schedule.frequency,
-
-          schedule
-
-        );
-
-
-
-      });
-
-
-
-  } catch (err) {
-
-
-
-    addError(
-
-      findings,
-
-      'HOUSEKEEPING_SCHEDULE',
-
-      'Unable to validate housekeeping schedule frequencies: ' +
-
-        err.message
-
-    );
-
-
-
-  }
-
-
-
-
-
-  /*
+    /*
 
    * --------------------------------------------------------
 
@@ -6462,69 +3156,34 @@ function checkHousekeepingSchedules(
 
    */
 
+    try {
+      HousekeepingScheduleService.findInvalidIntervals()
 
+        .forEach((schedule) => {
+          addError(
+            findings,
 
-  try {
+            "HOUSEKEEPING_SCHEDULE",
 
+            "Invalid housekeeping schedule interval: " +
+              schedule.schedule_id +
+              " -> " +
+              schedule.interval_value,
 
+            schedule,
+          );
+        });
+    } catch (err) {
+      addError(
+        findings,
 
-    HousekeepingScheduleService
+        "HOUSEKEEPING_SCHEDULE",
 
-      .findInvalidIntervals()
+        "Unable to validate housekeeping schedule intervals: " + err.message,
+      );
+    }
 
-      .forEach(schedule => {
-
-
-
-        addError(
-
-          findings,
-
-          'HOUSEKEEPING_SCHEDULE',
-
-          'Invalid housekeeping schedule interval: ' +
-
-            schedule.schedule_id +
-
-            ' -> ' +
-
-            schedule.interval_value,
-
-          schedule
-
-        );
-
-
-
-      });
-
-
-
-  } catch (err) {
-
-
-
-    addError(
-
-      findings,
-
-      'HOUSEKEEPING_SCHEDULE',
-
-      'Unable to validate housekeeping schedule intervals: ' +
-
-        err.message
-
-    );
-
-
-
-  }
-
-
-
-
-
-  /*
+    /*
 
    * --------------------------------------------------------
 
@@ -6534,69 +3193,34 @@ function checkHousekeepingSchedules(
 
    */
 
+    try {
+      HousekeepingScheduleService.findInvalidDaysOfWeek()
 
+        .forEach((schedule) => {
+          addError(
+            findings,
 
-  try {
+            "HOUSEKEEPING_SCHEDULE",
 
+            "Invalid housekeeping schedule day_of_week: " +
+              schedule.schedule_id +
+              " -> " +
+              schedule.day_of_week,
 
+            schedule,
+          );
+        });
+    } catch (err) {
+      addError(
+        findings,
 
-    HousekeepingScheduleService
+        "HOUSEKEEPING_SCHEDULE",
 
-      .findInvalidDaysOfWeek()
+        "Unable to validate housekeeping schedule day_of_week: " + err.message,
+      );
+    }
 
-      .forEach(schedule => {
-
-
-
-        addError(
-
-          findings,
-
-          'HOUSEKEEPING_SCHEDULE',
-
-          'Invalid housekeeping schedule day_of_week: ' +
-
-            schedule.schedule_id +
-
-            ' -> ' +
-
-            schedule.day_of_week,
-
-          schedule
-
-        );
-
-
-
-      });
-
-
-
-  } catch (err) {
-
-
-
-    addError(
-
-      findings,
-
-      'HOUSEKEEPING_SCHEDULE',
-
-      'Unable to validate housekeeping schedule day_of_week: ' +
-
-        err.message
-
-    );
-
-
-
-  }
-
-
-
-
-
-  /*
+    /*
 
    * --------------------------------------------------------
 
@@ -6606,69 +3230,34 @@ function checkHousekeepingSchedules(
 
    */
 
+    try {
+      HousekeepingScheduleService.findInvalidDaysOfMonth()
 
+        .forEach((schedule) => {
+          addError(
+            findings,
 
-  try {
+            "HOUSEKEEPING_SCHEDULE",
 
+            "Invalid housekeeping schedule day_of_month: " +
+              schedule.schedule_id +
+              " -> " +
+              schedule.day_of_month,
 
+            schedule,
+          );
+        });
+    } catch (err) {
+      addError(
+        findings,
 
-    HousekeepingScheduleService
+        "HOUSEKEEPING_SCHEDULE",
 
-      .findInvalidDaysOfMonth()
+        "Unable to validate housekeeping schedule day_of_month: " + err.message,
+      );
+    }
 
-      .forEach(schedule => {
-
-
-
-        addError(
-
-          findings,
-
-          'HOUSEKEEPING_SCHEDULE',
-
-          'Invalid housekeeping schedule day_of_month: ' +
-
-            schedule.schedule_id +
-
-            ' -> ' +
-
-            schedule.day_of_month,
-
-          schedule
-
-        );
-
-
-
-      });
-
-
-
-  } catch (err) {
-
-
-
-    addError(
-
-      findings,
-
-      'HOUSEKEEPING_SCHEDULE',
-
-      'Unable to validate housekeeping schedule day_of_month: ' +
-
-        err.message
-
-    );
-
-
-
-  }
-
-
-
-
-
-  /*
+    /*
 
    * --------------------------------------------------------
 
@@ -6678,65 +3267,31 @@ function checkHousekeepingSchedules(
 
    */
 
+    try {
+      HousekeepingScheduleService.findInvalidDates()
 
+        .forEach((schedule) => {
+          addError(
+            findings,
 
-  try {
+            "HOUSEKEEPING_SCHEDULE",
 
+            "Invalid housekeeping schedule date: " + schedule.schedule_id,
 
+            schedule,
+          );
+        });
+    } catch (err) {
+      addError(
+        findings,
 
-    HousekeepingScheduleService
+        "HOUSEKEEPING_SCHEDULE",
 
-      .findInvalidDates()
+        "Unable to validate housekeeping schedule dates: " + err.message,
+      );
+    }
 
-      .forEach(schedule => {
-
-
-
-        addError(
-
-          findings,
-
-          'HOUSEKEEPING_SCHEDULE',
-
-          'Invalid housekeeping schedule date: ' +
-
-            schedule.schedule_id,
-
-          schedule
-
-        );
-
-
-
-      });
-
-
-
-  } catch (err) {
-
-
-
-    addError(
-
-      findings,
-
-      'HOUSEKEEPING_SCHEDULE',
-
-      'Unable to validate housekeeping schedule dates: ' +
-
-        err.message
-
-    );
-
-
-
-  }
-
-
-
-
-
-  /*
+    /*
 
    * --------------------------------------------------------
 
@@ -6746,65 +3301,32 @@ function checkHousekeepingSchedules(
 
    */
 
+    try {
+      HousekeepingScheduleService.findDuplicateActiveSchedules()
 
+        .forEach((schedule) => {
+          addError(
+            findings,
 
-  try {
+            "HOUSEKEEPING_SCHEDULE",
 
+            "Duplicate active housekeeping schedule detected: " +
+              schedule.schedule_id,
 
+            schedule,
+          );
+        });
+    } catch (err) {
+      addError(
+        findings,
 
-    HousekeepingScheduleService
+        "HOUSEKEEPING_SCHEDULE",
 
-      .findDuplicateActiveSchedules()
+        "Unable to validate duplicate housekeeping schedules: " + err.message,
+      );
+    }
 
-      .forEach(schedule => {
-
-
-
-        addError(
-
-          findings,
-
-          'HOUSEKEEPING_SCHEDULE',
-
-          'Duplicate active housekeeping schedule detected: ' +
-
-            schedule.schedule_id,
-
-          schedule
-
-        );
-
-
-
-      });
-
-
-
-  } catch (err) {
-
-
-
-    addError(
-
-      findings,
-
-      'HOUSEKEEPING_SCHEDULE',
-
-      'Unable to validate duplicate housekeeping schedules: ' +
-
-        err.message
-
-    );
-
-
-
-  }
-
-
-
-
-
-  /*
+    /*
 
    * --------------------------------------------------------
 
@@ -6814,65 +3336,33 @@ function checkHousekeepingSchedules(
 
    */
 
+    try {
+      HousekeepingScheduleService.findActiveSchedulesWithoutNextDue()
 
+        .forEach((schedule) => {
+          addError(
+            findings,
 
-  try {
+            "HOUSEKEEPING_SCHEDULE",
 
+            "Active housekeeping schedule has no next_due: " +
+              schedule.schedule_id,
 
+            schedule,
+          );
+        });
+    } catch (err) {
+      addError(
+        findings,
 
-    HousekeepingScheduleService
+        "HOUSEKEEPING_SCHEDULE",
 
-      .findActiveSchedulesWithoutNextDue()
+        "Unable to validate housekeeping schedule next_due values: " +
+          err.message,
+      );
+    }
 
-      .forEach(schedule => {
-
-
-
-        addError(
-
-          findings,
-
-          'HOUSEKEEPING_SCHEDULE',
-
-          'Active housekeeping schedule has no next_due: ' +
-
-            schedule.schedule_id,
-
-          schedule
-
-        );
-
-
-
-      });
-
-
-
-  } catch (err) {
-
-
-
-    addError(
-
-      findings,
-
-      'HOUSEKEEPING_SCHEDULE',
-
-      'Unable to validate housekeeping schedule next_due values: ' +
-
-        err.message
-
-    );
-
-
-
-  }
-
-
-
-
-
-  /*
+    /*
 
    * --------------------------------------------------------
 
@@ -6882,984 +3372,694 @@ function checkHousekeepingSchedules(
 
    */
 
-
-
-  addInfo(
-
-    findings,
-
-    'HOUSEKEEPING_SCHEDULE',
-
-    schedules.length +
-
-      ' housekeeping schedule(s) checked.'
-
-  );
-
-
-
-}
-
-
-/**
- * ----------------------------------------------------------
- * MAINTENANCE ASSETS - PHASE 4
- * ----------------------------------------------------------
- */
-
-function checkMaintenanceAssets(findings) {
-
-  let assets;
-
-  try {
-
-    assets =
-      MaintenanceService.getAssets();
-
-  } catch (err) {
-
-    addError(
+    addInfo(
       findings,
-      'MAINTENANCE_ASSET',
-      'Unable to read maintenance assets: ' +
-        err.message
-    );
 
-    return;
+      "HOUSEKEEPING_SCHEDULE",
+
+      schedules.length + " housekeeping schedule(s) checked.",
+    );
   }
 
-
-  /*
-   * Orphan unit references.
+  /**
+   * ----------------------------------------------------------
+   * MAINTENANCE ASSETS - PHASE 4
+   * ----------------------------------------------------------
    */
 
-  try {
+  function checkMaintenanceAssets(findings) {
+    let assets;
 
-    MaintenanceService
-      .findOrphanAssetUnitLinks()
-      .forEach(asset => {
+    try {
+      assets = MaintenanceService.getAssets();
+    } catch (err) {
+      addError(
+        findings,
+        "MAINTENANCE_ASSET",
+        "Unable to read maintenance assets: " + err.message,
+      );
 
+      return;
+    }
+
+    /*
+     * Orphan unit references.
+     */
+
+    try {
+      MaintenanceService.findOrphanAssetUnitLinks().forEach((asset) => {
         addError(
           findings,
-          'MAINTENANCE_ASSET',
-          'Maintenance asset references missing unit: ' +
+          "MAINTENANCE_ASSET",
+          "Maintenance asset references missing unit: " +
             asset.asset_id +
-            ' -> ' +
+            " -> " +
             asset.unit_id,
-          asset
+          asset,
         );
-
       });
+    } catch (err) {
+      addError(
+        findings,
+        "MAINTENANCE_ASSET",
+        "Unable to validate maintenance asset unit links: " + err.message,
+      );
+    }
 
-  } catch (err) {
+    /*
+     * Invalid statuses.
+     */
 
-    addError(
-      findings,
-      'MAINTENANCE_ASSET',
-      'Unable to validate maintenance asset unit links: ' +
-        err.message
-    );
-
-  }
-
-
-  /*
-   * Invalid statuses.
-   */
-
-  try {
-
-    MaintenanceService
-      .findInvalidAssetStatuses()
-      .forEach(asset => {
-
+    try {
+      MaintenanceService.findInvalidAssetStatuses().forEach((asset) => {
         addError(
           findings,
-          'MAINTENANCE_ASSET',
-          'Invalid maintenance asset status: ' +
+          "MAINTENANCE_ASSET",
+          "Invalid maintenance asset status: " +
             asset.asset_id +
-            ' / ' +
+            " / " +
             asset.status,
-          asset
+          asset,
         );
-
       });
+    } catch (err) {
+      addError(
+        findings,
+        "MAINTENANCE_ASSET",
+        "Unable to validate maintenance asset statuses: " + err.message,
+      );
+    }
 
-  } catch (err) {
+    /*
+     * Invalid dates.
+     */
 
-    addError(
+    try {
+      MaintenanceService.findInvalidAssetDates().forEach((asset) => {
+        addError(
+          findings,
+          "MAINTENANCE_ASSET",
+          "Invalid maintenance asset date values: " + asset.asset_id,
+          asset,
+        );
+      });
+    } catch (err) {
+      addError(
+        findings,
+        "MAINTENANCE_ASSET",
+        "Unable to validate maintenance asset dates: " + err.message,
+      );
+    }
+
+    /*
+     * Duplicate serial numbers.
+     */
+
+    try {
+      MaintenanceService.findDuplicateAssetSerialNumbers().forEach((record) => {
+        addError(
+          findings,
+          "MAINTENANCE_ASSET",
+          "Duplicate maintenance asset serial number detected.",
+          record,
+        );
+      });
+    } catch (err) {
+      addError(
+        findings,
+        "MAINTENANCE_ASSET",
+        "Unable to validate maintenance asset serial numbers: " + err.message,
+      );
+    }
+
+    addInfo(
       findings,
-      'MAINTENANCE_ASSET',
-      'Unable to validate maintenance asset statuses: ' +
-        err.message
+      "MAINTENANCE_ASSET",
+      assets.length + " maintenance asset(s) checked.",
     );
-
   }
 
-
-  /*
-   * Invalid dates.
+  /**
+   * ----------------------------------------------------------
+   * MAINTENANCE SCHEDULES - PHASE 4
+   * ----------------------------------------------------------
    */
 
-  try {
+  function checkMaintenanceSchedules(findings) {
+    let schedules;
 
-    MaintenanceService
-      .findInvalidAssetDates()
-      .forEach(asset => {
+    try {
+      schedules = MaintenanceService.getSchedules();
+    } catch (err) {
+      addError(
+        findings,
+        "MAINTENANCE_SCHEDULE",
+        "Unable to read maintenance schedules: " + err.message,
+      );
 
+      return;
+    }
+
+    try {
+      MaintenanceService.findOrphanScheduleAssetLinks().forEach((schedule) => {
         addError(
           findings,
-          'MAINTENANCE_ASSET',
-          'Invalid maintenance asset date values: ' +
-            asset.asset_id,
-          asset
-        );
-
-      });
-
-  } catch (err) {
-
-    addError(
-      findings,
-      'MAINTENANCE_ASSET',
-      'Unable to validate maintenance asset dates: ' +
-        err.message
-    );
-
-  }
-
-
-  /*
-   * Duplicate serial numbers.
-   */
-
-  try {
-
-    MaintenanceService
-      .findDuplicateAssetSerialNumbers()
-      .forEach(record => {
-
-        addError(
-          findings,
-          'MAINTENANCE_ASSET',
-          'Duplicate maintenance asset serial number detected.',
-          record
-        );
-
-      });
-
-  } catch (err) {
-
-    addError(
-      findings,
-      'MAINTENANCE_ASSET',
-      'Unable to validate maintenance asset serial numbers: ' +
-        err.message
-    );
-
-  }
-
-
-  addInfo(
-    findings,
-    'MAINTENANCE_ASSET',
-    assets.length +
-      ' maintenance asset(s) checked.'
-  );
-
-}
-
-/**
- * ----------------------------------------------------------
- * MAINTENANCE SCHEDULES - PHASE 4
- * ----------------------------------------------------------
- */
-
-function checkMaintenanceSchedules(findings) {
-
-  let schedules;
-
-  try {
-
-    schedules =
-      MaintenanceService.getSchedules();
-
-  } catch (err) {
-
-    addError(
-      findings,
-      'MAINTENANCE_SCHEDULE',
-      'Unable to read maintenance schedules: ' +
-        err.message
-    );
-
-    return;
-  }
-
-
-  try {
-
-    MaintenanceService
-      .findOrphanScheduleAssetLinks()
-      .forEach(schedule => {
-
-        addError(
-          findings,
-          'MAINTENANCE_SCHEDULE',
-          'Maintenance schedule references missing asset: ' +
+          "MAINTENANCE_SCHEDULE",
+          "Maintenance schedule references missing asset: " +
             schedule.schedule_id +
-            ' -> ' +
+            " -> " +
             schedule.asset_id,
-          schedule
+          schedule,
         );
-
       });
+    } catch (err) {
+      addError(
+        findings,
+        "MAINTENANCE_SCHEDULE",
+        "Unable to validate maintenance schedule asset links: " + err.message,
+      );
+    }
 
-  } catch (err) {
-
-    addError(
-      findings,
-      'MAINTENANCE_SCHEDULE',
-      'Unable to validate maintenance schedule asset links: ' +
-        err.message
-    );
-
-  }
-
-
-  try {
-
-    MaintenanceService
-      .findOrphanScheduleStaffLinks()
-      .forEach(schedule => {
-
+    try {
+      MaintenanceService.findOrphanScheduleStaffLinks().forEach((schedule) => {
         addError(
           findings,
-          'MAINTENANCE_SCHEDULE',
-          'Maintenance schedule references missing staff: ' +
+          "MAINTENANCE_SCHEDULE",
+          "Maintenance schedule references missing staff: " +
             schedule.schedule_id +
-            ' -> ' +
+            " -> " +
             schedule.assigned_to,
-          schedule
+          schedule,
         );
-
       });
+    } catch (err) {
+      addError(
+        findings,
+        "MAINTENANCE_SCHEDULE",
+        "Unable to validate maintenance schedule staff links: " + err.message,
+      );
+    }
 
-  } catch (err) {
+    try {
+      MaintenanceService.findInvalidScheduleStaffAssignments().forEach(
+        (schedule) => {
+          addError(
+            findings,
+            "MAINTENANCE_SCHEDULE",
+            "Invalid maintenance technician assignment: " +
+              schedule.schedule_id +
+              " -> " +
+              schedule.assigned_to,
+            schedule,
+          );
+        },
+      );
+    } catch (err) {
+      addError(
+        findings,
+        "MAINTENANCE_SCHEDULE",
+        "Unable to validate maintenance schedule staff assignments: " +
+          err.message,
+      );
+    }
 
-    addError(
-      findings,
-      'MAINTENANCE_SCHEDULE',
-      'Unable to validate maintenance schedule staff links: ' +
-        err.message
-    );
+    try {
+      MaintenanceService.findInvalidScheduleFrequencies().forEach(
+        (schedule) => {
+          addError(
+            findings,
+            "MAINTENANCE_SCHEDULE",
+            "Invalid maintenance schedule frequency: " +
+              schedule.schedule_id +
+              " / " +
+              schedule.frequency,
+            schedule,
+          );
+        },
+      );
+    } catch (err) {
+      addError(
+        findings,
+        "MAINTENANCE_SCHEDULE",
+        "Unable to validate maintenance schedule frequencies: " + err.message,
+      );
+    }
 
-  }
-
-
-  try {
-
-    MaintenanceService
-      .findInvalidScheduleStaffAssignments()
-      .forEach(schedule => {
-
+    try {
+      MaintenanceService.findInvalidScheduleIntervals().forEach((schedule) => {
         addError(
           findings,
-          'MAINTENANCE_SCHEDULE',
-          'Invalid maintenance technician assignment: ' +
+          "MAINTENANCE_SCHEDULE",
+          "Invalid maintenance schedule interval: " +
             schedule.schedule_id +
-            ' -> ' +
-            schedule.assigned_to,
-          schedule
-        );
-
-      });
-
-  } catch (err) {
-
-    addError(
-      findings,
-      'MAINTENANCE_SCHEDULE',
-      'Unable to validate maintenance schedule staff assignments: ' +
-        err.message
-    );
-
-  }
-
-
-  try {
-
-    MaintenanceService
-      .findInvalidScheduleFrequencies()
-      .forEach(schedule => {
-
-        addError(
-          findings,
-          'MAINTENANCE_SCHEDULE',
-          'Invalid maintenance schedule frequency: ' +
-            schedule.schedule_id +
-            ' / ' +
-            schedule.frequency,
-          schedule
-        );
-
-      });
-
-  } catch (err) {
-
-    addError(
-      findings,
-      'MAINTENANCE_SCHEDULE',
-      'Unable to validate maintenance schedule frequencies: ' +
-        err.message
-    );
-
-  }
-
-
-  try {
-
-    MaintenanceService
-      .findInvalidScheduleIntervals()
-      .forEach(schedule => {
-
-        addError(
-          findings,
-          'MAINTENANCE_SCHEDULE',
-          'Invalid maintenance schedule interval: ' +
-            schedule.schedule_id +
-            ' / ' +
+            " / " +
             schedule.interval_value,
-          schedule
+          schedule,
         );
-
       });
+    } catch (err) {
+      addError(
+        findings,
+        "MAINTENANCE_SCHEDULE",
+        "Unable to validate maintenance schedule intervals: " + err.message,
+      );
+    }
 
-  } catch (err) {
-
-    addError(
-      findings,
-      'MAINTENANCE_SCHEDULE',
-      'Unable to validate maintenance schedule intervals: ' +
-        err.message
-    );
-
-  }
-
-
-  try {
-
-    MaintenanceService
-      .findInvalidScheduleDates()
-      .forEach(schedule => {
-
+    try {
+      MaintenanceService.findInvalidScheduleDates().forEach((schedule) => {
         addError(
           findings,
-          'MAINTENANCE_SCHEDULE',
-          'Invalid maintenance schedule dates: ' +
-            schedule.schedule_id,
-          schedule
+          "MAINTENANCE_SCHEDULE",
+          "Invalid maintenance schedule dates: " + schedule.schedule_id,
+          schedule,
         );
-
       });
+    } catch (err) {
+      addError(
+        findings,
+        "MAINTENANCE_SCHEDULE",
+        "Unable to validate maintenance schedule dates: " + err.message,
+      );
+    }
 
-  } catch (err) {
+    try {
+      MaintenanceService.findActiveSchedulesWithoutNextDue().forEach(
+        (schedule) => {
+          addError(
+            findings,
+            "MAINTENANCE_SCHEDULE",
+            "Active maintenance schedule has no next_due: " +
+              schedule.schedule_id,
+            schedule,
+          );
+        },
+      );
+    } catch (err) {
+      addError(
+        findings,
+        "MAINTENANCE_SCHEDULE",
+        "Unable to validate maintenance schedule next_due values: " +
+          err.message,
+      );
+    }
 
-    addError(
-      findings,
-      'MAINTENANCE_SCHEDULE',
-      'Unable to validate maintenance schedule dates: ' +
-        err.message
-    );
-
-  }
-
-
-  try {
-
-    MaintenanceService
-      .findActiveSchedulesWithoutNextDue()
-      .forEach(schedule => {
-
+    try {
+      MaintenanceService.findDuplicateActiveSchedules().forEach((record) => {
         addError(
           findings,
-          'MAINTENANCE_SCHEDULE',
-          'Active maintenance schedule has no next_due: ' +
-            schedule.schedule_id,
-          schedule
+          "MAINTENANCE_SCHEDULE",
+          "Duplicate active maintenance schedule detected.",
+          record,
         );
-
       });
+    } catch (err) {
+      addError(
+        findings,
+        "MAINTENANCE_SCHEDULE",
+        "Unable to validate duplicate maintenance schedules: " + err.message,
+      );
+    }
 
-  } catch (err) {
-
-    addError(
+    addInfo(
       findings,
-      'MAINTENANCE_SCHEDULE',
-      'Unable to validate maintenance schedule next_due values: ' +
-        err.message
+      "MAINTENANCE_SCHEDULE",
+      schedules.length + " maintenance schedule(s) checked.",
     );
-
   }
 
-
-  try {
-
-    MaintenanceService
-      .findDuplicateActiveSchedules()
-      .forEach(record => {
-
-        addError(
-          findings,
-          'MAINTENANCE_SCHEDULE',
-          'Duplicate active maintenance schedule detected.',
-          record
-        );
-
-      });
-
-  } catch (err) {
-
-    addError(
-      findings,
-      'MAINTENANCE_SCHEDULE',
-      'Unable to validate duplicate maintenance schedules: ' +
-        err.message
-    );
-
-  }
-
-
-  addInfo(
-    findings,
-    'MAINTENANCE_SCHEDULE',
-    schedules.length +
-      ' maintenance schedule(s) checked.'
-  );
-
-}
-
-/**
- * ----------------------------------------------------------
- * MAINTENANCE WORK ORDERS - PHASE 4
- * ----------------------------------------------------------
- */
-
-function checkMaintenanceWorkOrders(findings) {
-
-  let workOrders;
-
-  try {
-
-    workOrders =
-      MaintenanceService.getWorkOrders();
-
-  } catch (err) {
-
-    addError(
-      findings,
-      'MAINTENANCE_WORK_ORDER',
-      'Unable to read maintenance work orders: ' +
-        err.message
-    );
-
-    return;
-  }
-
-
-  /*
-   * Foreign-key integrity.
+  /**
+   * ----------------------------------------------------------
+   * MAINTENANCE WORK ORDERS - PHASE 4
+   * ----------------------------------------------------------
    */
 
-  try {
+  function checkMaintenanceWorkOrders(findings) {
+    let workOrders;
 
-    MaintenanceService
-      .findOrphanWorkOrderUnitLinks()
-      .forEach(workOrder => {
+    try {
+      workOrders = MaintenanceService.getWorkOrders();
+    } catch (err) {
+      addError(
+        findings,
+        "MAINTENANCE_WORK_ORDER",
+        "Unable to read maintenance work orders: " + err.message,
+      );
 
+      return;
+    }
+
+    /*
+     * Foreign-key integrity.
+     */
+
+    try {
+      MaintenanceService.findOrphanWorkOrderUnitLinks().forEach((workOrder) => {
         addError(
           findings,
-          'MAINTENANCE_WORK_ORDER',
-          'Maintenance work order references missing unit: ' +
+          "MAINTENANCE_WORK_ORDER",
+          "Maintenance work order references missing unit: " +
             workOrder.work_order_id +
-            ' -> ' +
+            " -> " +
             workOrder.unit_id,
-          workOrder
+          workOrder,
         );
-
       });
+    } catch (err) {
+      addError(
+        findings,
+        "MAINTENANCE_WORK_ORDER",
+        "Unable to validate work order unit links: " + err.message,
+      );
+    }
 
-  } catch (err) {
+    try {
+      MaintenanceService.findOrphanWorkOrderAssetLinks().forEach(
+        (workOrder) => {
+          addError(
+            findings,
+            "MAINTENANCE_WORK_ORDER",
+            "Maintenance work order references missing asset: " +
+              workOrder.work_order_id +
+              " -> " +
+              workOrder.asset_id,
+            workOrder,
+          );
+        },
+      );
+    } catch (err) {
+      addError(
+        findings,
+        "MAINTENANCE_WORK_ORDER",
+        "Unable to validate work order asset links: " + err.message,
+      );
+    }
 
-    addError(
-      findings,
-      'MAINTENANCE_WORK_ORDER',
-      'Unable to validate work order unit links: ' +
-        err.message
-    );
+    try {
+      MaintenanceService.findWorkOrderAssetUnitMismatches().forEach(
+        (workOrder) => {
+          addError(
+            findings,
+            "MAINTENANCE_WORK_ORDER",
+            "Maintenance work order asset does not belong to work order unit: " +
+              workOrder.work_order_id,
+            workOrder,
+          );
+        },
+      );
+    } catch (err) {
+      addError(
+        findings,
+        "MAINTENANCE_WORK_ORDER",
+        "Unable to validate work order asset/unit consistency: " + err.message,
+      );
+    }
 
-  }
+    try {
+      MaintenanceService.findOrphanWorkOrderReservationLinks().forEach(
+        (workOrder) => {
+          addError(
+            findings,
+            "MAINTENANCE_WORK_ORDER",
+            "Maintenance work order references missing reservation: " +
+              workOrder.work_order_id +
+              " -> " +
+              workOrder.reservation_id,
+            workOrder,
+          );
+        },
+      );
+    } catch (err) {
+      addError(
+        findings,
+        "MAINTENANCE_WORK_ORDER",
+        "Unable to validate work order reservation links: " + err.message,
+      );
+    }
 
+    try {
+      MaintenanceService.findReservationUnitMismatches().forEach(
+        (workOrder) => {
+          addError(
+            findings,
+            "MAINTENANCE_WORK_ORDER",
+            "Maintenance work order reservation does not belong to work order unit: " +
+              workOrder.work_order_id,
+            workOrder,
+          );
+        },
+      );
+    } catch (err) {
+      addError(
+        findings,
+        "MAINTENANCE_WORK_ORDER",
+        "Unable to validate work order reservation/unit consistency: " +
+          err.message,
+      );
+    }
 
-  try {
+    try {
+      MaintenanceService.findOrphanWorkOrderStaffLinks().forEach(
+        (workOrder) => {
+          addError(
+            findings,
+            "MAINTENANCE_WORK_ORDER",
+            "Maintenance work order references missing staff: " +
+              workOrder.work_order_id +
+              " -> " +
+              workOrder.assigned_to,
+            workOrder,
+          );
+        },
+      );
+    } catch (err) {
+      addError(
+        findings,
+        "MAINTENANCE_WORK_ORDER",
+        "Unable to validate work order staff links: " + err.message,
+      );
+    }
 
-    MaintenanceService
-      .findOrphanWorkOrderAssetLinks()
-      .forEach(workOrder => {
+    /*
+     * Technician assignment.
+     */
 
+    try {
+      MaintenanceService.findInvalidWorkOrderStaffAssignments().forEach(
+        (workOrder) => {
+          addError(
+            findings,
+            "MAINTENANCE_WORK_ORDER",
+            "Invalid maintenance technician assignment: " +
+              workOrder.work_order_id +
+              " -> " +
+              workOrder.assigned_to,
+            workOrder,
+          );
+        },
+      );
+    } catch (err) {
+      addError(
+        findings,
+        "MAINTENANCE_WORK_ORDER",
+        "Unable to validate work order staff assignments: " + err.message,
+      );
+    }
+
+    /*
+     * Domain values.
+     */
+
+    try {
+      MaintenanceService.findInvalidWorkOrderSources().forEach((workOrder) => {
         addError(
           findings,
-          'MAINTENANCE_WORK_ORDER',
-          'Maintenance work order references missing asset: ' +
+          "MAINTENANCE_WORK_ORDER",
+          "Invalid maintenance work order source: " +
             workOrder.work_order_id +
-            ' -> ' +
-            workOrder.asset_id,
-          workOrder
-        );
-
-      });
-
-  } catch (err) {
-
-    addError(
-      findings,
-      'MAINTENANCE_WORK_ORDER',
-      'Unable to validate work order asset links: ' +
-        err.message
-    );
-
-  }
-
-
-  try {
-
-    MaintenanceService
-      .findWorkOrderAssetUnitMismatches()
-      .forEach(workOrder => {
-
-        addError(
-          findings,
-          'MAINTENANCE_WORK_ORDER',
-          'Maintenance work order asset does not belong to work order unit: ' +
-            workOrder.work_order_id,
-          workOrder
-        );
-
-      });
-
-  } catch (err) {
-
-    addError(
-      findings,
-      'MAINTENANCE_WORK_ORDER',
-      'Unable to validate work order asset/unit consistency: ' +
-        err.message
-    );
-
-  }
-
-
-  try {
-
-    MaintenanceService
-      .findOrphanWorkOrderReservationLinks()
-      .forEach(workOrder => {
-
-        addError(
-          findings,
-          'MAINTENANCE_WORK_ORDER',
-          'Maintenance work order references missing reservation: ' +
-            workOrder.work_order_id +
-            ' -> ' +
-            workOrder.reservation_id,
-          workOrder
-        );
-
-      });
-
-  } catch (err) {
-
-    addError(
-      findings,
-      'MAINTENANCE_WORK_ORDER',
-      'Unable to validate work order reservation links: ' +
-        err.message
-    );
-
-  }
-
-
-  try {
-
-    MaintenanceService
-      .findReservationUnitMismatches()
-      .forEach(workOrder => {
-
-        addError(
-          findings,
-          'MAINTENANCE_WORK_ORDER',
-          'Maintenance work order reservation does not belong to work order unit: ' +
-            workOrder.work_order_id,
-          workOrder
-        );
-
-      });
-
-  } catch (err) {
-
-    addError(
-      findings,
-      'MAINTENANCE_WORK_ORDER',
-      'Unable to validate work order reservation/unit consistency: ' +
-        err.message
-    );
-
-  }
-
-
-  try {
-
-    MaintenanceService
-      .findOrphanWorkOrderStaffLinks()
-      .forEach(workOrder => {
-
-        addError(
-          findings,
-          'MAINTENANCE_WORK_ORDER',
-          'Maintenance work order references missing staff: ' +
-            workOrder.work_order_id +
-            ' -> ' +
-            workOrder.assigned_to,
-          workOrder
-        );
-
-      });
-
-  } catch (err) {
-
-    addError(
-      findings,
-      'MAINTENANCE_WORK_ORDER',
-      'Unable to validate work order staff links: ' +
-        err.message
-    );
-
-  }
-
-
-  /*
-   * Technician assignment.
-   */
-
-  try {
-
-    MaintenanceService
-      .findInvalidWorkOrderStaffAssignments()
-      .forEach(workOrder => {
-
-        addError(
-          findings,
-          'MAINTENANCE_WORK_ORDER',
-          'Invalid maintenance technician assignment: ' +
-            workOrder.work_order_id +
-            ' -> ' +
-            workOrder.assigned_to,
-          workOrder
-        );
-
-      });
-
-  } catch (err) {
-
-    addError(
-      findings,
-      'MAINTENANCE_WORK_ORDER',
-      'Unable to validate work order staff assignments: ' +
-        err.message
-    );
-
-  }
-
-
-  /*
-   * Domain values.
-   */
-
-  try {
-
-    MaintenanceService
-      .findInvalidWorkOrderSources()
-      .forEach(workOrder => {
-
-        addError(
-          findings,
-          'MAINTENANCE_WORK_ORDER',
-          'Invalid maintenance work order source: ' +
-            workOrder.work_order_id +
-            ' / ' +
+            " / " +
             workOrder.source,
-          workOrder
+          workOrder,
         );
-
       });
+    } catch (err) {
+      addError(
+        findings,
+        "MAINTENANCE_WORK_ORDER",
+        "Unable to validate work order sources: " + err.message,
+      );
+    }
 
-  } catch (err) {
+    try {
+      MaintenanceService.findInvalidWorkOrderPriorities().forEach(
+        (workOrder) => {
+          addError(
+            findings,
+            "MAINTENANCE_WORK_ORDER",
+            "Invalid maintenance work order priority: " +
+              workOrder.work_order_id +
+              " / " +
+              workOrder.priority,
+            workOrder,
+          );
+        },
+      );
+    } catch (err) {
+      addError(
+        findings,
+        "MAINTENANCE_WORK_ORDER",
+        "Unable to validate work order priorities: " + err.message,
+      );
+    }
 
-    addError(
-      findings,
-      'MAINTENANCE_WORK_ORDER',
-      'Unable to validate work order sources: ' +
-        err.message
-    );
-
-  }
-
-
-  try {
-
-    MaintenanceService
-      .findInvalidWorkOrderPriorities()
-      .forEach(workOrder => {
-
+    try {
+      MaintenanceService.findInvalidWorkOrderStatuses().forEach((workOrder) => {
         addError(
           findings,
-          'MAINTENANCE_WORK_ORDER',
-          'Invalid maintenance work order priority: ' +
+          "MAINTENANCE_WORK_ORDER",
+          "Invalid maintenance work order status: " +
             workOrder.work_order_id +
-            ' / ' +
-            workOrder.priority,
-          workOrder
-        );
-
-      });
-
-  } catch (err) {
-
-    addError(
-      findings,
-      'MAINTENANCE_WORK_ORDER',
-      'Unable to validate work order priorities: ' +
-        err.message
-    );
-
-  }
-
-
-  try {
-
-    MaintenanceService
-      .findInvalidWorkOrderStatuses()
-      .forEach(workOrder => {
-
-        addError(
-          findings,
-          'MAINTENANCE_WORK_ORDER',
-          'Invalid maintenance work order status: ' +
-            workOrder.work_order_id +
-            ' / ' +
+            " / " +
             workOrder.status,
-          workOrder
+          workOrder,
         );
-
       });
+    } catch (err) {
+      addError(
+        findings,
+        "MAINTENANCE_WORK_ORDER",
+        "Unable to validate work order statuses: " + err.message,
+      );
+    }
 
-  } catch (err) {
+    /*
+     * Lifecycle timestamps/state.
+     */
 
-    addError(
-      findings,
-      'MAINTENANCE_WORK_ORDER',
-      'Unable to validate work order statuses: ' +
-        err.message
-    );
-
-  }
-
-
-  /*
-   * Lifecycle timestamps/state.
-   */
-
-  try {
-
-    MaintenanceService
-      .findScheduledWithoutDate()
-      .forEach(workOrder => {
-
+    try {
+      MaintenanceService.findScheduledWithoutDate().forEach((workOrder) => {
         addError(
           findings,
-          'MAINTENANCE_WORK_ORDER',
-          'SCHEDULED maintenance work order has no scheduled_date: ' +
+          "MAINTENANCE_WORK_ORDER",
+          "SCHEDULED maintenance work order has no scheduled_date: " +
             workOrder.work_order_id,
-          workOrder
+          workOrder,
         );
-
       });
+    } catch (err) {
+      addError(
+        findings,
+        "MAINTENANCE_WORK_ORDER",
+        "Unable to validate scheduled work order dates: " + err.message,
+      );
+    }
 
-  } catch (err) {
+    try {
+      MaintenanceService.findInProgressWithoutStartedAt().forEach(
+        (workOrder) => {
+          addError(
+            findings,
+            "MAINTENANCE_WORK_ORDER",
+            "IN_PROGRESS maintenance work order has no started_at: " +
+              workOrder.work_order_id,
+            workOrder,
+          );
+        },
+      );
+    } catch (err) {
+      addError(
+        findings,
+        "MAINTENANCE_WORK_ORDER",
+        "Unable to validate work order start timestamps: " + err.message,
+      );
+    }
 
-    addError(
-      findings,
-      'MAINTENANCE_WORK_ORDER',
-      'Unable to validate scheduled work order dates: ' +
-        err.message
-    );
+    try {
+      MaintenanceService.findCompletedWithoutTimestamp().forEach(
+        (workOrder) => {
+          addError(
+            findings,
+            "MAINTENANCE_WORK_ORDER",
+            "COMPLETED maintenance work order has no completed_at: " +
+              workOrder.work_order_id,
+            workOrder,
+          );
+        },
+      );
+    } catch (err) {
+      addError(
+        findings,
+        "MAINTENANCE_WORK_ORDER",
+        "Unable to validate work order completion timestamps: " + err.message,
+      );
+    }
 
-  }
+    try {
+      MaintenanceService.findCompletedWithoutResolution().forEach(
+        (workOrder) => {
+          addError(
+            findings,
+            "MAINTENANCE_WORK_ORDER",
+            "COMPLETED maintenance work order has no resolution: " +
+              workOrder.work_order_id,
+            workOrder,
+          );
+        },
+      );
+    } catch (err) {
+      addError(
+        findings,
+        "MAINTENANCE_WORK_ORDER",
+        "Unable to validate work order resolutions: " + err.message,
+      );
+    }
 
-
-  try {
-
-    MaintenanceService
-      .findInProgressWithoutStartedAt()
-      .forEach(workOrder => {
-
+    try {
+      MaintenanceService.findInvalidWorkOrderDates().forEach((workOrder) => {
         addError(
           findings,
-          'MAINTENANCE_WORK_ORDER',
-          'IN_PROGRESS maintenance work order has no started_at: ' +
+          "MAINTENANCE_WORK_ORDER",
+          "Invalid maintenance work order date values: " +
             workOrder.work_order_id,
-          workOrder
+          workOrder,
         );
-
       });
+    } catch (err) {
+      addError(
+        findings,
+        "MAINTENANCE_WORK_ORDER",
+        "Unable to validate work order dates: " + err.message,
+      );
+    }
 
-  } catch (err) {
+    /*
+     * Preventive duplicate protection.
+     */
 
-    addError(
+    try {
+      MaintenanceService.findDuplicatePreventiveWorkOrders().forEach(
+        (record) => {
+          addError(
+            findings,
+            "MAINTENANCE_WORK_ORDER",
+            "Duplicate preventive maintenance work order detected.",
+            record,
+          );
+        },
+      );
+    } catch (err) {
+      addError(
+        findings,
+        "MAINTENANCE_WORK_ORDER",
+        "Unable to validate duplicate preventive work orders: " + err.message,
+      );
+    }
+
+    addInfo(
       findings,
-      'MAINTENANCE_WORK_ORDER',
-      'Unable to validate work order start timestamps: ' +
-        err.message
+      "MAINTENANCE_WORK_ORDER",
+      workOrders.length + " maintenance work order(s) checked.",
     );
-
   }
-
-
-  try {
-
-    MaintenanceService
-      .findCompletedWithoutTimestamp()
-      .forEach(workOrder => {
-
-        addError(
-          findings,
-          'MAINTENANCE_WORK_ORDER',
-          'COMPLETED maintenance work order has no completed_at: ' +
-            workOrder.work_order_id,
-          workOrder
-        );
-
-      });
-
-  } catch (err) {
-
-    addError(
-      findings,
-      'MAINTENANCE_WORK_ORDER',
-      'Unable to validate work order completion timestamps: ' +
-        err.message
-    );
-
-  }
-
-
-  try {
-
-    MaintenanceService
-      .findCompletedWithoutResolution()
-      .forEach(workOrder => {
-
-        addError(
-          findings,
-          'MAINTENANCE_WORK_ORDER',
-          'COMPLETED maintenance work order has no resolution: ' +
-            workOrder.work_order_id,
-          workOrder
-        );
-
-      });
-
-  } catch (err) {
-
-    addError(
-      findings,
-      'MAINTENANCE_WORK_ORDER',
-      'Unable to validate work order resolutions: ' +
-        err.message
-    );
-
-  }
-
-
-  try {
-
-    MaintenanceService
-      .findInvalidWorkOrderDates()
-      .forEach(workOrder => {
-
-        addError(
-          findings,
-          'MAINTENANCE_WORK_ORDER',
-          'Invalid maintenance work order date values: ' +
-            workOrder.work_order_id,
-          workOrder
-        );
-
-      });
-
-  } catch (err) {
-
-    addError(
-      findings,
-      'MAINTENANCE_WORK_ORDER',
-      'Unable to validate work order dates: ' +
-        err.message
-    );
-
-  }
-
-
-  /*
-   * Preventive duplicate protection.
-   */
-
-  try {
-
-    MaintenanceService
-      .findDuplicatePreventiveWorkOrders()
-      .forEach(record => {
-
-        addError(
-          findings,
-          'MAINTENANCE_WORK_ORDER',
-          'Duplicate preventive maintenance work order detected.',
-          record
-        );
-
-      });
-
-  } catch (err) {
-
-    addError(
-      findings,
-      'MAINTENANCE_WORK_ORDER',
-      'Unable to validate duplicate preventive work orders: ' +
-        err.message
-    );
-
-  }
-
-
-  addInfo(
-    findings,
-    'MAINTENANCE_WORK_ORDER',
-    workOrders.length +
-      ' maintenance work order(s) checked.'
-  );
-
-}
-
-
 
   /**
 
@@ -7871,555 +4071,584 @@ function checkMaintenanceWorkOrders(findings) {
 
    */
 
+  /**
+   * ----------------------------------------------------------
+   * INSPECTIONS - PHASE 4
+   * ----------------------------------------------------------
+   */
 
+  function checkInspections(findings) {
+    const inspections = safeFindAll(CONFIG.SHEETS.INSPECTIONS);
 
+    const checks = [
+      ["findOrphanUnitLinks", "Inspection references missing unit."],
+      [
+        "findOrphanReservationLinks",
+        "Inspection references missing reservation.",
+      ],
+      [
+        "findReservationUnitMismatches",
+        "Inspection reservation/unit mismatch detected.",
+      ],
+      ["findOrphanInspectorLinks", "Inspection references missing inspector."],
+      [
+        "findInvalidInspectorAssignments",
+        "Invalid inspection staff assignment detected.",
+      ],
+      ["findInvalidInspectionTypes", "Invalid inspection type detected."],
+      ["findInvalidStatuses", "Invalid inspection status detected."],
+      ["findInvalidScores", "Invalid inspection score detected."],
+      [
+        "findInvalidOverallResults",
+        "Invalid inspection overall result detected.",
+      ],
+      [
+        "findIncompleteWithResult",
+        "Incomplete inspection has an overall result.",
+      ],
+      [
+        "findInProgressWithoutInspector",
+        "IN_PROGRESS inspection has no inspector.",
+      ],
+      [
+        "findCompletedWithoutInspector",
+        "COMPLETED inspection has no inspector.",
+      ],
+      [
+        "findCompletedWithoutResult",
+        "COMPLETED inspection has no overall result.",
+      ],
+      [
+        "findCompletedWithIncompleteChecklist",
+        "COMPLETED inspection has incomplete checklist items.",
+      ],
+    ];
 
-/**
- * ----------------------------------------------------------
- * INSPECTIONS - PHASE 4
- * ----------------------------------------------------------
- */
-
-function checkInspections(findings) {
-
-  const inspections =
-    safeFindAll(
-      CONFIG.SHEETS.INSPECTIONS
-    );
-
-  const checks = [
-    ['findOrphanUnitLinks',
-     'Inspection references missing unit.'],
-    ['findOrphanReservationLinks',
-     'Inspection references missing reservation.'],
-    ['findReservationUnitMismatches',
-     'Inspection reservation/unit mismatch detected.'],
-    ['findOrphanInspectorLinks',
-     'Inspection references missing inspector.'],
-    ['findInvalidInspectorAssignments',
-     'Invalid inspection staff assignment detected.'],
-    ['findInvalidInspectionTypes',
-     'Invalid inspection type detected.'],
-    ['findInvalidStatuses',
-     'Invalid inspection status detected.'],
-    ['findInvalidScores',
-     'Invalid inspection score detected.'],
-    ['findInvalidOverallResults',
-     'Invalid inspection overall result detected.'],
-    ['findIncompleteWithResult',
-     'Incomplete inspection has an overall result.'],
-    ['findInProgressWithoutInspector',
-     'IN_PROGRESS inspection has no inspector.'],
-    ['findCompletedWithoutInspector',
-     'COMPLETED inspection has no inspector.'],
-    ['findCompletedWithoutResult',
-     'COMPLETED inspection has no overall result.'],
-    ['findCompletedWithIncompleteChecklist',
-     'COMPLETED inspection has incomplete checklist items.']
-  ];
-
-  checks.forEach(check => {
-
-    try {
-
-      InspectionService[check[0]]()
-        .forEach(record => {
-
-          addError(
-            findings,
-            'INSPECTION',
-            check[1],
-            record
-          );
-
+    checks.forEach((check) => {
+      try {
+        InspectionService[check[0]]().forEach((record) => {
+          addError(findings, "INSPECTION", check[1], record);
         });
-
-    } catch (err) {
-
-      addError(
-        findings,
-        'INSPECTION',
-        'Unable to execute ' +
-          check[0] +
-          ': ' +
-          err.message
-      );
-
-    }
-
-  });
-
-  addInfo(
-    findings,
-    'INSPECTION',
-    inspections.length +
-      ' inspection(s) checked.'
-  );
-
-}
-
-
-/**
- * ----------------------------------------------------------
- * INSPECTION CHECKLIST - PHASE 4
- * ----------------------------------------------------------
- */
-
-function checkInspectionChecklist(findings) {
-
-  const items =
-    safeFindAll(
-      CONFIG.SHEETS.INSPECTION_CHECKLIST
-    );
-
-  const checks = [
-    ['findOrphanChecklistInspectionLinks',
-     'Inspection checklist item references missing inspection.'],
-    ['findInvalidChecklistCategories',
-     'Invalid inspection checklist category detected.'],
-    ['findInvalidChecklistResults',
-     'Invalid inspection checklist result detected.'],
-    ['findChecklistItemsWithoutDescription',
-     'Inspection checklist item has no description.'],
-    ['findDuplicateChecklistItems',
-     'Duplicate inspection checklist item detected.']
-  ];
-
-  checks.forEach(check => {
-
-    try {
-
-      InspectionService[check[0]]()
-        .forEach(record => {
-
-          addError(
-            findings,
-            'INSPECTION_CHECKLIST',
-            check[1],
-            record
-          );
-
-        });
-
-    } catch (err) {
-
-      addError(
-        findings,
-        'INSPECTION_CHECKLIST',
-        'Unable to execute ' +
-          check[0] +
-          ': ' +
-          err.message
-      );
-
-    }
-
-  });
-
-  addInfo(
-    findings,
-    'INSPECTION_CHECKLIST',
-    items.length +
-      ' inspection checklist item(s) checked.'
-  );
-
-}
-
-
-
-/**
- * ----------------------------------------------------------
- * INVENTORY ITEMS - PHASE 4
- * ----------------------------------------------------------
- */
-function checkInventoryItems(findings) {
-
-  const items =
-    safeFindAll(
-      CONFIG.SHEETS.INVENTORY_ITEMS
-    );
-
-  const checks = [
-    ['findDuplicateItemCodes',
-     'Duplicate inventory item_code detected.'],
-    ['findItemsWithoutCode',
-     'Inventory item has no item_code.'],
-    ['findItemsWithoutName',
-     'Inventory item has no name.'],
-    ['findInvalidItemTypes',
-     'Invalid inventory item type detected.'],
-    ['findInvalidItemNumbers',
-     'Invalid inventory item numeric value detected.'],
-    ['findOrphanPreferredVendors',
-     'Inventory item references missing preferred vendor.']
-  ];
-
-  checks.forEach(check => {
-    try {
-      InventoryService[check[0]]()
-        .forEach(record => {
-          addError(
-            findings,
-            'INVENTORY_ITEM',
-            check[1],
-            record
-          );
-        });
-    } catch (err) {
-      addError(
-        findings,
-        'INVENTORY_ITEM',
-        'Unable to execute ' +
-          check[0] +
-          ': ' +
-          err.message
-      );
-    }
-  });
-
-  addInfo(
-    findings,
-    'INVENTORY_ITEM',
-    items.length +
-      ' inventory item(s) checked.'
-  );
-}
-
-
-/**
- * ----------------------------------------------------------
- * INVENTORY LOCATIONS - PHASE 4
- * ----------------------------------------------------------
- */
-function checkInventoryLocations(findings) {
-
-  const locations =
-    safeFindAll(
-      CONFIG.SHEETS.INVENTORY_LOCATIONS
-    );
-
-  const checks = [
-    ['findOrphanLocationProperties',
-     'Inventory location references missing property.'],
-    ['findOrphanLocationUnits',
-     'Inventory location references missing unit.'],
-    ['findLocationPropertyUnitMismatches',
-     'Inventory location property/unit mismatch detected.'],
-    ['findInvalidLocationTypes',
-     'Invalid inventory location type detected.'],
-    ['findInvalidUnitLocationLinks',
-     'Invalid inventory UNIT-location linkage detected.'],
-    ['findDuplicateUnitLocations',
-     'Duplicate UNIT inventory location detected.']
-  ];
-
-  checks.forEach(check => {
-    try {
-      InventoryService[check[0]]()
-        .forEach(record => {
-          addError(
-            findings,
-            'INVENTORY_LOCATION',
-            check[1],
-            record
-          );
-        });
-    } catch (err) {
-      addError(
-        findings,
-        'INVENTORY_LOCATION',
-        'Unable to execute ' +
-          check[0] +
-          ': ' +
-          err.message
-      );
-    }
-  });
-
-  addInfo(
-    findings,
-    'INVENTORY_LOCATION',
-    locations.length +
-      ' inventory location(s) checked.'
-  );
-}
-
-
-/**
- * ----------------------------------------------------------
- * INVENTORY STOCK - PHASE 4
- * ----------------------------------------------------------
- */
-function checkInventoryStock(findings) {
-
-  const stock =
-    safeFindAll(
-      CONFIG.SHEETS.INVENTORY_STOCK
-    );
-
-  const checks = [
-    ['findOrphanStockItems',
-     'Inventory stock references missing item.'],
-    ['findOrphanStockLocations',
-     'Inventory stock references missing location.'],
-    ['findDuplicateStockRecords',
-     'Duplicate inventory item/location stock record detected.'],
-    ['findInvalidStockQuantities',
-     'Invalid inventory stock quantity detected.'],
-    ['findReservedGreaterThanOnHand',
-     'Inventory reserved quantity exceeds quantity on hand.'],
-    ['findInvalidStockThresholds',
-     'Invalid inventory minimum/maximum threshold detected.']
-  ];
-
-  checks.forEach(check => {
-    try {
-      InventoryService[check[0]]()
-        .forEach(record => {
-          addError(
-            findings,
-            'INVENTORY_STOCK',
-            check[1],
-            record
-          );
-        });
-    } catch (err) {
-      addError(
-        findings,
-        'INVENTORY_STOCK',
-        'Unable to execute ' +
-          check[0] +
-          ': ' +
-          err.message
-      );
-    }
-  });
-
-  addInfo(
-    findings,
-    'INVENTORY_STOCK',
-    stock.length +
-      ' inventory stock record(s) checked.'
-  );
-}
-
-
-/**
- * ----------------------------------------------------------
- * INVENTORY TRANSACTIONS - PHASE 4
- * ----------------------------------------------------------
- */
-function checkInventoryTransactions(findings) {
-
-  const transactions =
-    safeFindAll(
-      CONFIG.SHEETS.INVENTORY_TRANSACTIONS
-    );
-
-  const checks = [
-    ['findOrphanItemLinks',
-     'Inventory transaction references missing item.'],
-    ['findOrphanFromLocations',
-     'Inventory transaction references missing source location.'],
-    ['findOrphanToLocations',
-     'Inventory transaction references missing destination location.'],
-    ['findInvalidTransactionTypes',
-     'Invalid inventory transaction type detected.'],
-    ['findInvalidQuantities',
-     'Invalid inventory transaction quantity detected.'],
-    ['findInvalidLocationRules',
-     'Inventory transaction violates location-direction rules.'],
-    ['findOrphanUnitLinks',
-     'Inventory transaction references missing unit.'],
-    ['findOrphanReservationLinks',
-     'Inventory transaction references missing reservation.'],
-    ['findOrphanHousekeepingTaskLinks',
-     'Inventory transaction references missing housekeeping task.'],
-    ['findOrphanMaintenanceWorkOrderLinks',
-     'Inventory transaction references missing maintenance work order.'],
-    ['findInvalidUnitLocationLinks',
-     'Inventory transaction UNIT location does not match unit_id.']
-  ];
-
-  checks.forEach(check => {
-    try {
-      InventoryTransactionService[check[0]]()
-        .forEach(record => {
-          addError(
-            findings,
-            'INVENTORY_TRANSACTION',
-            check[1],
-            record
-          );
-        });
-    } catch (err) {
-      addError(
-        findings,
-        'INVENTORY_TRANSACTION',
-        'Unable to execute ' +
-          check[0] +
-          ': ' +
-          err.message
-      );
-    }
-  });
-
-  try {
-    InventoryTransactionService
-      .findStockLedgerMismatches()
-      .forEach(record => {
+      } catch (err) {
         addError(
           findings,
-          'INVENTORY_RECONCILIATION',
-          'Inventory stock projection does not match immutable transaction ledger.',
-          record
+          "INSPECTION",
+          "Unable to execute " + check[0] + ": " + err.message,
         );
-      });
-  } catch (err) {
-    addError(
+      }
+    });
+
+    addInfo(
       findings,
-      'INVENTORY_RECONCILIATION',
-      'Unable to reconcile inventory stock against transaction ledger: ' +
-        err.message
+      "INSPECTION",
+      inspections.length + " inspection(s) checked.",
     );
   }
 
-  addInfo(
-    findings,
-    'INVENTORY_TRANSACTION',
-    transactions.length +
-      ' inventory transaction(s) checked.'
-  );
-}
+  /**
+   * ----------------------------------------------------------
+   * INSPECTION CHECKLIST - PHASE 4
+   * ----------------------------------------------------------
+   */
 
+  function checkInspectionChecklist(findings) {
+    const items = safeFindAll(CONFIG.SHEETS.INSPECTION_CHECKLIST);
 
+    const checks = [
+      [
+        "findOrphanChecklistInspectionLinks",
+        "Inspection checklist item references missing inspection.",
+      ],
+      [
+        "findInvalidChecklistCategories",
+        "Invalid inspection checklist category detected.",
+      ],
+      [
+        "findInvalidChecklistResults",
+        "Invalid inspection checklist result detected.",
+      ],
+      [
+        "findChecklistItemsWithoutDescription",
+        "Inspection checklist item has no description.",
+      ],
+      [
+        "findDuplicateChecklistItems",
+        "Duplicate inspection checklist item detected.",
+      ],
+    ];
+
+    checks.forEach((check) => {
+      try {
+        InspectionService[check[0]]().forEach((record) => {
+          addError(findings, "INSPECTION_CHECKLIST", check[1], record);
+        });
+      } catch (err) {
+        addError(
+          findings,
+          "INSPECTION_CHECKLIST",
+          "Unable to execute " + check[0] + ": " + err.message,
+        );
+      }
+    });
+
+    addInfo(
+      findings,
+      "INSPECTION_CHECKLIST",
+      items.length + " inspection checklist item(s) checked.",
+    );
+  }
+
+  /**
+   * ----------------------------------------------------------
+   * INVENTORY ITEMS - PHASE 4
+   * ----------------------------------------------------------
+   */
+  function checkInventoryItems(findings) {
+    const items = safeFindAll(CONFIG.SHEETS.INVENTORY_ITEMS);
+
+    const checks = [
+      ["findDuplicateItemCodes", "Duplicate inventory item_code detected."],
+      ["findItemsWithoutCode", "Inventory item has no item_code."],
+      ["findItemsWithoutName", "Inventory item has no name."],
+      ["findInvalidItemTypes", "Invalid inventory item type detected."],
+      [
+        "findInvalidItemNumbers",
+        "Invalid inventory item numeric value detected.",
+      ],
+      [
+        "findOrphanPreferredVendors",
+        "Inventory item references missing preferred vendor.",
+      ],
+    ];
+
+    checks.forEach((check) => {
+      try {
+        InventoryService[check[0]]().forEach((record) => {
+          addError(findings, "INVENTORY_ITEM", check[1], record);
+        });
+      } catch (err) {
+        addError(
+          findings,
+          "INVENTORY_ITEM",
+          "Unable to execute " + check[0] + ": " + err.message,
+        );
+      }
+    });
+
+    addInfo(
+      findings,
+      "INVENTORY_ITEM",
+      items.length + " inventory item(s) checked.",
+    );
+  }
+
+  /**
+   * ----------------------------------------------------------
+   * INVENTORY LOCATIONS - PHASE 4
+   * ----------------------------------------------------------
+   */
+  function checkInventoryLocations(findings) {
+    const locations = safeFindAll(CONFIG.SHEETS.INVENTORY_LOCATIONS);
+
+    const checks = [
+      [
+        "findOrphanLocationProperties",
+        "Inventory location references missing property.",
+      ],
+      [
+        "findOrphanLocationUnits",
+        "Inventory location references missing unit.",
+      ],
+      [
+        "findLocationPropertyUnitMismatches",
+        "Inventory location property/unit mismatch detected.",
+      ],
+      ["findInvalidLocationTypes", "Invalid inventory location type detected."],
+      [
+        "findInvalidUnitLocationLinks",
+        "Invalid inventory UNIT-location linkage detected.",
+      ],
+      [
+        "findDuplicateUnitLocations",
+        "Duplicate UNIT inventory location detected.",
+      ],
+    ];
+
+    checks.forEach((check) => {
+      try {
+        InventoryService[check[0]]().forEach((record) => {
+          addError(findings, "INVENTORY_LOCATION", check[1], record);
+        });
+      } catch (err) {
+        addError(
+          findings,
+          "INVENTORY_LOCATION",
+          "Unable to execute " + check[0] + ": " + err.message,
+        );
+      }
+    });
+
+    addInfo(
+      findings,
+      "INVENTORY_LOCATION",
+      locations.length + " inventory location(s) checked.",
+    );
+  }
+
+  /**
+   * ----------------------------------------------------------
+   * INVENTORY STOCK - PHASE 4
+   * ----------------------------------------------------------
+   */
+  function checkInventoryStock(findings) {
+    const stock = safeFindAll(CONFIG.SHEETS.INVENTORY_STOCK);
+
+    const checks = [
+      ["findOrphanStockItems", "Inventory stock references missing item."],
+      [
+        "findOrphanStockLocations",
+        "Inventory stock references missing location.",
+      ],
+      [
+        "findDuplicateStockRecords",
+        "Duplicate inventory item/location stock record detected.",
+      ],
+      [
+        "findInvalidStockQuantities",
+        "Invalid inventory stock quantity detected.",
+      ],
+      [
+        "findReservedGreaterThanOnHand",
+        "Inventory reserved quantity exceeds quantity on hand.",
+      ],
+      [
+        "findInvalidStockThresholds",
+        "Invalid inventory minimum/maximum threshold detected.",
+      ],
+    ];
+
+    checks.forEach((check) => {
+      try {
+        InventoryService[check[0]]().forEach((record) => {
+          addError(findings, "INVENTORY_STOCK", check[1], record);
+        });
+      } catch (err) {
+        addError(
+          findings,
+          "INVENTORY_STOCK",
+          "Unable to execute " + check[0] + ": " + err.message,
+        );
+      }
+    });
+
+    addInfo(
+      findings,
+      "INVENTORY_STOCK",
+      stock.length + " inventory stock record(s) checked.",
+    );
+  }
+
+  /**
+   * ----------------------------------------------------------
+   * INVENTORY TRANSACTIONS - PHASE 4
+   * ----------------------------------------------------------
+   */
+  function checkInventoryTransactions(findings) {
+    const transactions = safeFindAll(CONFIG.SHEETS.INVENTORY_TRANSACTIONS);
+
+    const checks = [
+      ["findOrphanItemLinks", "Inventory transaction references missing item."],
+      [
+        "findOrphanFromLocations",
+        "Inventory transaction references missing source location.",
+      ],
+      [
+        "findOrphanToLocations",
+        "Inventory transaction references missing destination location.",
+      ],
+      [
+        "findInvalidTransactionTypes",
+        "Invalid inventory transaction type detected.",
+      ],
+      [
+        "findInvalidQuantities",
+        "Invalid inventory transaction quantity detected.",
+      ],
+      [
+        "findInvalidLocationRules",
+        "Inventory transaction violates location-direction rules.",
+      ],
+      ["findOrphanUnitLinks", "Inventory transaction references missing unit."],
+      [
+        "findOrphanReservationLinks",
+        "Inventory transaction references missing reservation.",
+      ],
+      [
+        "findOrphanHousekeepingTaskLinks",
+        "Inventory transaction references missing housekeeping task.",
+      ],
+      [
+        "findOrphanMaintenanceWorkOrderLinks",
+        "Inventory transaction references missing maintenance work order.",
+      ],
+      [
+        "findInvalidUnitLocationLinks",
+        "Inventory transaction UNIT location does not match unit_id.",
+      ],
+    ];
+
+    checks.forEach((check) => {
+      try {
+        InventoryTransactionService[check[0]]().forEach((record) => {
+          addError(findings, "INVENTORY_TRANSACTION", check[1], record);
+        });
+      } catch (err) {
+        addError(
+          findings,
+          "INVENTORY_TRANSACTION",
+          "Unable to execute " + check[0] + ": " + err.message,
+        );
+      }
+    });
+
+    try {
+      InventoryTransactionService.findStockLedgerMismatches().forEach(
+        (record) => {
+          addError(
+            findings,
+            "INVENTORY_RECONCILIATION",
+            "Inventory stock projection does not match immutable transaction ledger.",
+            record,
+          );
+        },
+      );
+    } catch (err) {
+      addError(
+        findings,
+        "INVENTORY_RECONCILIATION",
+        "Unable to reconcile inventory stock against transaction ledger: " +
+          err.message,
+      );
+    }
+
+    addInfo(
+      findings,
+      "INVENTORY_TRANSACTION",
+      transactions.length + " inventory transaction(s) checked.",
+    );
+  }
 
   function runServiceIntegrityChecks(findings, service, checkName, checks) {
-    checks.forEach(check => {
+    checks.forEach((check) => {
       const methodName = check[0];
       const message = check[1];
       try {
-        if (!service || typeof service[methodName] !== 'function') {
-          addError(findings, checkName, 'Missing integrity helper: ' + methodName + '().');
+        if (!service || typeof service[methodName] !== "function") {
+          addError(
+            findings,
+            checkName,
+            "Missing integrity helper: " + methodName + "().",
+          );
           return;
         }
-        (service[methodName]() || []).forEach(record => {
+        (service[methodName]() || []).forEach((record) => {
           addError(findings, checkName, message, record);
         });
       } catch (err) {
-        addError(findings, checkName, 'Unable to execute ' + methodName + ': ' + err.message);
+        addError(
+          findings,
+          checkName,
+          "Unable to execute " + methodName + ": " + err.message,
+        );
       }
     });
   }
 
   function checkOperatingExpenses(findings) {
     const rows = safeFindAll(CONFIG.SHEETS.OPERATING_EXPENSES);
-    runServiceIntegrityChecks(findings, ExpenseService, 'OPERATING_EXPENSE', [
-      ['findOrphanPropertyLinks','Operating expense references missing property.'],
-      ['findOrphanUnitLinks','Operating expense references missing unit.'],
-      ['findPropertyUnitMismatches','Operating expense unit does not belong to property.'],
-      ['findOrphanReservationLinks','Operating expense references missing reservation.'],
-      ['findReservationUnitMismatches','Operating expense reservation context does not match unit/property.'],
-      ['findInvalidCategories','Invalid operating expense category detected.'],
-      ['findInvalidAmounts','Invalid operating expense amount detected.'],
-      ['findInvalidCurrencies','Invalid operating expense currency detected.'],
-      ['findInvalidPaymentMethods','Invalid operating expense payment method detected.'],
-      ['findInvalidDates','Invalid operating expense date detected.'],
-      ['findMissingDescriptions','Operating expense description is missing.'],
-      ['findDuplicateExpenseIds','Duplicate operating expense ID detected.']
+    runServiceIntegrityChecks(findings, ExpenseService, "OPERATING_EXPENSE", [
+      [
+        "findOrphanPropertyLinks",
+        "Operating expense references missing property.",
+      ],
+      ["findOrphanUnitLinks", "Operating expense references missing unit."],
+      [
+        "findPropertyUnitMismatches",
+        "Operating expense unit does not belong to property.",
+      ],
+      [
+        "findOrphanReservationLinks",
+        "Operating expense references missing reservation.",
+      ],
+      [
+        "findReservationUnitMismatches",
+        "Operating expense reservation context does not match unit/property.",
+      ],
+      ["findInvalidCategories", "Invalid operating expense category detected."],
+      ["findInvalidAmounts", "Invalid operating expense amount detected."],
+      ["findInvalidCurrencies", "Invalid operating expense currency detected."],
+      [
+        "findInvalidPaymentMethods",
+        "Invalid operating expense payment method detected.",
+      ],
+      ["findInvalidDates", "Invalid operating expense date detected."],
+      ["findMissingDescriptions", "Operating expense description is missing."],
+      ["findDuplicateExpenseIds", "Duplicate operating expense ID detected."],
     ]);
     try {
-      ExpenseService.findUnknownVendorNames().forEach(record =>
-        addWarning(findings,'OPERATING_EXPENSE_VENDOR',
-          'Operating expense vendor does not match a known vendor name.',record));
-      ExpenseService.findInactiveKnownVendors().forEach(record =>
-        addWarning(findings,'OPERATING_EXPENSE_VENDOR',
-          'Operating expense references a known inactive vendor.',record));
+      ExpenseService.findUnknownVendorNames().forEach((record) =>
+        addWarning(
+          findings,
+          "OPERATING_EXPENSE_VENDOR",
+          "Operating expense vendor does not match a known vendor name.",
+          record,
+        ),
+      );
+      ExpenseService.findInactiveKnownVendors().forEach((record) =>
+        addWarning(
+          findings,
+          "OPERATING_EXPENSE_VENDOR",
+          "Operating expense references a known inactive vendor.",
+          record,
+        ),
+      );
     } catch (err) {
-      addError(findings,'OPERATING_EXPENSE_VENDOR',
-        'Unable to validate operating expense vendor names: ' + err.message);
+      addError(
+        findings,
+        "OPERATING_EXPENSE_VENDOR",
+        "Unable to validate operating expense vendor names: " + err.message,
+      );
     }
-    addInfo(findings,'OPERATING_EXPENSE',rows.length + ' operating expense(s) checked.');
+    addInfo(
+      findings,
+      "OPERATING_EXPENSE",
+      rows.length + " operating expense(s) checked.",
+    );
   }
 
   function checkUtilities(findings) {
     const rows = safeFindAll(CONFIG.SHEETS.UTILITIES);
-    runServiceIntegrityChecks(findings, UtilityService, 'UTILITY', [
-      ['findOrphanUtilityPropertyLinks','Utility references missing property.'],
-      ['findOrphanUtilityUnitLinks','Utility references missing unit.'],
-      ['findUtilityPropertyUnitMismatches','Utility unit does not belong to property.'],
-      ['findInvalidUtilityTypes','Invalid utility type detected.'],
-      ['findInvalidUtilityFrequencies','Invalid utility billing frequency detected.'],
-      ['findInvalidUtilityCurrencies','Invalid utility currency detected.'],
-      ['findInvalidUtilityStatuses','Invalid utility status detected.'],
-      ['findDuplicateUtilityIds','Duplicate utility ID detected.'],
-      ['findDuplicateUtilityAccountsOrMeters','Duplicate utility account or meter detected.']
+    runServiceIntegrityChecks(findings, UtilityService, "UTILITY", [
+      [
+        "findOrphanUtilityPropertyLinks",
+        "Utility references missing property.",
+      ],
+      ["findOrphanUtilityUnitLinks", "Utility references missing unit."],
+      [
+        "findUtilityPropertyUnitMismatches",
+        "Utility unit does not belong to property.",
+      ],
+      ["findInvalidUtilityTypes", "Invalid utility type detected."],
+      [
+        "findInvalidUtilityFrequencies",
+        "Invalid utility billing frequency detected.",
+      ],
+      ["findInvalidUtilityCurrencies", "Invalid utility currency detected."],
+      ["findInvalidUtilityStatuses", "Invalid utility status detected."],
+      ["findDuplicateUtilityIds", "Duplicate utility ID detected."],
+      [
+        "findDuplicateUtilityAccountsOrMeters",
+        "Duplicate utility account or meter detected.",
+      ],
     ]);
-    addInfo(findings,'UTILITY',rows.length + ' utility record(s) checked.');
+    addInfo(findings, "UTILITY", rows.length + " utility record(s) checked.");
   }
 
   function checkUtilityBills(findings) {
     const rows = safeFindAll(CONFIG.SHEETS.UTILITY_BILLS);
-    runServiceIntegrityChecks(findings, UtilityService, 'UTILITY_BILL', [
-      ['findOrphanBillUtilityLinks','Utility bill references missing utility.'],
-      ['findInvalidBillingPeriods','Invalid utility billing period detected.'],
-      ['findDuplicateBillPeriods','Duplicate utility billing period detected.'],
-      ['findInvalidBillAmounts','Invalid utility bill amount/tax/total detected.'],
-      ['findInvalidPaymentStatuses','Invalid utility bill payment status detected.'],
-      ['findInvalidBillDates','Invalid utility bill date/due date detected.'],
-      ['findPaymentDateInconsistencies','Utility bill payment status and paid date are inconsistent.'],
-      ['findDuplicateBillIds','Duplicate utility bill ID detected.']
+    runServiceIntegrityChecks(findings, UtilityService, "UTILITY_BILL", [
+      [
+        "findOrphanBillUtilityLinks",
+        "Utility bill references missing utility.",
+      ],
+      ["findInvalidBillingPeriods", "Invalid utility billing period detected."],
+      [
+        "findDuplicateBillPeriods",
+        "Duplicate utility billing period detected.",
+      ],
+      [
+        "findInvalidBillAmounts",
+        "Invalid utility bill amount/tax/total detected.",
+      ],
+      [
+        "findInvalidPaymentStatuses",
+        "Invalid utility bill payment status detected.",
+      ],
+      ["findInvalidBillDates", "Invalid utility bill date/due date detected."],
+      [
+        "findPaymentDateInconsistencies",
+        "Utility bill payment status and paid date are inconsistent.",
+      ],
+      ["findDuplicateBillIds", "Duplicate utility bill ID detected."],
     ]);
-    addInfo(findings,'UTILITY_BILL',rows.length + ' utility bill(s) checked.');
+    addInfo(
+      findings,
+      "UTILITY_BILL",
+      rows.length + " utility bill(s) checked.",
+    );
   }
 
   function checkInternetServices(findings) {
     const rows = safeFindAll(CONFIG.SHEETS.INTERNET_SERVICES);
-    runServiceIntegrityChecks(findings, InternetService, 'INTERNET_SERVICE', [
-      ['findOrphanPropertyLinks','Internet service references missing property.'],
-      ['findOrphanUnitLinks','Internet service references missing unit.'],
-      ['findPropertyUnitMismatches','Internet service unit does not belong to property.'],
-      ['findMissingProviders','Internet service provider is missing.'],
-      ['findMissingAccountNumbers','Internet service account number is missing.'],
-      ['findMissingPackageNames','Internet service package name is missing.'],
-      ['findInvalidFees','Invalid Internet service fee detected.'],
-      ['findInvalidBillingCycles','Invalid Internet service billing cycle detected.'],
-      ['findInvalidStatuses','Invalid Internet service status detected.'],
-      ['findInvalidContractDates','Invalid Internet service contract dates detected.'],
-      ['findDuplicateIds','Duplicate Internet service ID detected.'],
-      ['findDuplicateProviderAccounts','Duplicate Internet provider/account detected.']
+    runServiceIntegrityChecks(findings, InternetService, "INTERNET_SERVICE", [
+      [
+        "findOrphanPropertyLinks",
+        "Internet service references missing property.",
+      ],
+      ["findOrphanUnitLinks", "Internet service references missing unit."],
+      [
+        "findPropertyUnitMismatches",
+        "Internet service unit does not belong to property.",
+      ],
+      ["findMissingProviders", "Internet service provider is missing."],
+      [
+        "findMissingAccountNumbers",
+        "Internet service account number is missing.",
+      ],
+      ["findMissingPackageNames", "Internet service package name is missing."],
+      ["findInvalidFees", "Invalid Internet service fee detected."],
+      [
+        "findInvalidBillingCycles",
+        "Invalid Internet service billing cycle detected.",
+      ],
+      ["findInvalidStatuses", "Invalid Internet service status detected."],
+      [
+        "findInvalidContractDates",
+        "Invalid Internet service contract dates detected.",
+      ],
+      ["findDuplicateIds", "Duplicate Internet service ID detected."],
+      [
+        "findDuplicateProviderAccounts",
+        "Duplicate Internet provider/account detected.",
+      ],
     ]);
     try {
-      InternetService.findActiveExpiredContracts().forEach(record =>
-        addWarning(findings,'INTERNET_SERVICE',
-          'ACTIVE Internet service has an expired contract.',record));
+      InternetService.findActiveExpiredContracts().forEach((record) =>
+        addWarning(
+          findings,
+          "INTERNET_SERVICE",
+          "ACTIVE Internet service has an expired contract.",
+          record,
+        ),
+      );
     } catch (err) {
-      addError(findings,'INTERNET_SERVICE',
-        'Unable to check active expired Internet contracts: ' + err.message);
+      addError(
+        findings,
+        "INTERNET_SERVICE",
+        "Unable to check active expired Internet contracts: " + err.message,
+      );
     }
-    addInfo(findings,'INTERNET_SERVICE',rows.length + ' Internet service record(s) checked.');
+    addInfo(
+      findings,
+      "INTERNET_SERVICE",
+      rows.length + " Internet service record(s) checked.",
+    );
   }
 
-
   function runAll() {
+    const started = new Date();
 
-
-
-    const started =
-
-      new Date();
-
-
-
-
-
-    const findings =
-
-      [];
-
-
-
-
+    const findings = [];
 
     /*
 
@@ -8427,33 +4656,11 @@ function checkInventoryTransactions(findings) {
 
      */
 
+    checkRequiredSheets(findings);
 
+    checkRequiredHeaders(findings);
 
-    checkRequiredSheets(
-
-      findings
-
-    );
-
-
-
-    checkRequiredHeaders(
-
-      findings
-
-    );
-
-
-
-    checkReferenceCategories(
-
-      findings
-
-    );
-
-
-
-
+    checkReferenceCategories(findings);
 
     /*
 
@@ -8461,41 +4668,13 @@ function checkInventoryTransactions(findings) {
 
      */
 
+    checkMissingIds(findings);
 
+    checkDuplicateIds(findings);
 
-    checkMissingIds(
+    checkIdFormats(findings);
 
-      findings
-
-    );
-
-
-
-    checkDuplicateIds(
-
-      findings
-
-    );
-
-
-
-    checkIdFormats(
-
-      findings
-
-    );
-
-
-
-    checkIdSequences(
-
-      findings
-
-    );
-
-
-
-
+    checkIdSequences(findings);
 
     /*
 
@@ -8503,49 +4682,15 @@ function checkInventoryTransactions(findings) {
 
      */
 
+    checkProperties(findings);
 
+    checkUnits(findings);
 
-    checkProperties(
+    checkCustomers(findings);
 
-      findings
+    checkStaff(findings);
 
-    );
-
-
-
-    checkUnits(
-
-      findings
-
-    );
-
-
-
-    checkCustomers(
-
-      findings
-
-    );
-
-
-
-    checkStaff(
-
-      findings
-
-    );
-
-
-
-    checkOperationalStatuses(
-
-      findings
-
-    );
-
-
-
-
+    checkOperationalStatuses(findings);
 
     /*
 
@@ -8553,25 +4698,9 @@ function checkInventoryTransactions(findings) {
 
      */
 
+    checkExternalCalendarEvents(findings);
 
-
-    checkExternalCalendarEvents(
-
-      findings
-
-    );
-
-
-
-    checkCalendarFeedConfiguration(
-
-      findings
-
-    );
-
-
-
-
+    checkCalendarFeedConfiguration(findings);
 
     /*
 
@@ -8579,89 +4708,45 @@ function checkInventoryTransactions(findings) {
 
      */
 
+    checkReservations(findings);
 
+    checkReservationGuests(findings);
 
-    checkReservations(
+    checkOTABlocks(findings);
 
-      findings
+    /*
+     * Phase 4 - Stay & Operations.
+     */
 
-    );
+    checkHousekeepingTasks(findings);
 
+    checkHousekeepingSchedules(findings);
 
+    checkMaintenanceAssets(findings);
 
-    checkReservationGuests(
+    checkMaintenanceSchedules(findings);
 
-      findings
+    checkMaintenanceWorkOrders(findings);
 
-    );
+    checkInspections(findings);
 
+    checkInspectionChecklist(findings);
 
+    checkInventoryItems(findings);
 
-    checkOTABlocks(
+    checkInventoryLocations(findings);
 
-      findings
+    checkInventoryStock(findings);
 
-    );
+    checkInventoryTransactions(findings);
 
-
-
- /*
- * Phase 4 - Stay & Operations.
- */
-
-checkHousekeepingTasks(
-  findings
-);
-
-checkHousekeepingSchedules(
-  findings
-);
-
-checkMaintenanceAssets(
-  findings
-);
-
-checkMaintenanceSchedules(
-  findings
-);
-
-checkMaintenanceWorkOrders(
-  findings
-);
-
-checkInspections(
-  findings
-);
-
-checkInspectionChecklist(
-  findings
-);
-
-checkInventoryItems(
-  findings
-);
-
-checkInventoryLocations(
-  findings
-);
-
-checkInventoryStock(
-  findings
-);
-
-checkInventoryTransactions(
-  findings
-);
-
-/*
- * Phase 5 - Finance & Reporting.
- */
-checkOperatingExpenses(findings);
-checkUtilities(findings);
-checkUtilityBills(findings);
-checkInternetServices(findings);
-
-
+    /*
+     * Phase 5 - Finance & Reporting.
+     */
+    checkOperatingExpenses(findings);
+    checkUtilities(findings);
+    checkUtilityBills(findings);
+    checkInternetServices(findings);
 
     /*
 
@@ -8669,17 +4754,7 @@ checkInternetServices(findings);
 
      */
 
-
-
-    checkCalendarConflicts(
-
-      findings
-
-    );
-
-
-
-
+    checkCalendarConflicts(findings);
 
     /*
 
@@ -8687,139 +4762,40 @@ checkInternetServices(findings);
 
      */
 
+    checkAuditLog(findings);
 
+    const errors = findings.filter((finding) => finding.severity === "ERROR");
 
-    checkAuditLog(
-
-      findings
-
+    const warnings = findings.filter(
+      (finding) => finding.severity === "WARNING",
     );
 
+    const infos = findings.filter((finding) => finding.severity === "INFO");
 
-
-
-
-    const errors =
-
-      findings.filter(
-
-        finding =>
-
-          finding.severity ===
-
-          'ERROR'
-
-      );
-
-
-
-
-
-    const warnings =
-
-      findings.filter(
-
-        finding =>
-
-          finding.severity ===
-
-          'WARNING'
-
-      );
-
-
-
-
-
-    const infos =
-
-      findings.filter(
-
-        finding =>
-
-          finding.severity ===
-
-          'INFO'
-
-      );
-
-
-
-
-
-    const finished =
-
-      new Date();
-
-
-
-
+    const finished = new Date();
 
     return {
+      passed: errors.length === 0,
 
+      errors: errors.length,
 
+      warnings: warnings.length,
 
-      passed:
+      infos: infos.length,
 
-        errors.length === 0,
+      findings: findings,
 
+      duration_ms: finished.getTime() - started.getTime(),
 
+      generated_at: Utilities.formatDate(
+        finished,
 
-      errors:
+        CONFIG.TIMEZONE,
 
-        errors.length,
-
-
-
-      warnings:
-
-        warnings.length,
-
-
-
-      infos:
-
-        infos.length,
-
-
-
-      findings:
-
-        findings,
-
-
-
-      duration_ms:
-
-        finished.getTime() -
-
-        started.getTime(),
-
-
-
-      generated_at:
-
-        Utilities.formatDate(
-
-          finished,
-
-          CONFIG.TIMEZONE,
-
-          CONFIG.DATE_FORMATS.DATETIME
-
-        )
-
-
-
+        CONFIG.DATE_FORMATS.DATETIME,
+      ),
     };
-
-
-
   }
-
-
-
-
 
   /**
 
@@ -8831,201 +4807,56 @@ checkInternetServices(findings);
 
    */
 
-
-
   function printReport(report) {
+    report = report || runAll();
 
+    Logger.log("============================================================");
 
+    Logger.log("INTEGRITY CHECK REPORT");
 
-    report =
+    Logger.log("============================================================");
 
-      report || runAll();
+    Logger.log("PASSED: " + report.passed);
 
+    Logger.log("ERRORS: " + report.errors);
 
+    Logger.log("WARNINGS: " + report.warnings);
 
+    Logger.log("INFO: " + report.infos);
 
+    Logger.log("DURATION: " + report.duration_ms + " ms");
 
-    Logger.log(
+    Logger.log("------------------------------------------------------------");
 
-      '============================================================'
-
-    );
-
-
-
-    Logger.log(
-
-      'INTEGRITY CHECK REPORT'
-
-    );
-
-
-
-    Logger.log(
-
-      '============================================================'
-
-    );
-
-
-
-    Logger.log(
-
-      'PASSED: ' +
-
-        report.passed
-
-    );
-
-
-
-    Logger.log(
-
-      'ERRORS: ' +
-
-        report.errors
-
-    );
-
-
-
-    Logger.log(
-
-      'WARNINGS: ' +
-
-        report.warnings
-
-    );
-
-
-
-    Logger.log(
-
-      'INFO: ' +
-
-        report.infos
-
-    );
-
-
-
-    Logger.log(
-
-      'DURATION: ' +
-
-        report.duration_ms +
-
-        ' ms'
-
-    );
-
-
-
-    Logger.log(
-
-      '------------------------------------------------------------'
-
-    );
-
-
-
-
-
-    report.findings
-
-      .forEach(
-
-        (finding, index) => {
-
-
-
-          Logger.log(
-
-            (
-
-              index + 1
-
-            ) +
-
-            '. [' +
-
-            finding.severity +
-
-            '] [' +
-
-            finding.check +
-
-            '] ' +
-
-            finding.message
-
-          );
-
-
-
-
-
-          if (
-
-            finding.details !==
-
-              undefined &&
-
-            finding.details !==
-
-              null
-
-          ) {
-
-
-
-            Logger.log(
-
-              JSON.stringify(
-
-                finding.details,
-
-                null,
-
-                2
-
-              )
-
-            );
-
-
-
-          }
-
-
-
-        }
-
+    report.findings.forEach((finding, index) => {
+      Logger.log(
+        index +
+          1 +
+          ". [" +
+          finding.severity +
+          "] [" +
+          finding.check +
+          "] " +
+          finding.message,
       );
 
+      if (finding.details !== undefined && finding.details !== null) {
+        Logger.log(
+          JSON.stringify(
+            finding.details,
 
+            null,
 
+            2,
+          ),
+        );
+      }
+    });
 
-
-    Logger.log(
-
-      '============================================================'
-
-    );
-
-
-
-
+    Logger.log("============================================================");
 
     return report;
-
-
-
   }
-
-
-
-
 
   /**
 
@@ -9036,8 +4867,6 @@ checkInternetServices(findings);
    * ----------------------------------------------------------
 
    */
-
-
 
   return {
     runAll,
@@ -9058,70 +4887,43 @@ checkInternetServices(findings);
     checkExternalCalendarEvents,
     checkReservations,
     checkReservationGuests,
-/*
+    /*
     checkOTABlocks,
     checkHousekeepingTasks,
     checkHousekeepingSchedules,
     checkCalendarFeedConfiguration,
 */
 
-checkOTABlocks,
+    checkOTABlocks,
 
-checkHousekeepingTasks,
+    checkHousekeepingTasks,
 
-checkHousekeepingSchedules,
-checkMaintenanceAssets,
-checkMaintenanceSchedules,
-checkMaintenanceWorkOrders,
-checkInspections,
-checkInspectionChecklist,
-checkInventoryItems,
-checkInventoryLocations,
-checkInventoryStock,
-checkInventoryTransactions,
-checkOperatingExpenses,
-checkUtilities,
-checkUtilityBills,
-checkInternetServices,
-checkCalendarFeedConfiguration,
-
+    checkHousekeepingSchedules,
+    checkMaintenanceAssets,
+    checkMaintenanceSchedules,
+    checkMaintenanceWorkOrders,
+    checkInspections,
+    checkInspectionChecklist,
+    checkInventoryItems,
+    checkInventoryLocations,
+    checkInventoryStock,
+    checkInventoryTransactions,
+    checkOperatingExpenses,
+    checkUtilities,
+    checkUtilityBills,
+    checkInternetServices,
+    checkCalendarFeedConfiguration,
 
     checkCalendarConflicts,
 
-
-
-    checkAuditLog
-
-
-
+    checkAuditLog,
   };
-
-
-
 })();
 
-
-
-
-
 function runIntegrityCheck() {
+  const report = IntegrityCheckService.runAll();
 
-
-
-  const report =
-
-    IntegrityCheckService.runAll();
-
-
-
-  IntegrityCheckService.printReport(
-
-    report
-
-  );
-
-
+  IntegrityCheckService.printReport(report);
 
   return report;
-
 }

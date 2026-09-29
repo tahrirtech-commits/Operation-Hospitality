@@ -36,7 +36,6 @@
  */
 
 const IdService = (() => {
-
   /**
    * ==========================================================
    * INTERNAL HELPERS
@@ -44,103 +43,47 @@ const IdService = (() => {
    */
 
   function normalizeEntityType(entityType) {
-
     if (
       entityType === undefined ||
       entityType === null ||
-      String(entityType).trim() === ''
+      String(entityType).trim() === ""
     ) {
-
-      throw new Error(
-        'entityType is required.'
-      );
-
+      throw new Error("entityType is required.");
     }
 
-
-    return String(entityType)
-      .trim()
-      .toUpperCase();
-
+    return String(entityType).trim().toUpperCase();
   }
-
 
   function getPrefix(entityType) {
+    const normalized = normalizeEntityType(entityType);
 
-    const normalized =
-      normalizeEntityType(
-        entityType
-      );
-
-
-    const prefix =
-      CONFIG.ID_PREFIXES[
-        normalized
-      ];
-
+    const prefix = CONFIG.ID_PREFIXES[normalized];
 
     if (!prefix) {
-
-      throw new Error(
-        'No ID prefix configured for entity type: ' +
-        normalized
-      );
-
+      throw new Error("No ID prefix configured for entity type: " + normalized);
     }
 
-
-    return String(prefix)
-      .trim()
-      .toUpperCase();
-
+    return String(prefix).trim().toUpperCase();
   }
 
-
-  function getSequencePropertyKey(
-    entityType
-  ) {
-
-    const normalized =
-      normalizeEntityType(
-        entityType
-      );
-
+  function getSequencePropertyKey(entityType) {
+    const normalized = normalizeEntityType(entityType);
 
     const propertyPrefix =
-      (
-        CONFIG.ID &&
-        CONFIG.ID.SEQUENCE_PROPERTY_PREFIX
-      )
+      CONFIG.ID && CONFIG.ID.SEQUENCE_PROPERTY_PREFIX
         ? CONFIG.ID.SEQUENCE_PROPERTY_PREFIX
-        : 'SEQ_';
+        : "SEQ_";
 
-
-    return (
-      propertyPrefix +
-      normalized
-    );
-
+    return propertyPrefix + normalized;
   }
-
 
   function getPadding() {
-
-    if (
-      CONFIG.ID &&
-      CONFIG.ID.PADDING
-    ) {
-
-      return Number(
-        CONFIG.ID.PADDING
-      );
-
+    if (CONFIG.ID && CONFIG.ID.PADDING) {
+      return Number(CONFIG.ID.PADDING);
     }
 
-
     return 6;
-
   }
-
 
   /**
    * ==========================================================
@@ -149,102 +92,40 @@ const IdService = (() => {
    */
 
   function nextId(entityType) {
+    const normalized = normalizeEntityType(entityType);
 
-    const normalized =
-      normalizeEntityType(
-        entityType
-      );
+    const prefix = getPrefix(normalized);
 
+    const key = getSequencePropertyKey(normalized);
 
-    const prefix =
-      getPrefix(
-        normalized
-      );
-
-
-    const key =
-      getSequencePropertyKey(
-        normalized
-      );
-
-
-    const lock =
-      LockService
-        .getScriptLock();
-
+    const lock = LockService.getScriptLock();
 
     try {
+      lock.waitLock(10000);
 
-      lock.waitLock(
-        10000
-      );
+      const properties = PropertiesService.getScriptProperties();
 
+      const storedValue = properties.getProperty(key);
 
-      const properties =
-        PropertiesService
-          .getScriptProperties();
+      let current = Number(storedValue || 0);
 
-
-      const storedValue =
-        properties.getProperty(
-          key
-        );
-
-
-      let current =
-        Number(
-          storedValue || 0
-        );
-
-
-      if (
-        isNaN(current) ||
-        current < 0
-      ) {
-
+      if (isNaN(current) || current < 0) {
         throw new Error(
-          'Invalid stored sequence for ' +
-          normalized +
-          ': ' +
-          storedValue
+          "Invalid stored sequence for " + normalized + ": " + storedValue,
         );
-
       }
-
 
       current++;
 
+      properties.setProperty(key, String(current));
 
-      properties.setProperty(
-        key,
-        String(current)
-      );
-
-
-      return (
-        prefix +
-        '-' +
-        String(current)
-          .padStart(
-            getPadding(),
-            '0'
-          )
-      );
-
+      return prefix + "-" + String(current).padStart(getPadding(), "0");
     } finally {
-
-      if (
-        lock.hasLock()
-      ) {
-
+      if (lock.hasLock()) {
         lock.releaseLock();
-
       }
-
     }
-
   }
-
 
   /**
    * ==========================================================
@@ -252,64 +133,29 @@ const IdService = (() => {
    * ==========================================================
    */
 
-  function getCurrentSequence(
-    entityType
-  ) {
-
-    const normalized =
-      normalizeEntityType(
-        entityType
-      );
-
+  function getCurrentSequence(entityType) {
+    const normalized = normalizeEntityType(entityType);
 
     /*
      * Validate that the entity is configured.
      */
 
-    getPrefix(
-      normalized
-    );
+    getPrefix(normalized);
 
+    const key = getSequencePropertyKey(normalized);
 
-    const key =
-      getSequencePropertyKey(
-        normalized
-      );
+    const value = PropertiesService.getScriptProperties().getProperty(key);
 
+    const number = Number(value || 0);
 
-    const value =
-      PropertiesService
-        .getScriptProperties()
-        .getProperty(
-          key
-        );
-
-
-    const number =
-      Number(
-        value || 0
-      );
-
-
-    if (
-      isNaN(number) ||
-      number < 0
-    ) {
-
+    if (isNaN(number) || number < 0) {
       throw new Error(
-        'Invalid sequence value for ' +
-        normalized +
-        ': ' +
-        value
+        "Invalid sequence value for " + normalized + ": " + value,
       );
-
     }
 
-
     return number;
-
   }
-
 
   /**
    * ==========================================================
@@ -317,65 +163,29 @@ const IdService = (() => {
    * ==========================================================
    */
 
-  function setSequence(
-    entityType,
-    value
-  ) {
-
-    const normalized =
-      normalizeEntityType(
-        entityType
-      );
-
+  function setSequence(entityType, value) {
+    const normalized = normalizeEntityType(entityType);
 
     /*
      * Validate configured entity.
      */
 
-    getPrefix(
-      normalized
-    );
+    getPrefix(normalized);
 
+    const number = Number(value);
 
-    const number =
-      Number(
-        value
-      );
-
-
-    if (
-      isNaN(number) ||
-      number < 0 ||
-      !Number.isInteger(number)
-    ) {
-
+    if (isNaN(number) || number < 0 || !Number.isInteger(number)) {
       throw new Error(
-        'Sequence must be a non-negative integer for ' +
-        normalized +
-        '.'
+        "Sequence must be a non-negative integer for " + normalized + ".",
       );
-
     }
 
+    const key = getSequencePropertyKey(normalized);
 
-    const key =
-      getSequencePropertyKey(
-        normalized
-      );
-
-
-    PropertiesService
-      .getScriptProperties()
-      .setProperty(
-        key,
-        String(number)
-      );
-
+    PropertiesService.getScriptProperties().setProperty(key, String(number));
 
     return number;
-
   }
-
 
   /**
    * ==========================================================
@@ -393,91 +203,37 @@ const IdService = (() => {
    * Invalid IDs return null.
    */
 
-  function extractSequence(
-    entityType,
-    id
-  ) {
-
-    if (
-      id === undefined ||
-      id === null ||
-      String(id).trim() === ''
-    ) {
-
+  function extractSequence(entityType, id) {
+    if (id === undefined || id === null || String(id).trim() === "") {
       return null;
-
     }
 
+    const normalized = normalizeEntityType(entityType);
 
-    const normalized =
-      normalizeEntityType(
-        entityType
-      );
+    const prefix = getPrefix(normalized);
 
+    const value = String(id).trim().toUpperCase();
 
-    const prefix =
-      getPrefix(
-        normalized
-      );
+    const expectedPrefix = prefix + "-";
 
-
-    const value =
-      String(id)
-        .trim()
-        .toUpperCase();
-
-
-    const expectedPrefix =
-      prefix + '-';
-
-
-    if (
-      !value.startsWith(
-        expectedPrefix
-      )
-    ) {
-
+    if (!value.startsWith(expectedPrefix)) {
       return null;
-
     }
 
+    const sequencePart = value.substring(expectedPrefix.length);
 
-    const sequencePart =
-      value.substring(
-        expectedPrefix.length
-      );
-
-
-    if (
-      !/^\d+$/.test(
-        sequencePart
-      )
-    ) {
-
+    if (!/^\d+$/.test(sequencePart)) {
       return null;
-
     }
 
+    const number = Number(sequencePart);
 
-    const number =
-      Number(
-        sequencePart
-      );
-
-
-    if (
-      isNaN(number)
-    ) {
-
+    if (isNaN(number)) {
       return null;
-
     }
-
 
     return number;
-
   }
-
 
   /**
    * ==========================================================
@@ -485,56 +241,23 @@ const IdService = (() => {
    * ==========================================================
    */
 
-  function getMaxSequenceFromSheet(
-    entityType,
-    sheetName,
-    idField
-  ) {
+  function getMaxSequenceFromSheet(entityType, sheetName, idField) {
+    const normalized = normalizeEntityType(entityType);
 
-    const normalized =
-      normalizeEntityType(
-        entityType
-      );
+    const records = BaseRepository.findAll(sheetName);
 
+    let max = 0;
 
-    const records =
-      BaseRepository.findAll(
-        sheetName
-      );
+    records.forEach((record) => {
+      const sequence = extractSequence(normalized, record[idField]);
 
-
-    let max =
-      0;
-
-
-    records.forEach(
-      record => {
-
-        const sequence =
-          extractSequence(
-            normalized,
-            record[idField]
-          );
-
-
-        if (
-          sequence !== null &&
-          sequence > max
-        ) {
-
-          max =
-            sequence;
-
-        }
-
+      if (sequence !== null && sequence > max) {
+        max = sequence;
       }
-    );
-
+    });
 
     return max;
-
   }
-
 
   /**
    * ==========================================================
@@ -555,55 +278,21 @@ const IdService = (() => {
    * This prevents ID reuse after records have been deleted.
    */
 
-  function initializeFromSheet(
-    entityType,
-    sheetName,
-    idField
-  ) {
+  function initializeFromSheet(entityType, sheetName, idField) {
+    const normalized = normalizeEntityType(entityType);
 
-    const normalized =
-      normalizeEntityType(
-        entityType
-      );
+    const stored = getCurrentSequence(normalized);
 
+    const sheetMax = getMaxSequenceFromSheet(normalized, sheetName, idField);
 
-    const stored =
-      getCurrentSequence(
-        normalized
-      );
+    const target = Math.max(stored, sheetMax);
 
-
-    const sheetMax =
-      getMaxSequenceFromSheet(
-        normalized,
-        sheetName,
-        idField
-      );
-
-
-    const target =
-      Math.max(
-        stored,
-        sheetMax
-      );
-
-
-    if (
-      target !== stored
-    ) {
-
-      setSequence(
-        normalized,
-        target
-      );
-
+    if (target !== stored) {
+      setSequence(normalized, target);
     }
 
-
     return target;
-
   }
-
 
   /**
    * ==========================================================
@@ -615,9 +304,7 @@ const IdService = (() => {
    */
 
   function getManagedEntities() {
-
     return [
-
       /*
        * ======================================================
        * PHASE 1
@@ -625,76 +312,52 @@ const IdService = (() => {
        */
 
       {
-        type:
-          'PROPERTY',
+        type: "PROPERTY",
 
-        sheet:
-          CONFIG.SHEETS.PROPERTIES,
+        sheet: CONFIG.SHEETS.PROPERTIES,
 
-        field:
-          'property_id'
+        field: "property_id",
       },
-
 
       {
-        type:
-          'UNIT',
+        type: "UNIT",
 
-        sheet:
-          CONFIG.SHEETS.UNITS,
+        sheet: CONFIG.SHEETS.UNITS,
 
-        field:
-          'unit_id'
+        field: "unit_id",
       },
-
 
       {
-        type:
-          'LOCATION',
+        type: "LOCATION",
 
-        sheet:
-          CONFIG.SHEETS.LOCATIONS,
+        sheet: CONFIG.SHEETS.LOCATIONS,
 
-        field:
-          'location_id'
+        field: "location_id",
       },
-
 
       {
-        type:
-          'CUSTOMER',
+        type: "CUSTOMER",
 
-        sheet:
-          CONFIG.SHEETS.CUSTOMERS,
+        sheet: CONFIG.SHEETS.CUSTOMERS,
 
-        field:
-          'customer_id'
+        field: "customer_id",
       },
-
 
       {
-        type:
-          'GUEST',
+        type: "GUEST",
 
-        sheet:
-          CONFIG.SHEETS.GUESTS,
+        sheet: CONFIG.SHEETS.GUESTS,
 
-        field:
-          'guest_id'
+        field: "guest_id",
       },
-
 
       {
-        type:
-          'STAFF',
+        type: "STAFF",
 
-        sheet:
-          CONFIG.SHEETS.STAFF,
+        sheet: CONFIG.SHEETS.STAFF,
 
-        field:
-          'staff_id'
+        field: "staff_id",
       },
-
 
       /*
        * ======================================================
@@ -703,92 +366,74 @@ const IdService = (() => {
        */
 
       {
-        type:
-          'RESERVATION',
+        type: "RESERVATION",
 
-        sheet:
-          CONFIG.SHEETS.RESERVATIONS,
+        sheet: CONFIG.SHEETS.RESERVATIONS,
 
-        field:
-          'reservation_id'
+        field: "reservation_id",
       },
-{
-        type:
-          'RESERVATION_GUEST',
+      {
+        type: "RESERVATION_GUEST",
 
-        sheet:
-          CONFIG.SHEETS.RESERVATION_GUESTS,
+        sheet: CONFIG.SHEETS.RESERVATION_GUESTS,
 
-        field:
-          'reservation_guest_id'
+        field: "reservation_guest_id",
       },
 
       {
-        type:
-          'HOUSEKEEPING_TASK',
+        type: "HOUSEKEEPING_TASK",
 
-        sheet:
-          CONFIG.SHEETS.HOUSEKEEPING_TASKS,
+        sheet: CONFIG.SHEETS.HOUSEKEEPING_TASKS,
 
-        field:
-          'task_id'
+        field: "task_id",
       },
 
       {
-        type: 'HOUSEKEEPING_SCHEDULE',
+        type: "HOUSEKEEPING_SCHEDULE",
         sheet: CONFIG.SHEETS.HOUSEKEEPING_SCHEDULES,
-        field: 'schedule_id'
+        field: "schedule_id",
       },
       {
-        type: 'MAINTENANCE_ASSET',
+        type: "MAINTENANCE_ASSET",
         sheet: CONFIG.SHEETS.MAINTENANCE_ASSETS,
-        field: 'asset_id'
+        field: "asset_id",
       },
       {
-        type: 'MAINTENANCE_SCHEDULE',
+        type: "MAINTENANCE_SCHEDULE",
         sheet: CONFIG.SHEETS.MAINTENANCE_SCHEDULES,
-        field: 'schedule_id'
+        field: "schedule_id",
       },
       {
-        type: 'MAINTENANCE_WORK_ORDER',
+        type: "MAINTENANCE_WORK_ORDER",
         sheet: CONFIG.SHEETS.MAINTENANCE_WORK_ORDERS,
-        field: 'work_order_id'
+        field: "work_order_id",
       },
       {
-        type:
-          'EXTERNAL_CALENDAR_EVENT',
+        type: "EXTERNAL_CALENDAR_EVENT",
 
-        sheet:
-          CONFIG.SHEETS
-            .EXTERNAL_CALENDAR_EVENTS,
+        sheet: CONFIG.SHEETS.EXTERNAL_CALENDAR_EVENTS,
 
-        field:
-          'external_event_id'
-      },
-
-
-      {
-        type:
-          'OTA_BLOCK',
-
-        sheet:
-          CONFIG.SHEETS.OTA_BLOCKS,
-
-        field:
-          'ota_block_id'
+        field: "external_event_id",
       },
 
       {
-  type: 'INSPECTION',
-  sheet: CONFIG.SHEETS.INSPECTIONS,
-  field: 'inspection_id'
-},
-{
-  type: 'INSPECTION_CHECKLIST_ITEM',
-  sheet: CONFIG.SHEETS.INSPECTION_CHECKLIST,
-  field: 'checklist_item_id'
-},
+        type: "OTA_BLOCK",
 
+        sheet: CONFIG.SHEETS.OTA_BLOCKS,
+
+        field: "ota_block_id",
+      },
+
+      {
+        type: "INSPECTION",
+        sheet: CONFIG.SHEETS.INSPECTIONS,
+        field: "inspection_id",
+      },
+      {
+        type: "INSPECTION_CHECKLIST_ITEM",
+        sheet: CONFIG.SHEETS.INSPECTION_CHECKLIST,
+        field: "checklist_item_id",
+      },
 
       /*
        * ======================================================
@@ -797,51 +442,49 @@ const IdService = (() => {
        */
 
       {
-        type: 'INVENTORY_ITEM',
+        type: "INVENTORY_ITEM",
         sheet: CONFIG.SHEETS.INVENTORY_ITEMS,
-        field: 'item_id'
+        field: "item_id",
       },
 
       {
-        type: 'INVENTORY_LOCATION',
+        type: "INVENTORY_LOCATION",
         sheet: CONFIG.SHEETS.INVENTORY_LOCATIONS,
-        field: 'location_id'
+        field: "location_id",
       },
 
       {
-        type: 'INVENTORY_STOCK',
+        type: "INVENTORY_STOCK",
         sheet: CONFIG.SHEETS.INVENTORY_STOCK,
-        field: 'stock_id'
+        field: "stock_id",
       },
 
       {
-        type: 'INVENTORY_TRANSACTION',
+        type: "INVENTORY_TRANSACTION",
         sheet: CONFIG.SHEETS.INVENTORY_TRANSACTIONS,
-        field: 'transaction_id'
+        field: "transaction_id",
       },
       {
-        type: 'OPERATING_EXPENSE',
+        type: "OPERATING_EXPENSE",
         sheet: CONFIG.SHEETS.OPERATING_EXPENSES,
-        field: 'expense_id'
+        field: "expense_id",
       },
 
-{
-  type: 'UTILITY',
-  sheet: CONFIG.SHEETS.UTILITIES,
-  field: 'utility_id'
-},
-{
-  type: 'UTILITY_BILL',
-  sheet: CONFIG.SHEETS.UTILITY_BILLS,
-  field: 'bill_id'
-},
-{
-  type: 'INTERNET_SERVICE',
-  sheet: CONFIG.SHEETS.INTERNET_SERVICES,
-  field: 'internet_service_id'
-},
-
-
+      {
+        type: "UTILITY",
+        sheet: CONFIG.SHEETS.UTILITIES,
+        field: "utility_id",
+      },
+      {
+        type: "UTILITY_BILL",
+        sheet: CONFIG.SHEETS.UTILITY_BILLS,
+        field: "bill_id",
+      },
+      {
+        type: "INTERNET_SERVICE",
+        sheet: CONFIG.SHEETS.INTERNET_SERVICES,
+        field: "internet_service_id",
+      },
 
       /*
        * ======================================================
@@ -850,20 +493,14 @@ const IdService = (() => {
        */
 
       {
-        type:
-          'AUDIT',
+        type: "AUDIT",
 
-        sheet:
-          CONFIG.SHEETS.AUDIT_LOG,
+        sheet: CONFIG.SHEETS.AUDIT_LOG,
 
-        field:
-          'audit_id'
-      }
-
+        field: "audit_id",
+      },
     ];
-
   }
-
 
   /**
    * ==========================================================
@@ -872,31 +509,18 @@ const IdService = (() => {
    */
 
   function initializeAll() {
-
     const result = {};
 
-
-    getManagedEntities()
-      .forEach(
-        entity => {
-
-          result[
-            entity.type
-          ] =
-            initializeFromSheet(
-              entity.type,
-              entity.sheet,
-              entity.field
-            );
-
-        }
+    getManagedEntities().forEach((entity) => {
+      result[entity.type] = initializeFromSheet(
+        entity.type,
+        entity.sheet,
+        entity.field,
       );
-
+    });
 
     return result;
-
   }
-
 
   /**
    * ==========================================================
@@ -905,59 +529,25 @@ const IdService = (() => {
    */
 
   function getAllSequences() {
-
-    const properties =
-      PropertiesService
-        .getScriptProperties()
-        .getProperties();
-
+    const properties = PropertiesService.getScriptProperties().getProperties();
 
     const result = {};
 
-
     const propertyPrefix =
-      (
-        CONFIG.ID &&
-        CONFIG.ID.SEQUENCE_PROPERTY_PREFIX
-      )
+      CONFIG.ID && CONFIG.ID.SEQUENCE_PROPERTY_PREFIX
         ? CONFIG.ID.SEQUENCE_PROPERTY_PREFIX
-        : 'SEQ_';
+        : "SEQ_";
 
+    Object.keys(properties).forEach((key) => {
+      if (key.startsWith(propertyPrefix)) {
+        const entityType = key.substring(propertyPrefix.length);
 
-    Object.keys(
-      properties
-    ).forEach(
-      key => {
-
-        if (
-          key.startsWith(
-            propertyPrefix
-          )
-        ) {
-
-          const entityType =
-            key.substring(
-              propertyPrefix.length
-            );
-
-
-          result[
-            entityType
-          ] =
-            Number(
-              properties[key]
-            );
-
-        }
-
+        result[entityType] = Number(properties[key]);
       }
-    );
-
+    });
 
     return result;
-
   }
-
 
   /**
    * ==========================================================
@@ -981,96 +571,46 @@ const IdService = (() => {
    * }
    */
 
-  function getSequenceStatus(
-    entityType,
-    sheetName,
-    idField
-  ) {
-
-    const normalized =
-      normalizeEntityType(
-        entityType
-      );
-
+  function getSequenceStatus(entityType, sheetName, idField) {
+    const normalized = normalizeEntityType(entityType);
 
     /*
      * If sheetName/idField are not provided,
      * try resolving them from managed entities.
      */
 
-    if (
-      !sheetName ||
-      !idField
-    ) {
-
-      const definition =
-        getManagedEntities()
-          .find(
-            entity =>
-              entity.type ===
-              normalized
-          );
-
+    if (!sheetName || !idField) {
+      const definition = getManagedEntities().find(
+        (entity) => entity.type === normalized,
+      );
 
       if (!definition) {
-
         throw new Error(
-          'No managed entity definition found for: ' +
-          normalized
+          "No managed entity definition found for: " + normalized,
         );
-
       }
 
+      sheetName = sheetName || definition.sheet;
 
-      sheetName =
-        sheetName ||
-        definition.sheet;
-
-
-      idField =
-        idField ||
-        definition.field;
-
+      idField = idField || definition.field;
     }
 
+    const stored = getCurrentSequence(normalized);
 
-    const stored =
-      getCurrentSequence(
-        normalized
-      );
-
-
-    const sheetMax =
-      getMaxSequenceFromSheet(
-        normalized,
-        sheetName,
-        idField
-      );
-
+    const sheetMax = getMaxSequenceFromSheet(normalized, sheetName, idField);
 
     return {
+      entity_type: normalized,
 
-      entity_type:
-        normalized,
+      prefix: getPrefix(normalized),
 
-      prefix:
-        getPrefix(
-          normalized
-        ),
+      stored_sequence: stored,
 
-      stored_sequence:
-        stored,
+      sheet_max_sequence: sheetMax,
 
-      sheet_max_sequence:
-        sheetMax,
-
-      valid:
-        stored >= sheetMax
-
+      valid: stored >= sheetMax,
     };
-
   }
-
 
   /**
    * ==========================================================
@@ -1079,19 +619,10 @@ const IdService = (() => {
    */
 
   function getAllSequenceStatuses() {
-
-    return getManagedEntities()
-      .map(
-        entity =>
-          getSequenceStatus(
-            entity.type,
-            entity.sheet,
-            entity.field
-          )
-      );
-
+    return getManagedEntities().map((entity) =>
+      getSequenceStatus(entity.type, entity.sheet, entity.field),
+    );
   }
-
 
   /**
    * ==========================================================
@@ -1105,34 +636,20 @@ const IdService = (() => {
    */
 
   function synchronizeAllSequences() {
+    const before = getAllSequenceStatuses();
 
-    const before =
-      getAllSequenceStatuses();
+    const initialized = initializeAll();
 
-
-    const initialized =
-      initializeAll();
-
-
-    const after =
-      getAllSequenceStatuses();
-
+    const after = getAllSequenceStatuses();
 
     return {
+      before: before,
 
-      before:
-        before,
+      initialized: initialized,
 
-      initialized:
-        initialized,
-
-      after:
-        after
-
+      after: after,
     };
-
   }
-
 
   /**
    * ==========================================================
@@ -1141,7 +658,6 @@ const IdService = (() => {
    */
 
   return {
-
     nextId,
 
     getCurrentSequence,
@@ -1164,8 +680,6 @@ const IdService = (() => {
 
     getAllSequenceStatuses,
 
-    synchronizeAllSequences
-
+    synchronizeAllSequences,
   };
-
 })();

@@ -47,20 +47,15 @@
  */
 
 const CustomerService = (() => {
+  const ENTITY_TYPE = "CUSTOMER";
 
-  const ENTITY_TYPE =
-    'CUSTOMER';
-
-  const DEFAULT_STATUS =
-    CONFIG.DEFAULTS.CUSTOMER_STATUS || 'ACTIVE';
-
+  const DEFAULT_STATUS = CONFIG.DEFAULTS.CUSTOMER_STATUS || "ACTIVE";
 
   /**
    * ==========================================================
    * INTERNAL HELPERS
    * ==========================================================
    */
-
 
   /**
    * ----------------------------------------------------------
@@ -69,15 +64,12 @@ const CustomerService = (() => {
    */
 
   function timestamp() {
-
     return Utilities.formatDate(
       new Date(),
       CONFIG.TIMEZONE,
-      CONFIG.DATE_FORMATS.DATETIME
+      CONFIG.DATE_FORMATS.DATETIME,
     );
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -86,22 +78,16 @@ const CustomerService = (() => {
    */
 
   function normalizeActorId(actorId) {
-
     if (
       actorId === undefined ||
       actorId === null ||
-      String(actorId).trim() === ''
+      String(actorId).trim() === ""
     ) {
-
       return CONFIG.DEFAULTS.ACTOR_ID;
-
     }
 
-
     return String(actorId).trim();
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -110,102 +96,34 @@ const CustomerService = (() => {
    */
 
   function normalizeCustomer(data) {
+    const customer = Object.assign({}, data || {});
 
-    const customer =
-      Object.assign(
-        {},
-        data || {}
-      );
-
-
-    if (
-      customer.first_name !== undefined &&
-      customer.first_name !== null
-    ) {
-
-      customer.first_name =
-        String(
-          customer.first_name
-        ).trim();
-
+    if (customer.first_name !== undefined && customer.first_name !== null) {
+      customer.first_name = String(customer.first_name).trim();
     }
 
-
-    if (
-      customer.last_name !== undefined &&
-      customer.last_name !== null
-    ) {
-
-      customer.last_name =
-        String(
-          customer.last_name
-        ).trim();
-
+    if (customer.last_name !== undefined && customer.last_name !== null) {
+      customer.last_name = String(customer.last_name).trim();
     }
 
-
-    if (
-      customer.email !== undefined &&
-      customer.email !== null
-    ) {
-
-      customer.email =
-        String(
-          customer.email
-        )
-          .trim()
-          .toLowerCase();
-
+    if (customer.email !== undefined && customer.email !== null) {
+      customer.email = String(customer.email).trim().toLowerCase();
     }
 
-
-    if (
-      customer.phone !== undefined &&
-      customer.phone !== null
-    ) {
-
-      customer.phone =
-        String(
-          customer.phone
-        ).trim();
-
+    if (customer.phone !== undefined && customer.phone !== null) {
+      customer.phone = String(customer.phone).trim();
     }
 
-
-    if (
-      customer.nationality !== undefined &&
-      customer.nationality !== null
-    ) {
-
-      customer.nationality =
-        String(
-          customer.nationality
-        )
-          .trim()
-          .toUpperCase();
-
+    if (customer.nationality !== undefined && customer.nationality !== null) {
+      customer.nationality = String(customer.nationality).trim().toUpperCase();
     }
 
-
-    if (
-      customer.status !== undefined &&
-      customer.status !== null
-    ) {
-
-      customer.status =
-        String(
-          customer.status
-        )
-          .trim()
-          .toUpperCase();
-
+    if (customer.status !== undefined && customer.status !== null) {
+      customer.status = String(customer.status).trim().toUpperCase();
     }
-
 
     return customer;
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -217,46 +135,28 @@ const CustomerService = (() => {
    */
 
   function requireCustomer(customerId) {
-
     if (
       customerId === undefined ||
       customerId === null ||
-      String(customerId).trim() === ''
+      String(customerId).trim() === ""
     ) {
-
-      throw new Error(
-        'customerId is required.'
-      );
-
+      throw new Error("customerId is required.");
     }
 
+    const normalizedId = String(customerId).trim();
 
-    const normalizedId =
-      String(customerId).trim();
-
-
-    const customer =
-      BaseRepository.findById(
-        CONFIG.SHEETS.CUSTOMERS,
-        'customer_id',
-        normalizedId
-      );
-
+    const customer = BaseRepository.findById(
+      CONFIG.SHEETS.CUSTOMERS,
+      "customer_id",
+      normalizedId,
+    );
 
     if (!customer) {
-
-      throw new Error(
-        'Customer not found: ' +
-        normalizedId
-      );
-
+      throw new Error("Customer not found: " + normalizedId);
     }
 
-
     return customer;
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -265,116 +165,74 @@ const CustomerService = (() => {
    */
 
   function validateUpdate(customer) {
-
-    ValidationService.requireFields(
-      customer,
-      [
-        'customer_id',
-        'first_name',
-        'last_name'
-      ]
-    );
-
+    ValidationService.requireFields(customer, [
+      "customer_id",
+      "first_name",
+      "last_name",
+    ]);
 
     /*
      * A customer must have at least one usable contact method.
      */
 
     if (
-      ValidationService.isBlank(
-        customer.email
-      ) &&
-      ValidationService.isBlank(
-        customer.phone
-      )
+      ValidationService.isBlank(customer.email) &&
+      ValidationService.isBlank(customer.phone)
     ) {
-
-      throw new Error(
-        'Customer must have at least an email or phone number.'
-      );
-
+      throw new Error("Customer must have at least an email or phone number.");
     }
-
 
     /*
      * Email
      */
 
-    if (
-      !ValidationService.isBlank(
-        customer.email
-      )
-    ) {
-
-      ValidationService.validateEmail(
-        customer.email
-      );
-
+    if (!ValidationService.isBlank(customer.email)) {
+      ValidationService.validateEmail(customer.email);
 
       ValidationService.validateUniqueExcept(
         CONFIG.SHEETS.CUSTOMERS,
-        'email',
+        "email",
         customer.email,
-        'customer_id',
+        "customer_id",
         customer.customer_id,
-        'Customer email'
+        "Customer email",
       );
-
     }
-
 
     /*
      * Phone
      */
 
-    if (
-      !ValidationService.isBlank(
-        customer.phone
-      )
-    ) {
-
+    if (!ValidationService.isBlank(customer.phone)) {
       ValidationService.validateUniqueExcept(
         CONFIG.SHEETS.CUSTOMERS,
-        'phone',
+        "phone",
         customer.phone,
-        'customer_id',
+        "customer_id",
         customer.customer_id,
-        'Customer phone'
+        "Customer phone",
       );
-
     }
-
 
     /*
      * Customer master status.
      */
 
-    if (
-      !ValidationService.isBlank(
-        customer.status
-      )
-    ) {
-
-      ValidationService
-        .validateActiveInactiveStatus(
-          customer.status,
-          'Customer status'
-        );
-
+    if (!ValidationService.isBlank(customer.status)) {
+      ValidationService.validateActiveInactiveStatus(
+        customer.status,
+        "Customer status",
+      );
     }
 
-
     return true;
-
   }
-
 
   /**
    * ==========================================================
    * CREATE
    * ==========================================================
    */
-
 
   /**
    * ----------------------------------------------------------
@@ -398,50 +256,22 @@ const CustomerService = (() => {
    * Audit
    */
 
-  function createCustomer(
-    data,
-    actorId
-  ) {
-
-    if (
-      !data ||
-      typeof data !== 'object'
-    ) {
-
-      throw new Error(
-        'Customer data is required.'
-      );
-
+  function createCustomer(data, actorId) {
+    if (!data || typeof data !== "object") {
+      throw new Error("Customer data is required.");
     }
 
+    const normalizedActorId = normalizeActorId(actorId);
 
-    const normalizedActorId =
-      normalizeActorId(
-        actorId
-      );
-
-
-    let customer =
-      normalizeCustomer(
-        data
-      );
-
+    let customer = normalizeCustomer(data);
 
     /*
      * Apply default status before validation.
      */
 
-    if (
-      ValidationService.isBlank(
-        customer.status
-      )
-    ) {
-
-      customer.status =
-        DEFAULT_STATUS;
-
+    if (ValidationService.isBlank(customer.status)) {
+      customer.status = DEFAULT_STATUS;
     }
-
 
     /*
      * IMPORTANT:
@@ -449,56 +279,33 @@ const CustomerService = (() => {
      * Validation occurs before ID generation.
      */
 
-    ValidationService
-      .validateCustomerCreate(
-        customer
-      );
+    ValidationService.validateCustomerCreate(customer);
 
+    customer.customer_id = IdService.nextId(ENTITY_TYPE);
 
-    customer.customer_id =
-      IdService.nextId(
-        ENTITY_TYPE
-      );
+    const now = timestamp();
 
+    customer.created_at = customer.created_at || now;
 
-    const now =
-      timestamp();
+    customer.updated_at = now;
 
-
-    customer.created_at =
-      customer.created_at || now;
-
-
-    customer.updated_at =
-      now;
-
-
-    const inserted =
-      BaseRepository.insert(
-        CONFIG.SHEETS.CUSTOMERS,
-        customer
-      );
-
+    const inserted = BaseRepository.insert(CONFIG.SHEETS.CUSTOMERS, customer);
 
     AuditService.logCreate(
       ENTITY_TYPE,
       inserted.customer_id,
       inserted,
-      normalizedActorId
+      normalizedActorId,
     );
 
-
     return inserted;
-
   }
-
 
   /**
    * ==========================================================
    * READ
    * ==========================================================
    */
-
 
   /**
    * ----------------------------------------------------------
@@ -508,31 +315,21 @@ const CustomerService = (() => {
    * Returns null if not found.
    */
 
-  function getCustomerById(
-    customerId
-  ) {
-
+  function getCustomerById(customerId) {
     if (
       customerId === undefined ||
       customerId === null ||
-      String(customerId).trim() === ''
+      String(customerId).trim() === ""
     ) {
-
-      throw new Error(
-        'customerId is required.'
-      );
-
+      throw new Error("customerId is required.");
     }
-
 
     return BaseRepository.findById(
       CONFIG.SHEETS.CUSTOMERS,
-      'customer_id',
-      String(customerId).trim()
+      "customer_id",
+      String(customerId).trim(),
     );
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -540,35 +337,19 @@ const CustomerService = (() => {
    * ----------------------------------------------------------
    */
 
-  function getCustomerByEmail(
-    email
-  ) {
-
-    if (
-      email === undefined ||
-      email === null ||
-      String(email).trim() === ''
-    ) {
-
+  function getCustomerByEmail(email) {
+    if (email === undefined || email === null || String(email).trim() === "") {
       return null;
-
     }
 
-
-    const normalizedEmail =
-      String(email)
-        .trim()
-        .toLowerCase();
-
+    const normalizedEmail = String(email).trim().toLowerCase();
 
     return BaseRepository.findOneByField(
       CONFIG.SHEETS.CUSTOMERS,
-      'email',
-      normalizedEmail
+      "email",
+      normalizedEmail,
     );
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -576,29 +357,17 @@ const CustomerService = (() => {
    * ----------------------------------------------------------
    */
 
-  function getCustomerByPhone(
-    phone
-  ) {
-
-    if (
-      phone === undefined ||
-      phone === null ||
-      String(phone).trim() === ''
-    ) {
-
+  function getCustomerByPhone(phone) {
+    if (phone === undefined || phone === null || String(phone).trim() === "") {
       return null;
-
     }
-
 
     return BaseRepository.findOneByField(
       CONFIG.SHEETS.CUSTOMERS,
-      'phone',
-      String(phone).trim()
+      "phone",
+      String(phone).trim(),
     );
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -607,13 +376,8 @@ const CustomerService = (() => {
    */
 
   function getAllCustomers() {
-
-    return BaseRepository.findAll(
-      CONFIG.SHEETS.CUSTOMERS
-    );
-
+    return BaseRepository.findAll(CONFIG.SHEETS.CUSTOMERS);
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -622,15 +386,12 @@ const CustomerService = (() => {
    */
 
   function getActiveCustomers() {
-
     return BaseRepository.findByField(
       CONFIG.SHEETS.CUSTOMERS,
-      'status',
-      'ACTIVE'
+      "status",
+      "ACTIVE",
     );
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -639,15 +400,12 @@ const CustomerService = (() => {
    */
 
   function getInactiveCustomers() {
-
     return BaseRepository.findByField(
       CONFIG.SHEETS.CUSTOMERS,
-      'status',
-      'INACTIVE'
+      "status",
+      "INACTIVE",
     );
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -656,33 +414,26 @@ const CustomerService = (() => {
    */
 
   function exists(customerId) {
-
     if (
       customerId === undefined ||
       customerId === null ||
-      String(customerId).trim() === ''
+      String(customerId).trim() === ""
     ) {
-
       return false;
-
     }
-
 
     return BaseRepository.exists(
       CONFIG.SHEETS.CUSTOMERS,
-      'customer_id',
-      String(customerId).trim()
+      "customer_id",
+      String(customerId).trim(),
     );
-
   }
-
 
   /**
    * ==========================================================
    * UPDATE
    * ==========================================================
    */
-
 
   /**
    * ----------------------------------------------------------
@@ -695,104 +446,58 @@ const CustomerService = (() => {
    * created_at
    */
 
-  function updateCustomer(
-    customerId,
-    changes,
-    actorId
-  ) {
-
-    if (
-      !changes ||
-      typeof changes !== 'object'
-    ) {
-
-      throw new Error(
-        'Customer changes are required.'
-      );
-
+  function updateCustomer(customerId, changes, actorId) {
+    if (!changes || typeof changes !== "object") {
+      throw new Error("Customer changes are required.");
     }
 
+    const existing = requireCustomer(customerId);
 
-    const existing =
-      requireCustomer(
-        customerId
-      );
-
-
-    const normalizedActorId =
-      normalizeActorId(
-        actorId
-      );
-
+    const normalizedActorId = normalizeActorId(actorId);
 
     /*
      * Merge current persisted state with requested changes.
      */
 
-    let updated =
-      Object.assign(
-        {},
-        existing,
-        changes
-      );
-
+    let updated = Object.assign({}, existing, changes);
 
     /*
      * Protect immutable fields.
      */
 
-    updated.customer_id =
-      existing.customer_id;
+    updated.customer_id = existing.customer_id;
 
+    updated.created_at = existing.created_at;
 
-    updated.created_at =
-      existing.created_at;
+    updated = normalizeCustomer(updated);
 
+    validateUpdate(updated);
 
-    updated =
-      normalizeCustomer(
-        updated
-      );
+    updated.updated_at = timestamp();
 
-
-    validateUpdate(
-      updated
+    const persisted = BaseRepository.update(
+      CONFIG.SHEETS.CUSTOMERS,
+      "customer_id",
+      existing.customer_id,
+      updated,
     );
-
-
-    updated.updated_at =
-      timestamp();
-
-
-    const persisted =
-      BaseRepository.update(
-        CONFIG.SHEETS.CUSTOMERS,
-        'customer_id',
-        existing.customer_id,
-        updated
-      );
-
 
     AuditService.logUpdate(
       ENTITY_TYPE,
       existing.customer_id,
       existing,
       persisted,
-      normalizedActorId
+      normalizedActorId,
     );
 
-
     return persisted;
-
   }
-
 
   /**
    * ==========================================================
    * STATUS MANAGEMENT
    * ==========================================================
    */
-
 
   /**
    * ----------------------------------------------------------
@@ -805,94 +510,59 @@ const CustomerService = (() => {
    * INACTIVE
    */
 
-  function changeCustomerStatus(
-    customerId,
-    newStatus,
-    actorId
-  ) {
+  function changeCustomerStatus(customerId, newStatus, actorId) {
+    const existing = requireCustomer(customerId);
 
-    const existing =
-      requireCustomer(
-        customerId
-      );
+    const normalizedStatus = String(newStatus || "")
+      .trim()
+      .toUpperCase();
 
-
-    const normalizedStatus =
-      String(
-        newStatus || ''
-      )
-        .trim()
-        .toUpperCase();
-
-
-    ValidationService
-      .validateActiveInactiveStatus(
-        normalizedStatus,
-        'Customer status'
-      );
-
+    ValidationService.validateActiveInactiveStatus(
+      normalizedStatus,
+      "Customer status",
+    );
 
     /*
      * Avoid unnecessary write/audit when there is no change.
      */
 
     if (
-      String(
-        existing.status || ''
-      )
+      String(existing.status || "")
         .trim()
-        .toUpperCase() ===
-      normalizedStatus
+        .toUpperCase() === normalizedStatus
     ) {
-
       return existing;
-
     }
 
+    const normalizedActorId = normalizeActorId(actorId);
 
-    const normalizedActorId =
-      normalizeActorId(
-        actorId
-      );
+    const persisted = BaseRepository.update(
+      CONFIG.SHEETS.CUSTOMERS,
+      "customer_id",
+      existing.customer_id,
+      {
+        status: normalizedStatus,
 
-
-    const persisted =
-      BaseRepository.update(
-        CONFIG.SHEETS.CUSTOMERS,
-        'customer_id',
-        existing.customer_id,
-        {
-
-          status:
-            normalizedStatus,
-
-          updated_at:
-            timestamp()
-
-        }
-      );
-
+        updated_at: timestamp(),
+      },
+    );
 
     AuditService.logStatusChange(
       ENTITY_TYPE,
       existing.customer_id,
       existing.status,
       normalizedStatus,
-      normalizedActorId
+      normalizedActorId,
     );
 
-
     return persisted;
-
   }
-
 
   /**
    * ==========================================================
    * SEARCH
    * ==========================================================
    */
-
 
   /**
    * ----------------------------------------------------------
@@ -912,71 +582,37 @@ const CustomerService = (() => {
    * move to a more scalable persistence/search mechanism.
    */
 
-  function searchCustomers(
-    searchText
-  ) {
-
+  function searchCustomers(searchText) {
     if (
       searchText === undefined ||
       searchText === null ||
-      String(searchText).trim() === ''
+      String(searchText).trim() === ""
     ) {
-
       return [];
-
     }
 
+    const query = String(searchText).trim().toLowerCase();
 
-    const query =
-      String(searchText)
-        .trim()
-        .toLowerCase();
+    return getAllCustomers().filter((customer) => {
+      const values = [
+        customer.first_name,
 
+        customer.last_name,
 
-    return getAllCustomers()
-      .filter(
-        customer => {
+        customer.email,
 
-          const values = [
+        customer.phone,
+      ];
 
-            customer.first_name,
-
-            customer.last_name,
-
-            customer.email,
-
-            customer.phone
-
-          ];
-
-
-          return values.some(
-            value => {
-
-              if (
-                value === undefined ||
-                value === null
-              ) {
-
-                return false;
-
-              }
-
-
-              return String(value)
-                .toLowerCase()
-                .includes(
-                  query
-                );
-
-            }
-          );
-
+      return values.some((value) => {
+        if (value === undefined || value === null) {
+          return false;
         }
-      );
 
+        return String(value).toLowerCase().includes(query);
+      });
+    });
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -984,35 +620,19 @@ const CustomerService = (() => {
    * ----------------------------------------------------------
    */
 
-  function getDisplayName(
-    customer
-  ) {
-
+  function getDisplayName(customer) {
     if (!customer) {
-
-      return '';
-
+      return "";
     }
 
-
-    return [
-      customer.first_name,
-      customer.last_name
-    ]
+    return [customer.first_name, customer.last_name]
       .filter(
-        value =>
-          value !== undefined &&
-          value !== null &&
-          String(value).trim() !== ''
+        (value) =>
+          value !== undefined && value !== null && String(value).trim() !== "",
       )
-      .map(
-        value =>
-          String(value).trim()
-      )
-      .join(' ');
-
+      .map((value) => String(value).trim())
+      .join(" ");
   }
-
 
   /**
    * ==========================================================
@@ -1021,7 +641,6 @@ const CustomerService = (() => {
    */
 
   return {
-
     createCustomer,
 
     getCustomerById,
@@ -1044,8 +663,6 @@ const CustomerService = (() => {
 
     searchCustomers,
 
-    getDisplayName
-
+    getDisplayName,
   };
-
 })();

@@ -31,14 +31,11 @@
  */
 
 const ValidationService = (() => {
-
-
   /**
    * ==========================================================
    * BASIC FIELD VALIDATION
    * ==========================================================
    */
-
 
   /**
    * ----------------------------------------------------------
@@ -47,18 +44,12 @@ const ValidationService = (() => {
    */
 
   function isBlank(value) {
-
     return (
       value === undefined ||
       value === null ||
-      (
-        typeof value === 'string' &&
-        value.trim() === ''
-      )
+      (typeof value === "string" && value.trim() === "")
     );
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -66,41 +57,17 @@ const ValidationService = (() => {
    * ----------------------------------------------------------
    */
 
-  function requireField(
-    data,
-    fieldName
-  ) {
-
-    if (
-      !data ||
-      typeof data !== 'object'
-    ) {
-
-      throw new Error(
-        'Data object is required.'
-      );
-
+  function requireField(data, fieldName) {
+    if (!data || typeof data !== "object") {
+      throw new Error("Data object is required.");
     }
 
-
-    if (
-      isBlank(
-        data[fieldName]
-      )
-    ) {
-
-      throw new Error(
-        'Required field missing: ' +
-        fieldName
-      );
-
+    if (isBlank(data[fieldName])) {
+      throw new Error("Required field missing: " + fieldName);
     }
-
 
     return true;
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -108,45 +75,23 @@ const ValidationService = (() => {
    * ----------------------------------------------------------
    */
 
-  function requireFields(
-    data,
-    fields
-  ) {
-
-    if (
-      !Array.isArray(fields)
-    ) {
-
-      throw new Error(
-        'fields must be an array.'
-      );
-
+  function requireFields(data, fields) {
+    if (!Array.isArray(fields)) {
+      throw new Error("fields must be an array.");
     }
 
-
-    fields.forEach(
-      fieldName => {
-
-        requireField(
-          data,
-          fieldName
-        );
-
-      }
-    );
-
+    fields.forEach((fieldName) => {
+      requireField(data, fieldName);
+    });
 
     return true;
-
   }
-
 
   /**
    * ==========================================================
    * REFERENCE DATA VALIDATION
    * ==========================================================
    */
-
 
   /**
    * ----------------------------------------------------------
@@ -164,44 +109,24 @@ const ValidationService = (() => {
    */
 
   function isActiveReference(value) {
-
     if (value === true) {
-
       return true;
-
     }
-
 
     if (value === 1) {
-
       return true;
-
     }
 
-
-    if (
-      typeof value === 'string'
-    ) {
-
-      const normalized =
-        value
-          .trim()
-          .toUpperCase();
-
+    if (typeof value === "string") {
+      const normalized = value.trim().toUpperCase();
 
       return (
-        normalized === 'TRUE' ||
-        normalized === 'YES' ||
-        normalized === '1'
+        normalized === "TRUE" || normalized === "YES" || normalized === "1"
       );
-
     }
 
-
     return false;
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -220,53 +145,23 @@ const ValidationService = (() => {
    * UNIT_TYPE | ONE_BEDROOM | One Bedroom | TRUE
    */
 
-  function getReferenceValues(
-    category
-  ) {
-
-    if (
-      isBlank(category)
-    ) {
-
-      throw new Error(
-        'Reference category is required.'
-      );
-
+  function getReferenceValues(category) {
+    if (isBlank(category)) {
+      throw new Error("Reference category is required.");
     }
 
+    const normalizedCategory = String(category).trim().toUpperCase();
 
-    const normalizedCategory =
-      String(category)
-        .trim()
-        .toUpperCase();
-
-
-    const records =
-      BaseRepository.findByField(
-        CONFIG.SHEETS.REFERENCE_DATA,
-        'category',
-        normalizedCategory
-      );
-
+    const records = BaseRepository.findByField(
+      CONFIG.SHEETS.REFERENCE_DATA,
+      "category",
+      normalizedCategory,
+    );
 
     return records
-      .filter(
-        record =>
-          isActiveReference(
-            record.active
-          )
-      )
-      .map(
-        record =>
-          String(
-            record.code
-          )
-            .trim()
-            .toUpperCase()
-      );
-
+      .filter((record) => isActiveReference(record.active))
+      .map((record) => String(record.code).trim().toUpperCase());
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -274,86 +169,40 @@ const ValidationService = (() => {
    * ----------------------------------------------------------
    */
 
-  function validateReference(
-    category,
-    value
-  ) {
-
-    if (
-      isBlank(category)
-    ) {
-
-      throw new Error(
-        'Reference category is required.'
-      );
-
+  function validateReference(category, value) {
+    if (isBlank(category)) {
+      throw new Error("Reference category is required.");
     }
 
-
-    if (
-      isBlank(value)
-    ) {
-
-      throw new Error(
-        'Reference value is required for category: ' +
-        category
-      );
-
+    if (isBlank(value)) {
+      throw new Error("Reference value is required for category: " + category);
     }
 
+    const normalizedCategory = String(category).trim().toUpperCase();
 
-    const normalizedCategory =
-      String(category)
-        .trim()
-        .toUpperCase();
+    const normalizedValue = String(value).trim().toUpperCase();
 
+    const allowedValues = getReferenceValues(normalizedCategory);
 
-    const normalizedValue =
-      String(value)
-        .trim()
-        .toUpperCase();
-
-
-    const allowedValues =
-      getReferenceValues(
-        normalizedCategory
-      );
-
-
-    if (
-      allowedValues.length === 0
-    ) {
-
+    if (allowedValues.length === 0) {
       throw new Error(
-        'No active reference values found for category: ' +
-        normalizedCategory
+        "No active reference values found for category: " + normalizedCategory,
       );
-
     }
 
-
-    if (
-      !allowedValues.includes(
-        normalizedValue
-      )
-    ) {
-
+    if (!allowedValues.includes(normalizedValue)) {
       throw new Error(
         'Invalid value "' +
-        normalizedValue +
-        '" for reference category "' +
-        normalizedCategory +
-        '". Allowed values: ' +
-        allowedValues.join(', ')
+          normalizedValue +
+          '" for reference category "' +
+          normalizedCategory +
+          '". Allowed values: ' +
+          allowedValues.join(", "),
       );
-
     }
 
-
     return true;
-
   }
-
 
   /**
    * ==========================================================
@@ -361,59 +210,27 @@ const ValidationService = (() => {
    * ==========================================================
    */
 
-
   /**
    * ----------------------------------------------------------
    * GENERIC FOREIGN KEY VALIDATION
    * ----------------------------------------------------------
    */
 
-  function validateForeignKey(
-    sheetName,
-    idColumn,
-    id,
-    entityName
-  ) {
-
-    if (
-      isBlank(id)
-    ) {
-
-      throw new Error(
-        (entityName || 'Entity') +
-        ' ID is required.'
-      );
-
+  function validateForeignKey(sheetName, idColumn, id, entityName) {
+    if (isBlank(id)) {
+      throw new Error((entityName || "Entity") + " ID is required.");
     }
 
+    const normalizedId = String(id).trim();
 
-    const normalizedId =
-      String(id).trim();
-
-
-    const exists =
-      BaseRepository.exists(
-        sheetName,
-        idColumn,
-        normalizedId
-      );
-
+    const exists = BaseRepository.exists(sheetName, idColumn, normalizedId);
 
     if (!exists) {
-
-      throw new Error(
-        (entityName || 'Entity') +
-        ' not found: ' +
-        normalizedId
-      );
-
+      throw new Error((entityName || "Entity") + " not found: " + normalizedId);
     }
 
-
     return true;
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -421,19 +238,14 @@ const ValidationService = (() => {
    * ----------------------------------------------------------
    */
 
-  function validatePropertyExists(
-    propertyId
-  ) {
-
+  function validatePropertyExists(propertyId) {
     return validateForeignKey(
       CONFIG.SHEETS.PROPERTIES,
-      'property_id',
+      "property_id",
       propertyId,
-      'Property'
+      "Property",
     );
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -441,19 +253,9 @@ const ValidationService = (() => {
    * ----------------------------------------------------------
    */
 
-  function validateUnitExists(
-    unitId
-  ) {
-
-    return validateForeignKey(
-      CONFIG.SHEETS.UNITS,
-      'unit_id',
-      unitId,
-      'Unit'
-    );
-
+  function validateUnitExists(unitId) {
+    return validateForeignKey(CONFIG.SHEETS.UNITS, "unit_id", unitId, "Unit");
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -461,19 +263,14 @@ const ValidationService = (() => {
    * ----------------------------------------------------------
    */
 
-  function validateLocationExists(
-    locationId
-  ) {
-
+  function validateLocationExists(locationId) {
     return validateForeignKey(
       CONFIG.SHEETS.LOCATIONS,
-      'location_id',
+      "location_id",
       locationId,
-      'Location'
+      "Location",
     );
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -481,19 +278,14 @@ const ValidationService = (() => {
    * ----------------------------------------------------------
    */
 
-  function validateCustomerExists(
-    customerId
-  ) {
-
+  function validateCustomerExists(customerId) {
     return validateForeignKey(
       CONFIG.SHEETS.CUSTOMERS,
-      'customer_id',
+      "customer_id",
       customerId,
-      'Customer'
+      "Customer",
     );
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -501,19 +293,14 @@ const ValidationService = (() => {
    * ----------------------------------------------------------
    */
 
-  function validateGuestExists(
-    guestId
-  ) {
-
+  function validateGuestExists(guestId) {
     return validateForeignKey(
       CONFIG.SHEETS.GUESTS,
-      'guest_id',
+      "guest_id",
       guestId,
-      'Guest'
+      "Guest",
     );
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -521,26 +308,20 @@ const ValidationService = (() => {
    * ----------------------------------------------------------
    */
 
-  function validateStaffExists(
-    staffId
-  ) {
-
+  function validateStaffExists(staffId) {
     return validateForeignKey(
       CONFIG.SHEETS.STAFF,
-      'staff_id',
+      "staff_id",
       staffId,
-      'Staff'
+      "Staff",
     );
-
   }
-
 
   /**
    * ==========================================================
    * UNIQUENESS VALIDATION
    * ==========================================================
    */
-
 
   /**
    * ----------------------------------------------------------
@@ -552,45 +333,19 @@ const ValidationService = (() => {
    * Blank optional values are ignored.
    */
 
-  function validateUnique(
-    sheetName,
-    fieldName,
-    value,
-    displayName
-  ) {
-
-    if (
-      isBlank(value)
-    ) {
-
+  function validateUnique(sheetName, fieldName, value, displayName) {
+    if (isBlank(value)) {
       return true;
-
     }
 
-
-    const exists =
-      BaseRepository.exists(
-        sheetName,
-        fieldName,
-        value
-      );
-
+    const exists = BaseRepository.exists(sheetName, fieldName, value);
 
     if (exists) {
-
-      throw new Error(
-        (displayName || fieldName) +
-        ' already exists: ' +
-        value
-      );
-
+      throw new Error((displayName || fieldName) + " already exists: " + value);
     }
 
-
     return true;
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -613,58 +368,24 @@ const ValidationService = (() => {
     value,
     idColumn,
     currentId,
-    displayName
+    displayName,
   ) {
-
-    if (
-      isBlank(value)
-    ) {
-
+    if (isBlank(value)) {
       return true;
-
     }
 
+    const matches = BaseRepository.findByField(sheetName, fieldName, value);
 
-    const matches =
-      BaseRepository.findByField(
-        sheetName,
-        fieldName,
-        value
-      );
-
-
-    const conflict =
-      matches.some(
-        record => {
-
-          return (
-            String(
-              record[idColumn]
-            ).trim() !==
-            String(
-              currentId
-            ).trim()
-          );
-
-        }
-      );
-
+    const conflict = matches.some((record) => {
+      return String(record[idColumn]).trim() !== String(currentId).trim();
+    });
 
     if (conflict) {
-
-      throw new Error(
-        (displayName || fieldName) +
-        ' already exists: ' +
-        value
-      );
-
+      throw new Error((displayName || fieldName) + " already exists: " + value);
     }
 
-
     return true;
-
   }
-
 
   /**
    * ==========================================================
@@ -672,47 +393,25 @@ const ValidationService = (() => {
    * ==========================================================
    */
 
-
   /**
    * ----------------------------------------------------------
    * VALIDATE NUMBER
    * ----------------------------------------------------------
    */
 
-  function validateNumber(
-    value,
-    fieldName
-  ) {
-
-    if (
-      isBlank(value)
-    ) {
-
+  function validateNumber(value, fieldName) {
+    if (isBlank(value)) {
       return true;
-
     }
 
+    const number = Number(value);
 
-    const number =
-      Number(value);
-
-
-    if (
-      !Number.isFinite(number)
-    ) {
-
-      throw new Error(
-        (fieldName || 'Value') +
-        ' must be a valid number.'
-      );
-
+    if (!Number.isFinite(number)) {
+      throw new Error((fieldName || "Value") + " must be a valid number.");
     }
-
 
     return true;
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -720,42 +419,21 @@ const ValidationService = (() => {
    * ----------------------------------------------------------
    */
 
-  function validateNonNegativeNumber(
-    value,
-    fieldName
-  ) {
-
-    if (
-      isBlank(value)
-    ) {
-
+  function validateNonNegativeNumber(value, fieldName) {
+    if (isBlank(value)) {
       return true;
-
     }
 
+    validateNumber(value, fieldName);
 
-    validateNumber(
-      value,
-      fieldName
-    );
-
-
-    if (
-      Number(value) < 0
-    ) {
-
+    if (Number(value) < 0) {
       throw new Error(
-        (fieldName || 'Value') +
-        ' must be greater than or equal to 0.'
+        (fieldName || "Value") + " must be greater than or equal to 0.",
       );
-
     }
-
 
     return true;
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -763,49 +441,25 @@ const ValidationService = (() => {
    * ----------------------------------------------------------
    */
 
-  function validatePositiveNumber(
-    value,
-    fieldName
-  ) {
-
-    if (
-      isBlank(value)
-    ) {
-
+  function validatePositiveNumber(value, fieldName) {
+    if (isBlank(value)) {
       return true;
-
     }
 
+    validateNumber(value, fieldName);
 
-    validateNumber(
-      value,
-      fieldName
-    );
-
-
-    if (
-      Number(value) <= 0
-    ) {
-
-      throw new Error(
-        (fieldName || 'Value') +
-        ' must be greater than 0.'
-      );
-
+    if (Number(value) <= 0) {
+      throw new Error((fieldName || "Value") + " must be greater than 0.");
     }
-
 
     return true;
-
   }
-
 
   /**
    * ==========================================================
    * FORMAT VALIDATION
    * ==========================================================
    */
-
 
   /**
    * ----------------------------------------------------------
@@ -816,45 +470,21 @@ const ValidationService = (() => {
    * attempting full RFC email-address validation.
    */
 
-  function validateEmail(
-    email
-  ) {
-
-    if (
-      isBlank(email)
-    ) {
-
+  function validateEmail(email) {
+    if (isBlank(email)) {
       return true;
-
     }
 
+    const normalizedEmail = String(email).trim();
 
-    const normalizedEmail =
-      String(email).trim();
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-
-    const emailPattern =
-      /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-
-    if (
-      !emailPattern.test(
-        normalizedEmail
-      )
-    ) {
-
-      throw new Error(
-        'Invalid email address: ' +
-        normalizedEmail
-      );
-
+    if (!emailPattern.test(normalizedEmail)) {
+      throw new Error("Invalid email address: " + normalizedEmail);
     }
-
 
     return true;
-
   }
-
 
   /**
    * ==========================================================
@@ -862,73 +492,45 @@ const ValidationService = (() => {
    * ==========================================================
    */
 
-
   /**
    * ----------------------------------------------------------
    * VALIDATE PROPERTY CREATE
    * ----------------------------------------------------------
    */
 
-  function validatePropertyCreate(
-    data
-  ) {
+  function validatePropertyCreate(data) {
+    requireFields(data, [
+      "property_code",
+      "property_name",
+      "property_type",
+      "location_id",
+      "status",
+    ]);
 
-    requireFields(
-      data,
-      [
-        'property_code',
-        'property_name',
-        'property_type',
-        'location_id',
-        'status'
-      ]
-    );
+    validateReference("PROPERTY_TYPE", data.property_type);
 
-
-    validateReference(
-      'PROPERTY_TYPE',
-      data.property_type
-    );
-
-
-    validateLocationExists(
-      data.location_id
-    );
-
+    validateLocationExists(data.location_id);
 
     validateUnique(
       CONFIG.SHEETS.PROPERTIES,
-      'property_code',
+      "property_code",
       data.property_code,
-      'Property code'
+      "Property code",
     );
 
+    validatePositiveNumber(data.min_nights, "min_nights");
 
-    validatePositiveNumber(
-      data.min_nights,
-      'min_nights'
-    );
-
-
-    validatePositiveNumber(
-      data.max_nights,
-      'max_nights'
-    );
-
+    validatePositiveNumber(data.max_nights, "max_nights");
 
     if (
       !isBlank(data.min_nights) &&
       !isBlank(data.max_nights) &&
-      Number(data.max_nights) <
-        Number(data.min_nights)
+      Number(data.max_nights) < Number(data.min_nights)
     ) {
-
       throw new Error(
-        'max_nights must be greater than or equal to min_nights.'
+        "max_nights must be greater than or equal to min_nights.",
       );
-
     }
-
 
     /*
      * Property master status.
@@ -936,16 +538,10 @@ const ValidationService = (() => {
      * Currently Phase 1 uses ACTIVE / INACTIVE directly.
      */
 
-    validateActiveInactiveStatus(
-      data.status,
-      'Property status'
-    );
-
+    validateActiveInactiveStatus(data.status, "Property status");
 
     return true;
-
   }
-
 
   /**
    * ==========================================================
@@ -953,100 +549,50 @@ const ValidationService = (() => {
    * ==========================================================
    */
 
-
   /**
    * ----------------------------------------------------------
    * VALIDATE UNIT CREATE
    * ----------------------------------------------------------
    */
 
-  function validateUnitCreate(
-    data
-  ) {
+  function validateUnitCreate(data) {
+    requireFields(data, [
+      "property_id",
+      "unit_code",
+      "unit_name",
+      "unit_type",
+      "status",
+    ]);
 
-    requireFields(
-      data,
-      [
-        'property_id',
-        'unit_code',
-        'unit_name',
-        'unit_type',
-        'status'
-      ]
-    );
+    validatePropertyExists(data.property_id);
 
+    validateReference("UNIT_TYPE", data.unit_type);
 
-    validatePropertyExists(
-      data.property_id
-    );
-
-
-    validateReference(
-      'UNIT_TYPE',
-      data.unit_type
-    );
-
-
-    validateReference(
-      'UNIT_STATUS',
-      data.status
-    );
-
+    validateReference("UNIT_STATUS", data.status);
 
     validateUnique(
       CONFIG.SHEETS.UNITS,
-      'unit_code',
+      "unit_code",
       data.unit_code,
-      'Unit code'
+      "Unit code",
     );
 
+    validateNonNegativeNumber(data.bedrooms, "bedrooms");
 
-    validateNonNegativeNumber(
-      data.bedrooms,
-      'bedrooms'
-    );
+    validateNonNegativeNumber(data.bathrooms, "bathrooms");
 
+    validateNonNegativeNumber(data.max_adults, "max_adults");
 
-    validateNonNegativeNumber(
-      data.bathrooms,
-      'bathrooms'
-    );
+    validateNonNegativeNumber(data.max_children, "max_children");
 
+    validateNonNegativeNumber(data.max_guests, "max_guests");
 
-    validateNonNegativeNumber(
-      data.max_adults,
-      'max_adults'
-    );
+    validateNonNegativeNumber(data.area_sqm, "area_sqm");
 
-
-    validateNonNegativeNumber(
-      data.max_children,
-      'max_children'
-    );
-
-
-    validateNonNegativeNumber(
-      data.max_guests,
-      'max_guests'
-    );
-
-
-    validateNonNegativeNumber(
-      data.area_sqm,
-      'area_sqm'
-    );
-
-
-    validateNonNegativeNumber(
-      data.floor_number,
-      'floor_number'
-    );
-
+    validateNonNegativeNumber(data.floor_number, "floor_number");
 
     return true;
-
   }
-
 
   /**
    * ==========================================================
@@ -1054,95 +600,53 @@ const ValidationService = (() => {
    * ==========================================================
    */
 
-
   /**
    * ----------------------------------------------------------
    * VALIDATE CUSTOMER CREATE
    * ----------------------------------------------------------
    */
 
-  function validateCustomerCreate(
-    data
-  ) {
-
-    requireFields(
-      data,
-      [
-        'first_name',
-        'last_name'
-      ]
-    );
-
+  function validateCustomerCreate(data) {
+    requireFields(data, ["first_name", "last_name"]);
 
     /*
      * Customer must have at least one contact method.
      */
 
-    if (
-      isBlank(data.email) &&
-      isBlank(data.phone)
-    ) {
-
-      throw new Error(
-        'Customer must have at least an email or phone number.'
-      );
-
+    if (isBlank(data.email) && isBlank(data.phone)) {
+      throw new Error("Customer must have at least an email or phone number.");
     }
 
-
-    if (
-      !isBlank(data.email)
-    ) {
-
-      validateEmail(
-        data.email
-      );
-
+    if (!isBlank(data.email)) {
+      validateEmail(data.email);
 
       validateUnique(
         CONFIG.SHEETS.CUSTOMERS,
-        'email',
+        "email",
         data.email,
-        'Customer email'
+        "Customer email",
       );
-
     }
 
-
-    if (
-      !isBlank(data.phone)
-    ) {
-
+    if (!isBlank(data.phone)) {
       validateUnique(
         CONFIG.SHEETS.CUSTOMERS,
-        'phone',
+        "phone",
         data.phone,
-        'Customer phone'
+        "Customer phone",
       );
-
     }
-
 
     /*
      * Validate status only when provided.
      */
 
-    if (
-      !isBlank(data.status)
-    ) {
-
-      validateActiveInactiveStatus(
-        data.status,
-        'Customer status'
-      );
-
+    if (!isBlank(data.status)) {
+      validateActiveInactiveStatus(data.status, "Customer status");
     }
 
-
     return true;
-
   }
-
 
   /**
    * ==========================================================
@@ -1150,38 +654,18 @@ const ValidationService = (() => {
    * ==========================================================
    */
 
-
   /**
    * ----------------------------------------------------------
    * VALIDATE STAFF CREATE
    * ----------------------------------------------------------
    */
 
-  function validateStaffCreate(
-    data
-  ) {
+  function validateStaffCreate(data) {
+    requireFields(data, ["name", "role", "property_id", "status"]);
 
-    requireFields(
-      data,
-      [
-        'name',
-        'role',
-        'property_id',
-        'status'
-      ]
-    );
+    validatePropertyExists(data.property_id);
 
-
-    validatePropertyExists(
-      data.property_id
-    );
-
-
-    validateReference(
-      'STAFF_ROLE',
-      data.role
-    );
-
+    validateReference("STAFF_ROLE", data.role);
 
     /*
      * Staff status is a master-record status:
@@ -1191,30 +675,14 @@ const ValidationService = (() => {
      * It is deliberately NOT an operational status.
      */
 
-    validateActiveInactiveStatus(
-      data.status,
-      'Staff status'
-    );
+    validateActiveInactiveStatus(data.status, "Staff status");
 
-
-    if (
-      !isBlank(data.phone)
-    ) {
-
-      validateUnique(
-        CONFIG.SHEETS.STAFF,
-        'phone',
-        data.phone,
-        'Staff phone'
-      );
-
+    if (!isBlank(data.phone)) {
+      validateUnique(CONFIG.SHEETS.STAFF, "phone", data.phone, "Staff phone");
     }
 
-
     return true;
-
   }
-
 
   /**
    * ==========================================================
@@ -1222,24 +690,15 @@ const ValidationService = (() => {
    * ==========================================================
    */
 
-
   /**
    * ----------------------------------------------------------
    * VALIDATE OPERATIONAL STATUS
    * ----------------------------------------------------------
    */
 
-  function validateOperationalStatus(
-    status
-  ) {
-
-    return validateReference(
-      'OPERATIONAL_STATUS',
-      status
-    );
-
+  function validateOperationalStatus(status) {
+    return validateReference("OPERATIONAL_STATUS", status);
   }
-
 
   /**
    * ==========================================================
@@ -1247,61 +706,29 @@ const ValidationService = (() => {
    * ==========================================================
    */
 
-
   /**
    * ----------------------------------------------------------
    * ACTIVE / INACTIVE STATUS
    * ----------------------------------------------------------
    */
 
-  function validateActiveInactiveStatus(
-    status,
-    displayName
-  ) {
-
-    if (
-      isBlank(status)
-    ) {
-
-      throw new Error(
-        (displayName || 'Status') +
-        ' is required.'
-      );
-
+  function validateActiveInactiveStatus(status, displayName) {
+    if (isBlank(status)) {
+      throw new Error((displayName || "Status") + " is required.");
     }
 
+    const normalized = String(status).trim().toUpperCase();
 
-    const normalized =
-      String(status)
-        .trim()
-        .toUpperCase();
+    const allowed = ["ACTIVE", "INACTIVE"];
 
-
-    const allowed =
-      [
-        'ACTIVE',
-        'INACTIVE'
-      ];
-
-
-    if (
-      !allowed.includes(
-        normalized
-      )
-    ) {
-
+    if (!allowed.includes(normalized)) {
       throw new Error(
-        (displayName || 'Status') +
-        ' must be ACTIVE or INACTIVE.'
+        (displayName || "Status") + " must be ACTIVE or INACTIVE.",
       );
-
     }
-
 
     return true;
-
   }
-
 
   /**
    * ==========================================================
@@ -1310,7 +737,6 @@ const ValidationService = (() => {
    */
 
   return {
-
     // Generic helpers
 
     isBlank,
@@ -1319,7 +745,6 @@ const ValidationService = (() => {
 
     requireFields,
 
-
     // Reference data
 
     isActiveReference,
@@ -1327,7 +752,6 @@ const ValidationService = (() => {
     getReferenceValues,
 
     validateReference,
-
 
     // Foreign keys
 
@@ -1345,13 +769,11 @@ const ValidationService = (() => {
 
     validateStaffExists,
 
-
     // Uniqueness
 
     validateUnique,
 
     validateUniqueExcept,
-
 
     // Numbers
 
@@ -1361,11 +783,9 @@ const ValidationService = (() => {
 
     validatePositiveNumber,
 
-
     // Formats
 
     validateEmail,
-
 
     // Entity validation
 
@@ -1379,11 +799,8 @@ const ValidationService = (() => {
 
     validateOperationalStatus,
 
-
     // Master status
 
-    validateActiveInactiveStatus
-
+    validateActiveInactiveStatus,
   };
-
 })();

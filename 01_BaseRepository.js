@@ -30,8 +30,6 @@
  */
 
 const BaseRepository = (() => {
-
-
   /**
    * ----------------------------------------------------------
    * GET ACTIVE SPREADSHEET
@@ -42,24 +40,18 @@ const BaseRepository = (() => {
    */
 
   function getSpreadsheet() {
-
-    const spreadsheet =
-      SpreadsheetApp.getActiveSpreadsheet();
+    const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
 
     if (!spreadsheet) {
-
       throw new Error(
-        'No active spreadsheet found. ' +
-        'This Apps Script project must be bound to the ' +
-        'Rental Operations Google Sheet.'
+        "No active spreadsheet found. " +
+          "This Apps Script project must be bound to the " +
+          "Rental Operations Google Sheet.",
       );
-
     }
 
     return spreadsheet;
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -68,34 +60,18 @@ const BaseRepository = (() => {
    */
 
   function getSheet(sheetName) {
-
     if (!sheetName) {
-
-      throw new Error(
-        'sheetName is required.'
-      );
-
+      throw new Error("sheetName is required.");
     }
 
-    const sheet =
-      getSpreadsheet()
-        .getSheetByName(
-          sheetName
-        );
+    const sheet = getSpreadsheet().getSheetByName(sheetName);
 
     if (!sheet) {
-
-      throw new Error(
-        'Sheet not found: ' +
-        sheetName
-      );
-
+      throw new Error("Sheet not found: " + sheetName);
     }
 
     return sheet;
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -106,61 +82,29 @@ const BaseRepository = (() => {
    */
 
   function getHeaders(sheetName) {
+    const sheet = getSheet(sheetName);
 
-    const sheet =
-      getSheet(
-        sheetName
-      );
-
-    const lastColumn =
-      sheet.getLastColumn();
+    const lastColumn = sheet.getLastColumn();
 
     if (lastColumn < 1) {
-
-      throw new Error(
-        'No columns found in sheet: ' +
-        sheetName
-      );
-
+      throw new Error("No columns found in sheet: " + sheetName);
     }
 
-    const headers =
-      sheet
-        .getRange(
-          1,
-          1,
-          1,
-          lastColumn
-        )
-        .getValues()[0]
-        .map(
-          value =>
-            String(value).trim()
+    const headers = sheet
+      .getRange(1, 1, 1, lastColumn)
+      .getValues()[0]
+      .map((value) => String(value).trim());
+
+    headers.forEach((header, index) => {
+      if (!header) {
+        throw new Error(
+          "Empty header found in " + sheetName + " at column " + (index + 1),
         );
-
-
-    headers.forEach(
-      (header, index) => {
-
-        if (!header) {
-
-          throw new Error(
-            'Empty header found in ' +
-            sheetName +
-            ' at column ' +
-            (index + 1)
-          );
-
-        }
-
       }
-    );
-
+    });
 
     return headers;
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -168,26 +112,15 @@ const BaseRepository = (() => {
    * ----------------------------------------------------------
    */
 
-  function rowToObject(
-    headers,
-    row
-  ) {
-
+  function rowToObject(headers, row) {
     const result = {};
 
-    headers.forEach(
-      (header, index) => {
-
-        result[header] =
-          row[index];
-
-      }
-    );
+    headers.forEach((header, index) => {
+      result[header] = row[index];
+    });
 
     return result;
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -199,38 +132,15 @@ const BaseRepository = (() => {
    * Extra object properties are intentionally ignored.
    */
 
-  function objectToRow(
-    headers,
-    object
-  ) {
-
-    return headers.map(
-      header => {
-
-        if (
-          Object.prototype
-            .hasOwnProperty
-            .call(
-              object,
-              header
-            )
-        ) {
-
-          return (
-            object[header] === undefined
-              ? ''
-              : object[header]
-          );
-
-        }
-
-        return '';
-
+  function objectToRow(headers, object) {
+    return headers.map((header) => {
+      if (Object.prototype.hasOwnProperty.call(object, header)) {
+        return object[header] === undefined ? "" : object[header];
       }
-    );
 
+      return "";
+    });
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -239,16 +149,10 @@ const BaseRepository = (() => {
    */
 
   function isEmptyRow(row) {
-
     return row.every(
-      value =>
-        value === '' ||
-        value === null ||
-        value === undefined
+      (value) => value === "" || value === null || value === undefined,
     );
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -259,44 +163,17 @@ const BaseRepository = (() => {
    * behave consistently when read from Google Sheets.
    */
 
-  function valuesEqual(
-    a,
-    b
-  ) {
-
-    if (
-      a === null ||
-      a === undefined
-    ) {
-
-      return (
-        b === null ||
-        b === undefined ||
-        b === ''
-      );
-
+  function valuesEqual(a, b) {
+    if (a === null || a === undefined) {
+      return b === null || b === undefined || b === "";
     }
 
-
-    if (
-      b === null ||
-      b === undefined
-    ) {
-
-      return (
-        a === ''
-      );
-
+    if (b === null || b === undefined) {
+      return a === "";
     }
 
-
-    return (
-      String(a).trim() ===
-      String(b).trim()
-    );
-
+    return String(a).trim() === String(b).trim();
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -305,53 +182,24 @@ const BaseRepository = (() => {
    */
 
   function findAll(sheetName) {
+    const sheet = getSheet(sheetName);
 
-    const sheet =
-      getSheet(
-        sheetName
-      );
+    const headers = getHeaders(sheetName);
 
-    const headers =
-      getHeaders(
-        sheetName
-      );
-
-    const lastRow =
-      sheet.getLastRow();
+    const lastRow = sheet.getLastRow();
 
     if (lastRow <= 1) {
-
       return [];
-
     }
 
-
-    const values =
-      sheet
-        .getRange(
-          2,
-          1,
-          lastRow - 1,
-          headers.length
-        )
-        .getValues();
-
+    const values = sheet
+      .getRange(2, 1, lastRow - 1, headers.length)
+      .getValues();
 
     return values
-      .filter(
-        row =>
-          !isEmptyRow(row)
-      )
-      .map(
-        row =>
-          rowToObject(
-            headers,
-            row
-          )
-      );
-
+      .filter((row) => !isEmptyRow(row))
+      .map((row) => rowToObject(headers, row));
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -364,72 +212,27 @@ const BaseRepository = (() => {
    * null   -> record not found
    */
 
-  function findOneByField(
-    sheetName,
-    fieldName,
-    value
-  ) {
-
+  function findOneByField(sheetName, fieldName, value) {
     if (!fieldName) {
-
-      throw new Error(
-        'fieldName is required.'
-      );
-
+      throw new Error("fieldName is required.");
     }
 
+    const headers = getHeaders(sheetName);
 
-    const headers =
-      getHeaders(
-        sheetName
-      );
-
-    if (
-      headers.indexOf(
-        fieldName
-      ) === -1
-    ) {
-
-      throw new Error(
-        'Column "' +
-        fieldName +
-        '" not found in ' +
-        sheetName
-      );
-
+    if (headers.indexOf(fieldName) === -1) {
+      throw new Error('Column "' + fieldName + '" not found in ' + sheetName);
     }
 
+    const records = findAll(sheetName);
 
-    const records =
-      findAll(
-        sheetName
-      );
-
-
-    for (
-      let i = 0;
-      i < records.length;
-      i++
-    ) {
-
-      if (
-        valuesEqual(
-          records[i][fieldName],
-          value
-        )
-      ) {
-
+    for (let i = 0; i < records.length; i++) {
+      if (valuesEqual(records[i][fieldName], value)) {
         return records[i];
-
       }
-
     }
-
 
     return null;
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -437,54 +240,21 @@ const BaseRepository = (() => {
    * ----------------------------------------------------------
    */
 
-  function findByField(
-    sheetName,
-    fieldName,
-    value
-  ) {
-
+  function findByField(sheetName, fieldName, value) {
     if (!fieldName) {
-
-      throw new Error(
-        'fieldName is required.'
-      );
-
+      throw new Error("fieldName is required.");
     }
 
+    const headers = getHeaders(sheetName);
 
-    const headers =
-      getHeaders(
-        sheetName
-      );
-
-    if (
-      headers.indexOf(
-        fieldName
-      ) === -1
-    ) {
-
-      throw new Error(
-        'Column "' +
-        fieldName +
-        '" not found in ' +
-        sheetName
-      );
-
+    if (headers.indexOf(fieldName) === -1) {
+      throw new Error('Column "' + fieldName + '" not found in ' + sheetName);
     }
 
-
-    return findAll(
-      sheetName
-    ).filter(
-      record =>
-        valuesEqual(
-          record[fieldName],
-          value
-        )
+    return findAll(sheetName).filter((record) =>
+      valuesEqual(record[fieldName], value),
     );
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -492,33 +262,13 @@ const BaseRepository = (() => {
    * ----------------------------------------------------------
    */
 
-  function findById(
-    sheetName,
-    idColumn,
-    id
-  ) {
-
-    if (
-      id === undefined ||
-      id === null ||
-      String(id).trim() === ''
-    ) {
-
-      throw new Error(
-        'ID is required.'
-      );
-
+  function findById(sheetName, idColumn, id) {
+    if (id === undefined || id === null || String(id).trim() === "") {
+      throw new Error("ID is required.");
     }
 
-
-    return findOneByField(
-      sheetName,
-      idColumn,
-      id
-    );
-
+    return findOneByField(sheetName, idColumn, id);
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -526,22 +276,9 @@ const BaseRepository = (() => {
    * ----------------------------------------------------------
    */
 
-  function exists(
-    sheetName,
-    fieldName,
-    value
-  ) {
-
-    return (
-      findOneByField(
-        sheetName,
-        fieldName,
-        value
-      ) !== null
-    );
-
+  function exists(sheetName, fieldName, value) {
+    return findOneByField(sheetName, fieldName, value) !== null;
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -551,57 +288,26 @@ const BaseRepository = (() => {
    * Only properties matching sheet headers are persisted.
    */
 
-  function insert(
-    sheetName,
-    record
-  ) {
-
-    if (
-      !record ||
-      typeof record !== 'object'
-    ) {
-
-      throw new Error(
-        'record must be an object.'
-      );
-
+  function insert(sheetName, record) {
+    if (!record || typeof record !== "object") {
+      throw new Error("record must be an object.");
     }
 
+    const sheet = getSheet(sheetName);
 
-    const sheet =
-      getSheet(
-        sheetName
-      );
+    const headers = getHeaders(sheetName);
 
-    const headers =
-      getHeaders(
-        sheetName
-      );
+    const row = objectToRow(headers, record);
 
-    const row =
-      objectToRow(
-        headers,
-        record
-      );
-
-
-    sheet.appendRow(
-      row
-    );
-
+    sheet.appendRow(row);
 
     /*
      * Return the stored representation rather than blindly
      * returning fields that may not exist in the sheet.
      */
 
-    return rowToObject(
-      headers,
-      row
-    );
-
+    return rowToObject(headers, row);
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -614,150 +320,53 @@ const BaseRepository = (() => {
    * changes object.
    */
 
-  function update(
-    sheetName,
-    idColumn,
-    id,
-    changes
-  ) {
-
-    if (
-      !changes ||
-      typeof changes !== 'object'
-    ) {
-
-      throw new Error(
-        'changes must be an object.'
-      );
-
+  function update(sheetName, idColumn, id, changes) {
+    if (!changes || typeof changes !== "object") {
+      throw new Error("changes must be an object.");
     }
 
+    const sheet = getSheet(sheetName);
 
-    const sheet =
-      getSheet(
-        sheetName
-      );
+    const headers = getHeaders(sheetName);
 
-    const headers =
-      getHeaders(
-        sheetName
-      );
-
-    const idIndex =
-      headers.indexOf(
-        idColumn
-      );
-
+    const idIndex = headers.indexOf(idColumn);
 
     if (idIndex === -1) {
-
-      throw new Error(
-        'Column "' +
-        idColumn +
-        '" not found in ' +
-        sheetName
-      );
-
+      throw new Error('Column "' + idColumn + '" not found in ' + sheetName);
     }
 
-
-    const lastRow =
-      sheet.getLastRow();
-
+    const lastRow = sheet.getLastRow();
 
     if (lastRow <= 1) {
-
-      throw new Error(
-        'Record not found: ' +
-        id
-      );
-
+      throw new Error("Record not found: " + id);
     }
 
+    const values = sheet
+      .getRange(2, 1, lastRow - 1, headers.length)
+      .getValues();
 
-    const values =
-      sheet
-        .getRange(
-          2,
-          1,
-          lastRow - 1,
-          headers.length
-        )
-        .getValues();
+    for (let i = 0; i < values.length; i++) {
+      if (valuesEqual(values[i][idIndex], id)) {
+        const existing = rowToObject(headers, values[i]);
 
-
-    for (
-      let i = 0;
-      i < values.length;
-      i++
-    ) {
-
-      if (
-        valuesEqual(
-          values[i][idIndex],
-          id
-        )
-      ) {
-
-        const existing =
-          rowToObject(
-            headers,
-            values[i]
-          );
-
-
-        const updated =
-          Object.assign(
-            {},
-            existing,
-            changes
-          );
-
+        const updated = Object.assign({}, existing, changes);
 
         /*
          * Protect stable ID.
          */
 
-        updated[idColumn] =
-          existing[idColumn];
+        updated[idColumn] = existing[idColumn];
 
+        const updatedRow = objectToRow(headers, updated);
 
-        const updatedRow =
-          objectToRow(
-            headers,
-            updated
-          );
+        sheet.getRange(i + 2, 1, 1, headers.length).setValues([updatedRow]);
 
-
-        sheet
-          .getRange(
-            i + 2,
-            1,
-            1,
-            headers.length
-          )
-          .setValues([
-            updatedRow
-          ]);
-
-
-        return rowToObject(
-          headers,
-          updatedRow
-        );
-
+        return rowToObject(headers, updatedRow);
       }
-
     }
 
-
-    throw new Error(
-      'Record not found: ' +
-      id
-    );
-
+    throw new Error("Record not found: " + id);
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -777,86 +386,33 @@ const BaseRepository = (() => {
    * The row number is NOT an entity ID.
    */
 
-  function findRowNumberById(
-    sheetName,
-    idColumn,
-    id
-  ) {
+  function findRowNumberById(sheetName, idColumn, id) {
+    const sheet = getSheet(sheetName);
 
-    const sheet =
-      getSheet(
-        sheetName
-      );
+    const headers = getHeaders(sheetName);
 
-    const headers =
-      getHeaders(
-        sheetName
-      );
-
-    const index =
-      headers.indexOf(
-        idColumn
-      );
-
+    const index = headers.indexOf(idColumn);
 
     if (index === -1) {
-
-      throw new Error(
-        'Column "' +
-        idColumn +
-        '" not found in ' +
-        sheetName
-      );
-
+      throw new Error('Column "' + idColumn + '" not found in ' + sheetName);
     }
 
-
-    const lastRow =
-      sheet.getLastRow();
-
+    const lastRow = sheet.getLastRow();
 
     if (lastRow <= 1) {
-
       return -1;
-
     }
 
+    const values = sheet.getRange(2, index + 1, lastRow - 1, 1).getValues();
 
-    const values =
-      sheet
-        .getRange(
-          2,
-          index + 1,
-          lastRow - 1,
-          1
-        )
-        .getValues();
-
-
-    for (
-      let i = 0;
-      i < values.length;
-      i++
-    ) {
-
-      if (
-        valuesEqual(
-          values[i][0],
-          id
-        )
-      ) {
-
+    for (let i = 0; i < values.length; i++) {
+      if (valuesEqual(values[i][0], id)) {
         return i + 2;
-
       }
-
     }
-
 
     return -1;
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -865,13 +421,8 @@ const BaseRepository = (() => {
    */
 
   function count(sheetName) {
-
-    return findAll(
-      sheetName
-    ).length;
-
+    return findAll(sheetName).length;
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -882,39 +433,20 @@ const BaseRepository = (() => {
    */
 
   function getSheetInfo(sheetName) {
+    const sheet = getSheet(sheetName);
 
-    const sheet =
-      getSheet(
-        sheetName
-      );
-
-    const headers =
-      getHeaders(
-        sheetName
-      );
-
+    const headers = getHeaders(sheetName);
 
     return {
+      sheet_name: sheetName,
 
-      sheet_name:
-        sheetName,
+      row_count: Math.max(sheet.getLastRow() - 1, 0),
 
-      row_count:
-        Math.max(
-          sheet.getLastRow() - 1,
-          0
-        ),
+      column_count: headers.length,
 
-      column_count:
-        headers.length,
-
-      headers:
-        headers
-
+      headers: headers,
     };
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -923,7 +455,6 @@ const BaseRepository = (() => {
    */
 
   return {
-
     getSpreadsheet,
 
     getSheet,
@@ -948,8 +479,6 @@ const BaseRepository = (() => {
 
     count,
 
-    getSheetInfo
-
+    getSheetInfo,
   };
-
 })();

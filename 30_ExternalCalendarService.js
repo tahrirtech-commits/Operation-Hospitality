@@ -65,25 +65,17 @@
  */
 
 const ExternalCalendarService = (() => {
+  const ENTITY_TYPE = "EXTERNAL_CALENDAR_EVENT";
 
-  const ENTITY_TYPE =
-    'EXTERNAL_CALENDAR_EVENT';
+  const STATUS_ACTIVE = "ACTIVE";
 
-
-  const STATUS_ACTIVE =
-    'ACTIVE';
-
-
-  const STATUS_INACTIVE =
-    'INACTIVE';
-
+  const STATUS_INACTIVE = "INACTIVE";
 
   /**
    * ==========================================================
    * INTERNAL HELPERS
    * ==========================================================
    */
-
 
   /**
    * ----------------------------------------------------------
@@ -92,15 +84,12 @@ const ExternalCalendarService = (() => {
    */
 
   function timestamp() {
-
     return Utilities.formatDate(
       new Date(),
       CONFIG.TIMEZONE,
-      CONFIG.DATE_FORMATS.DATETIME
+      CONFIG.DATE_FORMATS.DATETIME,
     );
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -109,15 +98,12 @@ const ExternalCalendarService = (() => {
    */
 
   function today() {
-
     return Utilities.formatDate(
       new Date(),
       CONFIG.TIMEZONE,
-      CONFIG.DATE_FORMATS.DATE
+      CONFIG.DATE_FORMATS.DATE,
     );
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -126,15 +112,8 @@ const ExternalCalendarService = (() => {
    */
 
   function isBlank(value) {
-
-    return (
-      value === undefined ||
-      value === null ||
-      String(value).trim() === ''
-    );
-
+    return value === undefined || value === null || String(value).trim() === "";
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -143,18 +122,12 @@ const ExternalCalendarService = (() => {
    */
 
   function normalizeText(value) {
-
     if (isBlank(value)) {
-
-      return '';
-
+      return "";
     }
 
-
     return String(value).trim();
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -163,13 +136,8 @@ const ExternalCalendarService = (() => {
    */
 
   function normalizeUpper(value) {
-
-    return normalizeText(
-      value
-    ).toUpperCase();
-
+    return normalizeText(value).toUpperCase();
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -178,20 +146,12 @@ const ExternalCalendarService = (() => {
    */
 
   function normalizeActorId(actorId) {
-
     if (isBlank(actorId)) {
-
       return CONFIG.DEFAULTS.ACTOR_ID;
-
     }
 
-
-    return normalizeText(
-      actorId
-    );
-
+    return normalizeText(actorId);
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -200,26 +160,14 @@ const ExternalCalendarService = (() => {
    */
 
   function normalizeSource(source) {
-
-    const normalized =
-      normalizeUpper(
-        source
-      );
-
+    const normalized = normalizeUpper(source);
 
     if (!normalized) {
-
-      throw new Error(
-        'source is required.'
-      );
-
+      throw new Error("source is required.");
     }
 
-
     return normalized;
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -228,30 +176,16 @@ const ExternalCalendarService = (() => {
    */
 
   function normalizeStatus(status) {
+    const normalized = normalizeUpper(status);
 
-    const normalized =
-      normalizeUpper(
-        status
-      );
-
-
-    if (
-      normalized !== STATUS_ACTIVE &&
-      normalized !== STATUS_INACTIVE
-    ) {
-
+    if (normalized !== STATUS_ACTIVE && normalized !== STATUS_INACTIVE) {
       throw new Error(
-        'External calendar event status must be ' +
-        'ACTIVE or INACTIVE.'
+        "External calendar event status must be " + "ACTIVE or INACTIVE.",
       );
-
     }
 
-
     return normalized;
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -268,116 +202,53 @@ const ExternalCalendarService = (() => {
    * YYYY-MM-DD
    */
 
-  function normalizeDate(
-    value,
-    fieldName
-  ) {
-
+  function normalizeDate(value, fieldName) {
     if (isBlank(value)) {
-
-      throw new Error(
-        fieldName +
-        ' is required.'
-      );
-
+      throw new Error(fieldName + " is required.");
     }
 
-
-    if (
-      Object.prototype
-        .toString
-        .call(value) ===
-      '[object Date]'
-    ) {
-
-      if (
-        isNaN(
-          value.getTime()
-        )
-      ) {
-
-        throw new Error(
-          fieldName +
-          ' is not a valid date.'
-        );
-
+    if (Object.prototype.toString.call(value) === "[object Date]") {
+      if (isNaN(value.getTime())) {
+        throw new Error(fieldName + " is not a valid date.");
       }
-
 
       return Utilities.formatDate(
         value,
         CONFIG.TIMEZONE,
-        CONFIG.DATE_FORMATS.DATE
+        CONFIG.DATE_FORMATS.DATE,
       );
-
     }
 
+    const text = normalizeText(value);
 
-    const text =
-      normalizeText(
-        value
-      );
-
-
-    if (
-      !/^\d{4}-\d{2}-\d{2}$/
-        .test(text)
-    ) {
-
-      throw new Error(
-        fieldName +
-        ' must use YYYY-MM-DD format.'
-      );
-
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(text)) {
+      throw new Error(fieldName + " must use YYYY-MM-DD format.");
     }
-
 
     /*
      * Validate actual calendar date.
      */
 
-    const parts =
-      text.split('-');
+    const parts = text.split("-");
 
+    const year = Number(parts[0]);
 
-    const year =
-      Number(parts[0]);
+    const month = Number(parts[1]);
 
+    const day = Number(parts[2]);
 
-    const month =
-      Number(parts[1]);
-
-
-    const day =
-      Number(parts[2]);
-
-
-    const date =
-      new Date(
-        year,
-        month - 1,
-        day
-      );
-
+    const date = new Date(year, month - 1, day);
 
     if (
       date.getFullYear() !== year ||
       date.getMonth() !== month - 1 ||
       date.getDate() !== day
     ) {
-
-      throw new Error(
-        fieldName +
-        ' is not a valid calendar date.'
-      );
-
+      throw new Error(fieldName + " is not a valid calendar date.");
     }
 
-
     return text;
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -391,26 +262,12 @@ const ExternalCalendarService = (() => {
    */
 
   function dateToNumber(value) {
+    const normalized = normalizeDate(value, "date");
 
-    const normalized =
-      normalizeDate(
-        value,
-        'date'
-      );
+    const parts = normalized.split("-");
 
-
-    const parts =
-      normalized.split('-');
-
-
-    return Date.UTC(
-      Number(parts[0]),
-      Number(parts[1]) - 1,
-      Number(parts[2])
-    );
-
+    return Date.UTC(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -418,49 +275,21 @@ const ExternalCalendarService = (() => {
    * ----------------------------------------------------------
    */
 
-  function validateDateRange(
-    startDate,
-    endDate
-  ) {
+  function validateDateRange(startDate, endDate) {
+    const start = normalizeDate(startDate, "start_date");
 
-    const start =
-      normalizeDate(
-        startDate,
-        'start_date'
-      );
+    const end = normalizeDate(endDate, "end_date");
 
-
-    const end =
-      normalizeDate(
-        endDate,
-        'end_date'
-      );
-
-
-    if (
-      dateToNumber(end) <=
-      dateToNumber(start)
-    ) {
-
-      throw new Error(
-        'end_date must be after start_date.'
-      );
-
+    if (dateToNumber(end) <= dateToNumber(start)) {
+      throw new Error("end_date must be after start_date.");
     }
 
-
     return {
+      start_date: start,
 
-      start_date:
-        start,
-
-      end_date:
-        end
-
+      end_date: end,
     };
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -469,120 +298,42 @@ const ExternalCalendarService = (() => {
    */
 
   function normalizeEvent(data) {
+    const event = Object.assign({}, data || {});
 
-    const event =
-      Object.assign(
-        {},
-        data || {}
-      );
-
-
-    if (
-      event.external_event_id !== undefined
-    ) {
-
-      event.external_event_id =
-        normalizeText(
-          event.external_event_id
-        );
-
+    if (event.external_event_id !== undefined) {
+      event.external_event_id = normalizeText(event.external_event_id);
     }
 
-
-    if (
-      event.unit_id !== undefined
-    ) {
-
-      event.unit_id =
-        normalizeText(
-          event.unit_id
-        );
-
+    if (event.unit_id !== undefined) {
+      event.unit_id = normalizeText(event.unit_id);
     }
 
-
-    if (
-      event.source !== undefined
-    ) {
-
-      event.source =
-        normalizeUpper(
-          event.source
-        );
-
+    if (event.source !== undefined) {
+      event.source = normalizeUpper(event.source);
     }
 
-
-    if (
-      event.external_uid !== undefined
-    ) {
-
-      event.external_uid =
-        normalizeText(
-          event.external_uid
-        );
-
+    if (event.external_uid !== undefined) {
+      event.external_uid = normalizeText(event.external_uid);
     }
 
-
-    if (
-      event.summary !== undefined
-    ) {
-
-      event.summary =
-        normalizeText(
-          event.summary
-        );
-
+    if (event.summary !== undefined) {
+      event.summary = normalizeText(event.summary);
     }
 
-
-    if (
-      event.status !== undefined
-    ) {
-
-      event.status =
-        normalizeUpper(
-          event.status
-        );
-
+    if (event.status !== undefined) {
+      event.status = normalizeUpper(event.status);
     }
 
-
-    if (
-      !isBlank(
-        event.start_date
-      )
-    ) {
-
-      event.start_date =
-        normalizeDate(
-          event.start_date,
-          'start_date'
-        );
-
+    if (!isBlank(event.start_date)) {
+      event.start_date = normalizeDate(event.start_date, "start_date");
     }
 
-
-    if (
-      !isBlank(
-        event.end_date
-      )
-    ) {
-
-      event.end_date =
-        normalizeDate(
-          event.end_date,
-          'end_date'
-        );
-
+    if (!isBlank(event.end_date)) {
+      event.end_date = normalizeDate(event.end_date, "end_date");
     }
-
 
     return event;
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -591,29 +342,20 @@ const ExternalCalendarService = (() => {
    */
 
   function validateEvent(event) {
-
-    ValidationService.requireFields(
-      event,
-      [
-        'unit_id',
-        'source',
-        'external_uid',
-        'start_date',
-        'end_date',
-        'status'
-      ]
-    );
-
+    ValidationService.requireFields(event, [
+      "unit_id",
+      "source",
+      "external_uid",
+      "start_date",
+      "end_date",
+      "status",
+    ]);
 
     /*
      * Unit FK.
      */
 
-    ValidationService
-      .validateUnitExists(
-        event.unit_id
-      );
-
+    ValidationService.validateUnitExists(event.unit_id);
 
     /*
      * Source.
@@ -624,34 +366,22 @@ const ExternalCalendarService = (() => {
      * identifiers without requiring a schema change.
      */
 
-    normalizeSource(
-      event.source
-    );
-
+    normalizeSource(event.source);
 
     /*
      * Status.
      */
 
-    normalizeStatus(
-      event.status
-    );
-
+    normalizeStatus(event.status);
 
     /*
      * Date range.
      */
 
-    validateDateRange(
-      event.start_date,
-      event.end_date
-    );
-
+    validateDateRange(event.start_date, event.end_date);
 
     return true;
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -659,43 +389,19 @@ const ExternalCalendarService = (() => {
    * ----------------------------------------------------------
    */
 
-  function requireEvent(
-    externalEventId
-  ) {
-
-    if (
-      isBlank(
-        externalEventId
-      )
-    ) {
-
-      throw new Error(
-        'externalEventId is required.'
-      );
-
+  function requireEvent(externalEventId) {
+    if (isBlank(externalEventId)) {
+      throw new Error("externalEventId is required.");
     }
 
-
-    const event =
-      getById(
-        externalEventId
-      );
-
+    const event = getById(externalEventId);
 
     if (!event) {
-
-      throw new Error(
-        'External calendar event not found: ' +
-        externalEventId
-      );
-
+      throw new Error("External calendar event not found: " + externalEventId);
     }
 
-
     return event;
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -709,79 +415,34 @@ const ExternalCalendarService = (() => {
    * unit_id + source + external_uid
    */
 
-  function findBySourceUid(
-    unitId,
-    source,
-    externalUid
-  ) {
-
-    if (
-      isBlank(unitId) ||
-      isBlank(source) ||
-      isBlank(externalUid)
-    ) {
-
+  function findBySourceUid(unitId, source, externalUid) {
+    if (isBlank(unitId) || isBlank(source) || isBlank(externalUid)) {
       return null;
-
     }
 
+    const normalizedUnitId = normalizeText(unitId);
 
-    const normalizedUnitId =
-      normalizeText(
-        unitId
-      );
+    const normalizedSource = normalizeUpper(source);
 
+    const normalizedUid = normalizeText(externalUid);
 
-    const normalizedSource =
-      normalizeUpper(
-        source
-      );
+    const events = BaseRepository.findByField(
+      CONFIG.SHEETS.EXTERNAL_CALENDAR_EVENTS,
+      "unit_id",
+      normalizedUnitId,
+    );
 
-
-    const normalizedUid =
-      normalizeText(
-        externalUid
-      );
-
-
-    const events =
-      BaseRepository.findByField(
-        CONFIG
-          .SHEETS
-          .EXTERNAL_CALENDAR_EVENTS,
-        'unit_id',
-        normalizedUnitId
-      );
-
-
-    for (
-      let i = 0;
-      i < events.length;
-      i++
-    ) {
-
+    for (let i = 0; i < events.length; i++) {
       if (
-        normalizeUpper(
-          events[i].source
-        ) ===
-        normalizedSource &&
-        normalizeText(
-          events[i].external_uid
-        ) ===
-        normalizedUid
+        normalizeUpper(events[i].source) === normalizedSource &&
+        normalizeText(events[i].external_uid) === normalizedUid
       ) {
-
         return events[i];
-
       }
-
     }
-
 
     return null;
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -789,53 +450,35 @@ const ExternalCalendarService = (() => {
    * ----------------------------------------------------------
    */
 
-  function validateNaturalKeyUnique(
-    event,
-    exceptExternalEventId
-  ) {
-
-    const existing =
-      findBySourceUid(
-        event.unit_id,
-        event.source,
-        event.external_uid
-      );
-
+  function validateNaturalKeyUnique(event, exceptExternalEventId) {
+    const existing = findBySourceUid(
+      event.unit_id,
+      event.source,
+      event.external_uid,
+    );
 
     if (!existing) {
-
       return true;
-
     }
-
 
     if (
       exceptExternalEventId &&
-      normalizeText(
-        existing.external_event_id
-      ) ===
-      normalizeText(
-        exceptExternalEventId
-      )
+      normalizeText(existing.external_event_id) ===
+        normalizeText(exceptExternalEventId)
     ) {
-
       return true;
-
     }
 
-
     throw new Error(
-      'External calendar event already exists for ' +
-      'unit/source/external_uid: ' +
-      event.unit_id +
-      ' / ' +
-      event.source +
-      ' / ' +
-      event.external_uid
+      "External calendar event already exists for " +
+        "unit/source/external_uid: " +
+        event.unit_id +
+        " / " +
+        event.source +
+        " / " +
+        event.external_uid,
     );
-
   }
-
 
   /**
    * ==========================================================
@@ -843,131 +486,71 @@ const ExternalCalendarService = (() => {
    * ==========================================================
    */
 
-
   /**
    * ----------------------------------------------------------
    * CREATE EVENT
    * ----------------------------------------------------------
    */
 
-  function createEvent(
-    data,
-    actorId
-  ) {
-
-    if (
-      !data ||
-      typeof data !== 'object'
-    ) {
-
-      throw new Error(
-        'External calendar event data must be an object.'
-      );
-
+  function createEvent(data, actorId) {
+    if (!data || typeof data !== "object") {
+      throw new Error("External calendar event data must be an object.");
     }
 
+    const normalizedActorId = normalizeActorId(actorId);
 
-    const normalizedActorId =
-      normalizeActorId(
-        actorId
-      );
-
-
-    let event =
-      normalizeEvent(
-        data
-      );
-
+    let event = normalizeEvent(data);
 
     /*
      * External events are active by default.
      */
 
-    if (
-      isBlank(
-        event.status
-      )
-    ) {
-
-      event.status =
-        STATUS_ACTIVE;
-
+    if (isBlank(event.status)) {
+      event.status = STATUS_ACTIVE;
     }
 
-
-    validateEvent(
-      event
-    );
-
+    validateEvent(event);
 
     /*
      * Prevent duplicate OTA/iCal events.
      */
 
-    validateNaturalKeyUnique(
-      event
-    );
-
+    validateNaturalKeyUnique(event);
 
     /*
      * Generate internal stable ID only after validation.
      */
 
-    event.external_event_id =
-      IdService.nextId(
-        ENTITY_TYPE
-      );
+    event.external_event_id = IdService.nextId(ENTITY_TYPE);
 
-
-    const now =
-      timestamp();
-
+    const now = timestamp();
 
     /*
      * The event has just been observed from the external feed.
      */
 
-    if (
-      isBlank(
-        event.last_seen_at
-      )
-    ) {
-
-      event.last_seen_at =
-        now;
-
+    if (isBlank(event.last_seen_at)) {
+      event.last_seen_at = now;
     }
 
+    event.created_at = now;
 
-    event.created_at =
-      now;
+    event.updated_at = now;
 
-
-    event.updated_at =
-      now;
-
-
-    const inserted =
-      BaseRepository.insert(
-        CONFIG
-          .SHEETS
-          .EXTERNAL_CALENDAR_EVENTS,
-        event
-      );
-
+    const inserted = BaseRepository.insert(
+      CONFIG.SHEETS.EXTERNAL_CALENDAR_EVENTS,
+      event,
+    );
 
     AuditService.logCreate(
       ENTITY_TYPE,
       inserted.external_event_id,
       inserted,
-      normalizedActorId
+      normalizedActorId,
     );
 
-
     return inserted;
-
   }
-
 
   /**
    * ==========================================================
@@ -975,42 +558,23 @@ const ExternalCalendarService = (() => {
    * ==========================================================
    */
 
-
   /**
    * ----------------------------------------------------------
    * GET BY ID
    * ----------------------------------------------------------
    */
 
-  function getById(
-    externalEventId
-  ) {
-
-    if (
-      isBlank(
-        externalEventId
-      )
-    ) {
-
-      throw new Error(
-        'externalEventId is required.'
-      );
-
+  function getById(externalEventId) {
+    if (isBlank(externalEventId)) {
+      throw new Error("externalEventId is required.");
     }
 
-
     return BaseRepository.findById(
-      CONFIG
-        .SHEETS
-        .EXTERNAL_CALENDAR_EVENTS,
-      'external_event_id',
-      normalizeText(
-        externalEventId
-      )
+      CONFIG.SHEETS.EXTERNAL_CALENDAR_EVENTS,
+      "external_event_id",
+      normalizeText(externalEventId),
     );
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -1019,15 +583,8 @@ const ExternalCalendarService = (() => {
    */
 
   function getAll() {
-
-    return BaseRepository.findAll(
-      CONFIG
-        .SHEETS
-        .EXTERNAL_CALENDAR_EVENTS
-    );
-
+    return BaseRepository.findAll(CONFIG.SHEETS.EXTERNAL_CALENDAR_EVENTS);
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -1036,25 +593,14 @@ const ExternalCalendarService = (() => {
    */
 
   function getByUnit(unitId) {
-
-    ValidationService
-      .validateUnitExists(
-        unitId
-      );
-
+    ValidationService.validateUnitExists(unitId);
 
     return BaseRepository.findByField(
-      CONFIG
-        .SHEETS
-        .EXTERNAL_CALENDAR_EVENTS,
-      'unit_id',
-      normalizeText(
-        unitId
-      )
+      CONFIG.SHEETS.EXTERNAL_CALENDAR_EVENTS,
+      "unit_id",
+      normalizeText(unitId),
     );
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -1062,23 +608,11 @@ const ExternalCalendarService = (() => {
    * ----------------------------------------------------------
    */
 
-  function getActiveByUnit(
-    unitId
-  ) {
-
-    return getByUnit(
-      unitId
-    )
-      .filter(
-        event =>
-          normalizeUpper(
-            event.status
-          ) ===
-          STATUS_ACTIVE
-      );
-
+  function getActiveByUnit(unitId) {
+    return getByUnit(unitId).filter(
+      (event) => normalizeUpper(event.status) === STATUS_ACTIVE,
+    );
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -1087,24 +621,12 @@ const ExternalCalendarService = (() => {
    */
 
   function getBySource(source) {
+    const normalizedSource = normalizeSource(source);
 
-    const normalizedSource =
-      normalizeSource(
-        source
-      );
-
-
-    return getAll()
-      .filter(
-        event =>
-          normalizeUpper(
-            event.source
-          ) ===
-          normalizedSource
-      );
-
+    return getAll().filter(
+      (event) => normalizeUpper(event.source) === normalizedSource,
+    );
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -1113,18 +635,10 @@ const ExternalCalendarService = (() => {
    */
 
   function getActiveEvents() {
-
-    return getAll()
-      .filter(
-        event =>
-          normalizeUpper(
-            event.status
-          ) ===
-          STATUS_ACTIVE
-      );
-
+    return getAll().filter(
+      (event) => normalizeUpper(event.status) === STATUS_ACTIVE,
+    );
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -1132,33 +646,17 @@ const ExternalCalendarService = (() => {
    * ----------------------------------------------------------
    */
 
-  function exists(
-    externalEventId
-  ) {
-
-    if (
-      isBlank(
-        externalEventId
-      )
-    ) {
-
+  function exists(externalEventId) {
+    if (isBlank(externalEventId)) {
       return false;
-
     }
 
-
     return BaseRepository.exists(
-      CONFIG
-        .SHEETS
-        .EXTERNAL_CALENDAR_EVENTS,
-      'external_event_id',
-      normalizeText(
-        externalEventId
-      )
+      CONFIG.SHEETS.EXTERNAL_CALENDAR_EVENTS,
+      "external_event_id",
+      normalizeText(externalEventId),
     );
-
   }
-
 
   /**
    * ==========================================================
@@ -1166,162 +664,84 @@ const ExternalCalendarService = (() => {
    * ==========================================================
    */
 
-
   /**
    * ----------------------------------------------------------
    * UPDATE EVENT
    * ----------------------------------------------------------
    */
 
-  function updateEvent(
-    externalEventId,
-    changes,
-    actorId
-  ) {
-
-    if (
-      !changes ||
-      typeof changes !== 'object'
-    ) {
-
-      throw new Error(
-        'changes must be an object.'
-      );
-
+  function updateEvent(externalEventId, changes, actorId) {
+    if (!changes || typeof changes !== "object") {
+      throw new Error("changes must be an object.");
     }
 
+    const existing = requireEvent(externalEventId);
 
-    const existing =
-      requireEvent(
-        externalEventId
-      );
-
-
-    const normalizedActorId =
-      normalizeActorId(
-        actorId
-      );
-
+    const normalizedActorId = normalizeActorId(actorId);
 
     /*
      * Stable internal ID cannot change.
      */
 
     if (
-      Object.prototype
-        .hasOwnProperty
-        .call(
-          changes,
-          'external_event_id'
-        ) &&
-      normalizeText(
-        changes.external_event_id
-      ) !==
-      normalizeText(
-        existing.external_event_id
-      )
+      Object.prototype.hasOwnProperty.call(changes, "external_event_id") &&
+      normalizeText(changes.external_event_id) !==
+        normalizeText(existing.external_event_id)
     ) {
-
-      throw new Error(
-        'external_event_id cannot be changed.'
-      );
-
+      throw new Error("external_event_id cannot be changed.");
     }
 
+    let merged = Object.assign({}, existing, changes);
 
-    let merged =
-      Object.assign(
-        {},
-        existing,
-        changes
-      );
+    merged.external_event_id = existing.external_event_id;
 
+    merged.created_at = existing.created_at;
 
-    merged.external_event_id =
-      existing.external_event_id;
+    merged = normalizeEvent(merged);
 
+    validateEvent(merged);
 
-    merged.created_at =
-      existing.created_at;
+    validateNaturalKeyUnique(merged, existing.external_event_id);
 
+    merged.updated_at = timestamp();
 
-    merged =
-      normalizeEvent(
-        merged
-      );
-
-
-    validateEvent(
-      merged
-    );
-
-
-    validateNaturalKeyUnique(
+    const updated = BaseRepository.update(
+      CONFIG.SHEETS.EXTERNAL_CALENDAR_EVENTS,
+      "external_event_id",
+      existing.external_event_id,
       merged,
-      existing.external_event_id
     );
-
-
-    merged.updated_at =
-      timestamp();
-
-
-    const updated =
-      BaseRepository.update(
-        CONFIG
-          .SHEETS
-          .EXTERNAL_CALENDAR_EVENTS,
-        'external_event_id',
-        existing.external_event_id,
-        merged
-      );
-
 
     /*
      * Status changes receive a dedicated audit entry.
      */
 
-    if (
-      normalizeUpper(
-        existing.status
-      ) !==
-      normalizeUpper(
-        updated.status
-      )
-    ) {
-
+    if (normalizeUpper(existing.status) !== normalizeUpper(updated.status)) {
       AuditService.logStatusChange(
         ENTITY_TYPE,
         existing.external_event_id,
         existing.status,
         updated.status,
-        normalizedActorId
+        normalizedActorId,
       );
-
     } else {
-
       AuditService.logUpdate(
         ENTITY_TYPE,
         existing.external_event_id,
         existing,
         updated,
-        normalizedActorId
+        normalizedActorId,
       );
-
     }
 
-
     return updated;
-
   }
-
 
   /**
    * ==========================================================
    * SYNC OPERATIONS
    * ==========================================================
    */
-
 
   /**
    * ----------------------------------------------------------
@@ -1342,96 +762,54 @@ const ExternalCalendarService = (() => {
    *     create it
    */
 
-  function upsertEvent(
-    data,
-    actorId
-  ) {
-
-    if (
-      !data ||
-      typeof data !== 'object'
-    ) {
-
-      throw new Error(
-        'External calendar event data must be an object.'
-      );
-
+  function upsertEvent(data, actorId) {
+    if (!data || typeof data !== "object") {
+      throw new Error("External calendar event data must be an object.");
     }
 
+    let event = normalizeEvent(data);
 
-    let event =
-      normalizeEvent(
-        data
-      );
+    ValidationService.requireFields(event, [
+      "unit_id",
+      "source",
+      "external_uid",
+      "start_date",
+      "end_date",
+    ]);
 
-
-    ValidationService.requireFields(
-      event,
-      [
-        'unit_id',
-        'source',
-        'external_uid',
-        'start_date',
-        'end_date'
-      ]
+    const existing = findBySourceUid(
+      event.unit_id,
+      event.source,
+      event.external_uid,
     );
 
-
-    const existing =
-      findBySourceUid(
-        event.unit_id,
-        event.source,
-        event.external_uid
-      );
-
-
-    const now =
-      timestamp();
-
+    const now = timestamp();
 
     if (existing) {
-
       return updateEvent(
         existing.external_event_id,
         {
           summary:
-            event.summary !== undefined
-              ? event.summary
-              : existing.summary,
+            event.summary !== undefined ? event.summary : existing.summary,
 
-          start_date:
-            event.start_date,
+          start_date: event.start_date,
 
-          end_date:
-            event.end_date,
+          end_date: event.end_date,
 
-          status:
-            STATUS_ACTIVE,
+          status: STATUS_ACTIVE,
 
-          last_seen_at:
-            now
+          last_seen_at: now,
         },
-        actorId
+        actorId,
       );
-
     }
 
+    event.status = STATUS_ACTIVE;
 
-    event.status =
-      STATUS_ACTIVE;
+    event.last_seen_at = now;
 
-
-    event.last_seen_at =
-      now;
-
-
-    return createEvent(
-      event,
-      actorId
-    );
-
+    return createEvent(event, actorId);
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -1441,27 +819,17 @@ const ExternalCalendarService = (() => {
    * Used when sync sees an unchanged event.
    */
 
-  function markSeen(
-    externalEventId,
-    actorId
-  ) {
-
-    requireEvent(
-      externalEventId
-    );
-
+  function markSeen(externalEventId, actorId) {
+    requireEvent(externalEventId);
 
     return updateEvent(
       externalEventId,
       {
-        last_seen_at:
-          timestamp()
+        last_seen_at: timestamp(),
       },
-      actorId
+      actorId,
     );
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -1469,25 +837,17 @@ const ExternalCalendarService = (() => {
    * ----------------------------------------------------------
    */
 
-  function activateEvent(
-    externalEventId,
-    actorId
-  ) {
-
+  function activateEvent(externalEventId, actorId) {
     return updateEvent(
       externalEventId,
       {
-        status:
-          STATUS_ACTIVE,
+        status: STATUS_ACTIVE,
 
-        last_seen_at:
-          timestamp()
+        last_seen_at: timestamp(),
       },
-      actorId
+      actorId,
     );
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -1500,22 +860,15 @@ const ExternalCalendarService = (() => {
    * INACTIVE so we retain traceability.
    */
 
-  function deactivateEvent(
-    externalEventId,
-    actorId
-  ) {
-
+  function deactivateEvent(externalEventId, actorId) {
     return updateEvent(
       externalEventId,
       {
-        status:
-          STATUS_INACTIVE
+        status: STATUS_INACTIVE,
       },
-      actorId
+      actorId,
     );
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -1537,104 +890,44 @@ const ExternalCalendarService = (() => {
     unitId,
     source,
     currentExternalUids,
-    actorId
+    actorId,
   ) {
+    ValidationService.validateUnitExists(unitId);
 
-    ValidationService
-      .validateUnitExists(
-        unitId
-      );
+    const normalizedSource = normalizeSource(source);
 
-
-    const normalizedSource =
-      normalizeSource(
-        source
-      );
-
-
-    if (
-      !Array.isArray(
-        currentExternalUids
-      )
-    ) {
-
-      throw new Error(
-        'currentExternalUids must be an array.'
-      );
-
+    if (!Array.isArray(currentExternalUids)) {
+      throw new Error("currentExternalUids must be an array.");
     }
 
+    const currentUidSet = new Set(
+      currentExternalUids.map((uid) => normalizeText(uid)).filter(Boolean),
+    );
 
-    const currentUidSet =
-      new Set(
-        currentExternalUids
-          .map(
-            uid =>
-              normalizeText(uid)
-          )
-          .filter(Boolean)
-      );
-
-
-    const events =
-      getActiveByUnit(
-        unitId
-      )
-        .filter(
-          event =>
-            normalizeUpper(
-              event.source
-            ) ===
-            normalizedSource
-        );
-
+    const events = getActiveByUnit(unitId).filter(
+      (event) => normalizeUpper(event.source) === normalizedSource,
+    );
 
     const deactivated = [];
 
+    events.forEach((event) => {
+      const uid = normalizeText(event.external_uid);
 
-    events.forEach(
-      event => {
+      if (!currentUidSet.has(uid)) {
+        const updated = deactivateEvent(event.external_event_id, actorId);
 
-        const uid =
-          normalizeText(
-            event.external_uid
-          );
-
-
-        if (
-          !currentUidSet.has(
-            uid
-          )
-        ) {
-
-          const updated =
-            deactivateEvent(
-              event.external_event_id,
-              actorId
-            );
-
-
-          deactivated.push(
-            updated
-          );
-
-        }
-
+        deactivated.push(updated);
       }
-    );
-
+    });
 
     return deactivated;
-
   }
-
 
   /**
    * ==========================================================
    * CONFLICT / AVAILABILITY HELPERS
    * ==========================================================
    */
-
 
   /**
    * ----------------------------------------------------------
@@ -1647,45 +940,16 @@ const ExternalCalendarService = (() => {
    * B: [startB, endB)
    */
 
-  function rangesOverlap(
-    startA,
-    endA,
-    startB,
-    endB
-  ) {
+  function rangesOverlap(startA, endA, startB, endB) {
+    const a = validateDateRange(startA, endA);
 
-    const a =
-      validateDateRange(
-        startA,
-        endA
-      );
-
-
-    const b =
-      validateDateRange(
-        startB,
-        endB
-      );
-
+    const b = validateDateRange(startB, endB);
 
     return (
-      dateToNumber(
-        a.start_date
-      ) <
-      dateToNumber(
-        b.end_date
-      ) &&
-
-      dateToNumber(
-        a.end_date
-      ) >
-      dateToNumber(
-        b.start_date
-      )
+      dateToNumber(a.start_date) < dateToNumber(b.end_date) &&
+      dateToNumber(a.end_date) > dateToNumber(b.start_date)
     );
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -1693,40 +957,20 @@ const ExternalCalendarService = (() => {
    * ----------------------------------------------------------
    */
 
-  function getConflictingEvents(
-    unitId,
-    startDate,
-    endDate
-  ) {
+  function getConflictingEvents(unitId, startDate, endDate) {
+    ValidationService.validateUnitExists(unitId);
 
-    ValidationService
-      .validateUnitExists(
-        unitId
-      );
+    const requestedRange = validateDateRange(startDate, endDate);
 
-
-    const requestedRange =
-      validateDateRange(
-        startDate,
-        endDate
-      );
-
-
-    return getActiveByUnit(
-      unitId
-    )
-      .filter(
-        event =>
-          rangesOverlap(
-            event.start_date,
-            event.end_date,
-            requestedRange.start_date,
-            requestedRange.end_date
-          )
-      );
-
+    return getActiveByUnit(unitId).filter((event) =>
+      rangesOverlap(
+        event.start_date,
+        event.end_date,
+        requestedRange.start_date,
+        requestedRange.end_date,
+      ),
+    );
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -1734,22 +978,9 @@ const ExternalCalendarService = (() => {
    * ----------------------------------------------------------
    */
 
-  function hasConflict(
-    unitId,
-    startDate,
-    endDate
-  ) {
-
-    return (
-      getConflictingEvents(
-        unitId,
-        startDate,
-        endDate
-      ).length > 0
-    );
-
+  function hasConflict(unitId, startDate, endDate) {
+    return getConflictingEvents(unitId, startDate, endDate).length > 0;
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -1757,45 +988,21 @@ const ExternalCalendarService = (() => {
    * ----------------------------------------------------------
    */
 
-  function getFutureActiveEvents(
-    unitId
-  ) {
+  function getFutureActiveEvents(unitId) {
+    const currentDate = today();
 
-    const currentDate =
-      today();
-
-
-    return getActiveByUnit(
-      unitId
-    )
+    return getActiveByUnit(unitId)
       .filter(
-        event =>
-          dateToNumber(
-            event.end_date
-          ) >
-          dateToNumber(
-            currentDate
-          )
+        (event) => dateToNumber(event.end_date) > dateToNumber(currentDate),
       )
-      .sort(
-        (a, b) =>
-          dateToNumber(
-            a.start_date
-          ) -
-          dateToNumber(
-            b.start_date
-          )
-      );
-
+      .sort((a, b) => dateToNumber(a.start_date) - dateToNumber(b.start_date));
   }
-
 
   /**
    * ==========================================================
    * INTEGRITY HELPERS
    * ==========================================================
    */
-
 
   /**
    * ----------------------------------------------------------
@@ -1804,38 +1011,16 @@ const ExternalCalendarService = (() => {
    */
 
   function findOrphanEvents() {
+    const units = BaseRepository.findAll(CONFIG.SHEETS.UNITS);
 
-    const units =
-      BaseRepository.findAll(
-        CONFIG.SHEETS.UNITS
-      );
+    const unitIds = new Set(
+      units.map((unit) => normalizeText(unit.unit_id)).filter(Boolean),
+    );
 
-
-    const unitIds =
-      new Set(
-        units
-          .map(
-            unit =>
-              normalizeText(
-                unit.unit_id
-              )
-          )
-          .filter(Boolean)
-      );
-
-
-    return getAll()
-      .filter(
-        event =>
-          !unitIds.has(
-            normalizeText(
-              event.unit_id
-            )
-          )
-      );
-
+    return getAll().filter(
+      (event) => !unitIds.has(normalizeText(event.unit_id)),
+    );
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -1848,107 +1033,48 @@ const ExternalCalendarService = (() => {
    */
 
   function findDuplicateEvents() {
-
-    const events =
-      getAll();
-
+    const events = getAll();
 
     const groups = {};
 
+    events.forEach((event) => {
+      const unitId = normalizeText(event.unit_id);
 
-    events.forEach(
-      event => {
+      const source = normalizeUpper(event.source);
 
-        const unitId =
-          normalizeText(
-            event.unit_id
-          );
+      const uid = normalizeText(event.external_uid);
 
-
-        const source =
-          normalizeUpper(
-            event.source
-          );
-
-
-        const uid =
-          normalizeText(
-            event.external_uid
-          );
-
-
-        if (
-          !unitId ||
-          !source ||
-          !uid
-        ) {
-
-          return;
-
-        }
-
-
-        const key =
-          unitId +
-          '|' +
-          source +
-          '|' +
-          uid;
-
-
-        if (!groups[key]) {
-
-          groups[key] = [];
-
-        }
-
-
-        groups[key].push(
-          event
-        );
-
+      if (!unitId || !source || !uid) {
+        return;
       }
-    );
 
+      const key = unitId + "|" + source + "|" + uid;
 
-    return Object.keys(
-      groups
-    )
-      .filter(
-        key =>
-          groups[key].length > 1
-      )
-      .map(
-        key => {
+      if (!groups[key]) {
+        groups[key] = [];
+      }
 
-          const sample =
-            groups[key][0];
+      groups[key].push(event);
+    });
 
+    return Object.keys(groups)
+      .filter((key) => groups[key].length > 1)
+      .map((key) => {
+        const sample = groups[key][0];
 
-          return {
+        return {
+          unit_id: sample.unit_id,
 
-            unit_id:
-              sample.unit_id,
+          source: sample.source,
 
-            source:
-              sample.source,
+          external_uid: sample.external_uid,
 
-            external_uid:
-              sample.external_uid,
+          count: groups[key].length,
 
-            count:
-              groups[key].length,
-
-            events:
-              groups[key]
-
-          };
-
-        }
-      );
-
+          events: groups[key],
+        };
+      });
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -1957,44 +1083,22 @@ const ExternalCalendarService = (() => {
    */
 
   function findInvalidDateRanges() {
-
     const invalid = [];
 
-
-    getAll()
-      .forEach(
-        event => {
-
-          try {
-
-            validateDateRange(
-              event.start_date,
-              event.end_date
-            );
-
-          } catch (e) {
-
-            invalid.push(
-              Object.assign(
-                {},
-                event,
-                {
-                  integrity_error:
-                    e.message
-                }
-              )
-            );
-
-          }
-
-        }
-      );
-
+    getAll().forEach((event) => {
+      try {
+        validateDateRange(event.start_date, event.end_date);
+      } catch (e) {
+        invalid.push(
+          Object.assign({}, event, {
+            integrity_error: e.message,
+          }),
+        );
+      }
+    });
 
     return invalid;
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -2003,31 +1107,16 @@ const ExternalCalendarService = (() => {
    */
 
   function findInvalidStatuses() {
+    return getAll().filter((event) => {
+      try {
+        normalizeStatus(event.status);
 
-    return getAll()
-      .filter(
-        event => {
-
-          try {
-
-            normalizeStatus(
-              event.status
-            );
-
-
-            return false;
-
-          } catch (e) {
-
-            return true;
-
-          }
-
-        }
-      );
-
+        return false;
+      } catch (e) {
+        return true;
+      }
+    });
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -2036,23 +1125,13 @@ const ExternalCalendarService = (() => {
    */
 
   function findMissingNaturalKeys() {
-
-    return getAll()
-      .filter(
-        event =>
-          isBlank(
-            event.unit_id
-          ) ||
-          isBlank(
-            event.source
-          ) ||
-          isBlank(
-            event.external_uid
-          )
-      );
-
+    return getAll().filter(
+      (event) =>
+        isBlank(event.unit_id) ||
+        isBlank(event.source) ||
+        isBlank(event.external_uid),
+    );
   }
-
 
   /**
    * ==========================================================
@@ -2061,7 +1140,6 @@ const ExternalCalendarService = (() => {
    */
 
   return {
-
     /*
      * Create / update
      */
@@ -2071,7 +1149,6 @@ const ExternalCalendarService = (() => {
     updateEvent,
 
     upsertEvent,
-
 
     /*
      * Read
@@ -2093,7 +1170,6 @@ const ExternalCalendarService = (() => {
 
     exists,
 
-
     /*
      * Sync lifecycle
      */
@@ -2105,7 +1181,6 @@ const ExternalCalendarService = (() => {
     deactivateEvent,
 
     deactivateMissingEvents,
-
 
     /*
      * Availability helpers
@@ -2119,7 +1194,6 @@ const ExternalCalendarService = (() => {
 
     getFutureActiveEvents,
 
-
     /*
      * Integrity helpers
      */
@@ -2132,8 +1206,6 @@ const ExternalCalendarService = (() => {
 
     findInvalidStatuses,
 
-    findMissingNaturalKeys
-
+    findMissingNaturalKeys,
   };
-
 })();

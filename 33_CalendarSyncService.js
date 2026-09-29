@@ -54,7 +54,6 @@
  */
 
 const CalendarSyncService = (() => {
-
   /**
    * ==========================================================
    * CONFIGURATION
@@ -78,33 +77,24 @@ const CalendarSyncService = (() => {
    */
 
   const FEED_DEFINITIONS = [
-
     {
-      source:
-        'AIRBNB',
+      source: "AIRBNB",
 
-      field:
-        'airbnb_ical_url'
+      field: "airbnb_ical_url",
     },
 
     {
-      source:
-        'BOOKING_COM',
+      source: "BOOKING_COM",
 
-      field:
-        'booking_ical_url'
+      field: "booking_ical_url",
     },
 
     {
-      source:
-        'OTHER',
+      source: "OTHER",
 
-      field:
-        'other_ical_url'
-    }
-
+      field: "other_ical_url",
+    },
   ];
-
 
   /**
    * ==========================================================
@@ -112,67 +102,37 @@ const CalendarSyncService = (() => {
    * ==========================================================
    */
 
-
   function isBlank(value) {
-
-    return (
-      value === undefined ||
-      value === null ||
-      String(value).trim() === ''
-    );
-
+    return value === undefined || value === null || String(value).trim() === "";
   }
-
 
   function normalizeText(value) {
-
     if (isBlank(value)) {
-
-      return '';
-
+      return "";
     }
-
 
     return String(value).trim();
-
   }
-
 
   function normalizeUpper(value) {
-
-    return normalizeText(
-      value
-    ).toUpperCase();
-
+    return normalizeText(value).toUpperCase();
   }
-
 
   function normalizeActorId(actorId) {
-
     if (isBlank(actorId)) {
-
       return CONFIG.DEFAULTS.ACTOR_ID;
-
     }
 
-
-    return normalizeText(
-      actorId
-    );
-
+    return normalizeText(actorId);
   }
 
-
   function timestamp() {
-
     return Utilities.formatDate(
       new Date(),
       CONFIG.TIMEZONE,
-      CONFIG.DATE_FORMATS.DATETIME
+      CONFIG.DATE_FORMATS.DATETIME,
     );
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -181,42 +141,18 @@ const CalendarSyncService = (() => {
    */
 
   function requireUnit(unitId) {
-
-    if (
-      isBlank(
-        unitId
-      )
-    ) {
-
-      throw new Error(
-        'unitId is required.'
-      );
-
+    if (isBlank(unitId)) {
+      throw new Error("unitId is required.");
     }
 
-
-    const unit =
-      UnitService.getUnitById(
-        normalizeText(
-          unitId
-        )
-      );
-
+    const unit = UnitService.getUnitById(normalizeText(unitId));
 
     if (!unit) {
-
-      throw new Error(
-        'Unit not found: ' +
-        unitId
-      );
-
+      throw new Error("Unit not found: " + unitId);
     }
 
-
     return unit;
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -235,51 +171,26 @@ const CalendarSyncService = (() => {
    */
 
   function maskUrl(url) {
-
-    if (
-      isBlank(
-        url
-      )
-    ) {
-
-      return '';
-
+    if (isBlank(url)) {
+      return "";
     }
 
+    const text = normalizeText(url);
 
-    const text =
-      normalizeText(
-        url
-      );
-
-
-    const match =
-      text.match(
-        /^(https?:\/\/[^\/]+)/i
-      );
-
+    const match = text.match(/^(https?:\/\/[^\/]+)/i);
 
     if (!match) {
-
-      return '[configured URL]';
-
+      return "[configured URL]";
     }
 
-
-    return (
-      match[1] +
-      '/...'
-    );
-
+    return match[1] + "/...";
   }
-
 
   /**
    * ==========================================================
    * FEED DISCOVERY
    * ==========================================================
    */
-
 
   /**
    * ----------------------------------------------------------
@@ -300,65 +211,32 @@ const CalendarSyncService = (() => {
    */
 
   function getUnitFeeds(unitId) {
-
-    const unit =
-      requireUnit(
-        unitId
-      );
-
+    const unit = requireUnit(unitId);
 
     const feeds = [];
 
+    FEED_DEFINITIONS.forEach((definition) => {
+      const url = unit[definition.field];
 
-    FEED_DEFINITIONS.forEach(
-      definition => {
-
-        const url =
-          unit[
-            definition.field
-          ];
-
-
-        if (
-          isBlank(
-            url
-          )
-        ) {
-
-          return;
-
-        }
-
-
-        feeds.push({
-
-          unit_id:
-            unit.unit_id,
-
-          property_id:
-            unit.property_id,
-
-          unit_code:
-            unit.unit_code,
-
-          source:
-            definition.source,
-
-          calendar_url:
-            normalizeText(
-              url
-            )
-
-        });
-
+      if (isBlank(url)) {
+        return;
       }
-    );
 
+      feeds.push({
+        unit_id: unit.unit_id,
+
+        property_id: unit.property_id,
+
+        unit_code: unit.unit_code,
+
+        source: definition.source,
+
+        calendar_url: normalizeText(url),
+      });
+    });
 
     return feeds;
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -366,99 +244,49 @@ const CalendarSyncService = (() => {
    * ----------------------------------------------------------
    */
 
-  function getAllConfiguredFeeds(
-    includeInactiveUnits
-  ) {
-
-    let units =
-      UnitService.getAllUnits();
-
+  function getAllConfiguredFeeds(includeInactiveUnits) {
+    let units = UnitService.getAllUnits();
 
     /*
      * Normally inactive units should not be synchronized.
      */
 
-    if (
-      includeInactiveUnits !== true
-    ) {
-
-      units =
-        units.filter(
-          unit =>
-            normalizeUpper(
-              unit.status
-            ) ===
-            'ACTIVE'
-        );
-
+    if (includeInactiveUnits !== true) {
+      units = units.filter((unit) => normalizeUpper(unit.status) === "ACTIVE");
     }
-
 
     const feeds = [];
 
+    units.forEach((unit) => {
+      FEED_DEFINITIONS.forEach((definition) => {
+        const url = unit[definition.field];
 
-    units.forEach(
-      unit => {
+        if (isBlank(url)) {
+          return;
+        }
 
-        FEED_DEFINITIONS.forEach(
-          definition => {
+        feeds.push({
+          unit_id: unit.unit_id,
 
-            const url =
-              unit[
-                definition.field
-              ];
+          property_id: unit.property_id,
 
+          unit_code: unit.unit_code,
 
-            if (
-              isBlank(
-                url
-              )
-            ) {
+          source: definition.source,
 
-              return;
-
-            }
-
-
-            feeds.push({
-
-              unit_id:
-                unit.unit_id,
-
-              property_id:
-                unit.property_id,
-
-              unit_code:
-                unit.unit_code,
-
-              source:
-                definition.source,
-
-              calendar_url:
-                normalizeText(
-                  url
-                )
-
-            });
-
-          }
-        );
-
-      }
-    );
-
+          calendar_url: normalizeText(url),
+        });
+      });
+    });
 
     return feeds;
-
   }
-
 
   /**
    * ==========================================================
    * SINGLE FEED SYNC
    * ==========================================================
    */
-
 
   /**
    * ----------------------------------------------------------
@@ -474,56 +302,22 @@ const CalendarSyncService = (() => {
    * Use syncFeedSafe() when failure isolation is required.
    */
 
-  function syncFeed(
-    unitId,
-    source,
-    calendarUrl,
-    actorId
-  ) {
+  function syncFeed(unitId, source, calendarUrl, actorId) {
+    const unit = requireUnit(unitId);
 
-    const unit =
-      requireUnit(
-        unitId
-      );
-
-
-    const normalizedSource =
-      normalizeUpper(
-        source
-      );
-
+    const normalizedSource = normalizeUpper(source);
 
     if (!normalizedSource) {
-
-      throw new Error(
-        'source is required.'
-      );
-
+      throw new Error("source is required.");
     }
 
-
-    if (
-      isBlank(
-        calendarUrl
-      )
-    ) {
-
-      throw new Error(
-        'calendarUrl is required.'
-      );
-
+    if (isBlank(calendarUrl)) {
+      throw new Error("calendarUrl is required.");
     }
 
+    const normalizedActorId = normalizeActorId(actorId);
 
-    const normalizedActorId =
-      normalizeActorId(
-        actorId
-      );
-
-
-    const startedAt =
-      new Date();
-
+    const startedAt = new Date();
 
     /*
      * ICalService performs:
@@ -534,75 +328,51 @@ const CalendarSyncService = (() => {
      * deactivate disappeared events
      */
 
-    const result =
-      ICalService.syncCalendar(
-        unit.unit_id,
-        normalizedSource,
-        calendarUrl,
-        normalizedActorId
-      );
+    const result = ICalService.syncCalendar(
+      unit.unit_id,
+      normalizedSource,
+      calendarUrl,
+      normalizedActorId,
+    );
 
-
-    const finishedAt =
-      new Date();
-
+    const finishedAt = new Date();
 
     return {
+      success: true,
 
-      success:
-        true,
+      unit_id: unit.unit_id,
 
-      unit_id:
-        unit.unit_id,
+      property_id: unit.property_id,
 
-      property_id:
-        unit.property_id,
+      unit_code: unit.unit_code,
 
-      unit_code:
-        unit.unit_code,
+      source: normalizedSource,
 
-      source:
-        normalizedSource,
+      calendar: maskUrl(calendarUrl),
 
-      calendar:
-        maskUrl(
-          calendarUrl
-        ),
+      started_at: Utilities.formatDate(
+        startedAt,
+        CONFIG.TIMEZONE,
+        CONFIG.DATE_FORMATS.DATETIME,
+      ),
 
-      started_at:
-        Utilities.formatDate(
-          startedAt,
-          CONFIG.TIMEZONE,
-          CONFIG.DATE_FORMATS.DATETIME
-        ),
+      completed_at: Utilities.formatDate(
+        finishedAt,
+        CONFIG.TIMEZONE,
+        CONFIG.DATE_FORMATS.DATETIME,
+      ),
 
-      completed_at:
-        Utilities.formatDate(
-          finishedAt,
-          CONFIG.TIMEZONE,
-          CONFIG.DATE_FORMATS.DATETIME
-        ),
+      duration_ms: finishedAt.getTime() - startedAt.getTime(),
 
-      duration_ms:
-        finishedAt.getTime() -
-        startedAt.getTime(),
+      feed_event_count: result.feed_event_count || 0,
 
-      feed_event_count:
-        result.feed_event_count || 0,
+      created_count: result.created_count || 0,
 
-      created_count:
-        result.created_count || 0,
+      updated_count: result.updated_count || 0,
 
-      updated_count:
-        result.updated_count || 0,
-
-      deactivated_count:
-        result.deactivated_count || 0
-
+      deactivated_count: result.deactivated_count || 0,
     };
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -615,98 +385,55 @@ const CalendarSyncService = (() => {
    * This is what batch synchronization should use.
    */
 
-  function syncFeedSafe(
-    unitId,
-    source,
-    calendarUrl,
-    actorId
-  ) {
-
-    const startedAt =
-      new Date();
-
+  function syncFeedSafe(unitId, source, calendarUrl, actorId) {
+    const startedAt = new Date();
 
     try {
-
-      return syncFeed(
-        unitId,
-        source,
-        calendarUrl,
-        actorId
-      );
-
+      return syncFeed(unitId, source, calendarUrl, actorId);
     } catch (error) {
-
-      const finishedAt =
-        new Date();
-
+      const finishedAt = new Date();
 
       return {
+        success: false,
 
-        success:
-          false,
+        unit_id: normalizeText(unitId),
 
-        unit_id:
-          normalizeText(
-            unitId
-          ),
+        source: normalizeUpper(source),
 
-        source:
-          normalizeUpper(
-            source
-          ),
+        calendar: maskUrl(calendarUrl),
 
-        calendar:
-          maskUrl(
-            calendarUrl
-          ),
+        started_at: Utilities.formatDate(
+          startedAt,
+          CONFIG.TIMEZONE,
+          CONFIG.DATE_FORMATS.DATETIME,
+        ),
 
-        started_at:
-          Utilities.formatDate(
-            startedAt,
-            CONFIG.TIMEZONE,
-            CONFIG.DATE_FORMATS.DATETIME
-          ),
+        completed_at: Utilities.formatDate(
+          finishedAt,
+          CONFIG.TIMEZONE,
+          CONFIG.DATE_FORMATS.DATETIME,
+        ),
 
-        completed_at:
-          Utilities.formatDate(
-            finishedAt,
-            CONFIG.TIMEZONE,
-            CONFIG.DATE_FORMATS.DATETIME
-          ),
+        duration_ms: finishedAt.getTime() - startedAt.getTime(),
 
-        duration_ms:
-          finishedAt.getTime() -
-          startedAt.getTime(),
+        feed_event_count: 0,
 
-        feed_event_count:
-          0,
+        created_count: 0,
 
-        created_count:
-          0,
+        updated_count: 0,
 
-        updated_count:
-          0,
+        deactivated_count: 0,
 
-        deactivated_count:
-          0,
-
-        error:
-          error.message
-
+        error: error.message,
       };
-
     }
-
   }
-
 
   /**
    * ==========================================================
    * UNIT SYNCHRONIZATION
    * ==========================================================
    */
-
 
   /**
    * ----------------------------------------------------------
@@ -719,108 +446,60 @@ const CalendarSyncService = (() => {
    * synchronized.
    */
 
-  function syncUnit(
-    unitId,
-    actorId
-  ) {
+  function syncUnit(unitId, actorId) {
+    const unit = requireUnit(unitId);
 
-    const unit =
-      requireUnit(
-        unitId
-      );
+    const normalizedActorId = normalizeActorId(actorId);
 
+    const startedAt = new Date();
 
-    const normalizedActorId =
-      normalizeActorId(
-        actorId
-      );
-
-
-    const startedAt =
-      new Date();
-
-
-    const feeds =
-      getUnitFeeds(
-        unit.unit_id
-      );
-
+    const feeds = getUnitFeeds(unit.unit_id);
 
     const results = [];
 
-
-    feeds.forEach(
-      feed => {
-
-        const result =
-          syncFeedSafe(
-            feed.unit_id,
-            feed.source,
-            feed.calendar_url,
-            normalizedActorId
-          );
-
-
-        results.push(
-          result
-        );
-
-      }
-    );
-
-
-    const finishedAt =
-      new Date();
-
-
-    const summary =
-      summarizeResults(
-        results
+    feeds.forEach((feed) => {
+      const result = syncFeedSafe(
+        feed.unit_id,
+        feed.source,
+        feed.calendar_url,
+        normalizedActorId,
       );
 
+      results.push(result);
+    });
+
+    const finishedAt = new Date();
+
+    const summary = summarizeResults(results);
 
     return {
+      success: summary.failed_feeds === 0,
 
-      success:
-        summary.failed_feeds === 0,
+      unit_id: unit.unit_id,
 
-      unit_id:
-        unit.unit_id,
+      property_id: unit.property_id,
 
-      property_id:
-        unit.property_id,
+      unit_code: unit.unit_code,
 
-      unit_code:
-        unit.unit_code,
+      started_at: Utilities.formatDate(
+        startedAt,
+        CONFIG.TIMEZONE,
+        CONFIG.DATE_FORMATS.DATETIME,
+      ),
 
-      started_at:
-        Utilities.formatDate(
-          startedAt,
-          CONFIG.TIMEZONE,
-          CONFIG.DATE_FORMATS.DATETIME
-        ),
+      completed_at: Utilities.formatDate(
+        finishedAt,
+        CONFIG.TIMEZONE,
+        CONFIG.DATE_FORMATS.DATETIME,
+      ),
 
-      completed_at:
-        Utilities.formatDate(
-          finishedAt,
-          CONFIG.TIMEZONE,
-          CONFIG.DATE_FORMATS.DATETIME
-        ),
+      duration_ms: finishedAt.getTime() - startedAt.getTime(),
 
-      duration_ms:
-        finishedAt.getTime() -
-        startedAt.getTime(),
+      summary: summary,
 
-      summary:
-        summary,
-
-      results:
-        results
-
+      results: results,
     };
-
   }
-
 
   /**
    * ==========================================================
@@ -828,147 +507,78 @@ const CalendarSyncService = (() => {
    * ==========================================================
    */
 
-
   /**
    * ----------------------------------------------------------
    * SYNC PROPERTY
    * ----------------------------------------------------------
    */
 
-  function syncProperty(
-    propertyId,
-    actorId
-  ) {
-
-    if (
-      isBlank(
-        propertyId
-      )
-    ) {
-
-      throw new Error(
-        'propertyId is required.'
-      );
-
+  function syncProperty(propertyId, actorId) {
+    if (isBlank(propertyId)) {
+      throw new Error("propertyId is required.");
     }
 
-
-    const property =
-      PropertyService
-        .getPropertyById(
-          normalizeText(
-            propertyId
-          )
-        );
-
+    const property = PropertyService.getPropertyById(normalizeText(propertyId));
 
     if (!property) {
-
-      throw new Error(
-        'Property not found: ' +
-        propertyId
-      );
-
+      throw new Error("Property not found: " + propertyId);
     }
 
+    const normalizedActorId = normalizeActorId(actorId);
 
-    const normalizedActorId =
-      normalizeActorId(
-        actorId
-      );
+    const startedAt = new Date();
 
-
-    const startedAt =
-      new Date();
-
-
-    const feeds =
-      getAllConfiguredFeeds(false)
-        .filter(
-          feed =>
-            normalizeText(
-              feed.property_id
-            ) ===
-            normalizeText(
-              propertyId
-            )
-        );
-
+    const feeds = getAllConfiguredFeeds(false).filter(
+      (feed) => normalizeText(feed.property_id) === normalizeText(propertyId),
+    );
 
     const results = [];
 
+    feeds.forEach((feed) => {
+      results.push(
+        syncFeedSafe(
+          feed.unit_id,
+          feed.source,
+          feed.calendar_url,
+          normalizedActorId,
+        ),
+      );
+    });
 
-    feeds.forEach(
-      feed => {
-
-        results.push(
-          syncFeedSafe(
-            feed.unit_id,
-            feed.source,
-            feed.calendar_url,
-            normalizedActorId
-          )
-        );
-
-      }
-    );
-
-
-    const finishedAt =
-      new Date();
-
+    const finishedAt = new Date();
 
     return {
+      success: results.every((result) => result.success),
 
-      success:
-        results.every(
-          result =>
-            result.success
-        ),
+      property_id: property.property_id,
 
-      property_id:
-        property.property_id,
+      property_code: property.property_code,
 
-      property_code:
-        property.property_code,
+      started_at: Utilities.formatDate(
+        startedAt,
+        CONFIG.TIMEZONE,
+        CONFIG.DATE_FORMATS.DATETIME,
+      ),
 
-      started_at:
-        Utilities.formatDate(
-          startedAt,
-          CONFIG.TIMEZONE,
-          CONFIG.DATE_FORMATS.DATETIME
-        ),
+      completed_at: Utilities.formatDate(
+        finishedAt,
+        CONFIG.TIMEZONE,
+        CONFIG.DATE_FORMATS.DATETIME,
+      ),
 
-      completed_at:
-        Utilities.formatDate(
-          finishedAt,
-          CONFIG.TIMEZONE,
-          CONFIG.DATE_FORMATS.DATETIME
-        ),
+      duration_ms: finishedAt.getTime() - startedAt.getTime(),
 
-      duration_ms:
-        finishedAt.getTime() -
-        startedAt.getTime(),
+      summary: summarizeResults(results),
 
-      summary:
-        summarizeResults(
-          results
-        ),
-
-      results:
-        results
-
+      results: results,
     };
-
   }
-
 
   /**
    * ==========================================================
    * GLOBAL SYNCHRONIZATION
    * ==========================================================
    */
-
 
   /**
    * ----------------------------------------------------------
@@ -986,89 +596,51 @@ const CalendarSyncService = (() => {
    */
 
   function syncAll(actorId) {
+    const normalizedActorId = normalizeActorId(actorId);
 
-    const normalizedActorId =
-      normalizeActorId(
-        actorId
-      );
+    const startedAt = new Date();
 
-
-    const startedAt =
-      new Date();
-
-
-    const feeds =
-      getAllConfiguredFeeds(
-        false
-      );
-
+    const feeds = getAllConfiguredFeeds(false);
 
     const results = [];
 
-
-    feeds.forEach(
-      feed => {
-
-        const result =
-          syncFeedSafe(
-            feed.unit_id,
-            feed.source,
-            feed.calendar_url,
-            normalizedActorId
-          );
-
-
-        results.push(
-          result
-        );
-
-      }
-    );
-
-
-    const finishedAt =
-      new Date();
-
-
-    const summary =
-      summarizeResults(
-        results
+    feeds.forEach((feed) => {
+      const result = syncFeedSafe(
+        feed.unit_id,
+        feed.source,
+        feed.calendar_url,
+        normalizedActorId,
       );
 
+      results.push(result);
+    });
+
+    const finishedAt = new Date();
+
+    const summary = summarizeResults(results);
 
     return {
+      success: summary.failed_feeds === 0,
 
-      success:
-        summary.failed_feeds === 0,
+      started_at: Utilities.formatDate(
+        startedAt,
+        CONFIG.TIMEZONE,
+        CONFIG.DATE_FORMATS.DATETIME,
+      ),
 
-      started_at:
-        Utilities.formatDate(
-          startedAt,
-          CONFIG.TIMEZONE,
-          CONFIG.DATE_FORMATS.DATETIME
-        ),
+      completed_at: Utilities.formatDate(
+        finishedAt,
+        CONFIG.TIMEZONE,
+        CONFIG.DATE_FORMATS.DATETIME,
+      ),
 
-      completed_at:
-        Utilities.formatDate(
-          finishedAt,
-          CONFIG.TIMEZONE,
-          CONFIG.DATE_FORMATS.DATETIME
-        ),
+      duration_ms: finishedAt.getTime() - startedAt.getTime(),
 
-      duration_ms:
-        finishedAt.getTime() -
-        startedAt.getTime(),
+      summary: summary,
 
-      summary:
-        summary,
-
-      results:
-        results
-
+      results: results,
     };
-
   }
-
 
   /**
    * ==========================================================
@@ -1076,111 +648,55 @@ const CalendarSyncService = (() => {
    * ==========================================================
    */
 
-
   /**
    * ----------------------------------------------------------
    * SUMMARIZE RESULTS
    * ----------------------------------------------------------
    */
 
-  function summarizeResults(
-    results
-  ) {
-
-    const list =
-      Array.isArray(
-        results
-      )
-        ? results
-        : [];
-
+  function summarizeResults(results) {
+    const list = Array.isArray(results) ? results : [];
 
     const summary = {
+      total_feeds: list.length,
 
-      total_feeds:
-        list.length,
+      successful_feeds: 0,
 
-      successful_feeds:
-        0,
+      failed_feeds: 0,
 
-      failed_feeds:
-        0,
+      feed_events: 0,
 
-      feed_events:
-        0,
+      created: 0,
 
-      created:
-        0,
+      updated: 0,
 
-      updated:
-        0,
-
-      deactivated:
-        0
-
+      deactivated: 0,
     };
 
-
-    list.forEach(
-      result => {
-
-        if (
-          result.success
-        ) {
-
-          summary
-            .successful_feeds++;
-
-        } else {
-
-          summary
-            .failed_feeds++;
-
-        }
-
-
-        summary.feed_events +=
-          Number(
-            result.feed_event_count ||
-            0
-          );
-
-
-        summary.created +=
-          Number(
-            result.created_count ||
-            0
-          );
-
-
-        summary.updated +=
-          Number(
-            result.updated_count ||
-            0
-          );
-
-
-        summary.deactivated +=
-          Number(
-            result.deactivated_count ||
-            0
-          );
-
+    list.forEach((result) => {
+      if (result.success) {
+        summary.successful_feeds++;
+      } else {
+        summary.failed_feeds++;
       }
-    );
 
+      summary.feed_events += Number(result.feed_event_count || 0);
+
+      summary.created += Number(result.created_count || 0);
+
+      summary.updated += Number(result.updated_count || 0);
+
+      summary.deactivated += Number(result.deactivated_count || 0);
+    });
 
     return summary;
-
   }
-
 
   /**
    * ==========================================================
    * DIAGNOSTICS
    * ==========================================================
    */
-
 
   /**
    * ----------------------------------------------------------
@@ -1191,38 +707,20 @@ const CalendarSyncService = (() => {
    */
 
   function getSyncConfiguration() {
+    const feeds = getAllConfiguredFeeds(true);
 
-    const feeds =
-      getAllConfiguredFeeds(
-        true
-      );
+    return feeds.map((feed) => ({
+      unit_id: feed.unit_id,
 
+      property_id: feed.property_id,
 
-    return feeds.map(
-      feed => ({
+      unit_code: feed.unit_code,
 
-        unit_id:
-          feed.unit_id,
+      source: feed.source,
 
-        property_id:
-          feed.property_id,
-
-        unit_code:
-          feed.unit_code,
-
-        source:
-          feed.source,
-
-        calendar:
-          maskUrl(
-            feed.calendar_url
-          )
-
-      })
-    );
-
+      calendar: maskUrl(feed.calendar_url),
+    }));
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -1230,38 +728,19 @@ const CalendarSyncService = (() => {
    * ----------------------------------------------------------
    */
 
-  function getUnitSyncConfiguration(
-    unitId
-  ) {
+  function getUnitSyncConfiguration(unitId) {
+    return getUnitFeeds(unitId).map((feed) => ({
+      unit_id: feed.unit_id,
 
-    return getUnitFeeds(
-      unitId
-    )
-      .map(
-        feed => ({
+      property_id: feed.property_id,
 
-          unit_id:
-            feed.unit_id,
+      unit_code: feed.unit_code,
 
-          property_id:
-            feed.property_id,
+      source: feed.source,
 
-          unit_code:
-            feed.unit_code,
-
-          source:
-            feed.source,
-
-          calendar:
-            maskUrl(
-              feed.calendar_url
-            )
-
-        })
-      );
-
+      calendar: maskUrl(feed.calendar_url),
+    }));
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -1274,145 +753,73 @@ const CalendarSyncService = (() => {
    * Useful before enabling synchronization.
    */
 
-  function inspectUnitFeeds(
-    unitId
-  ) {
-
-    const feeds =
-      getUnitFeeds(
-        unitId
-      );
-
+  function inspectUnitFeeds(unitId) {
+    const feeds = getUnitFeeds(unitId);
 
     const results = [];
 
+    feeds.forEach((feed) => {
+      const startedAt = new Date();
 
-    feeds.forEach(
-      feed => {
+      try {
+        const inspection = ICalService.inspectCalendar(feed.calendar_url);
 
-        const startedAt =
-          new Date();
+        const finishedAt = new Date();
 
+        results.push({
+          success: true,
 
-        try {
+          unit_id: feed.unit_id,
 
-          const inspection =
-            ICalService
-              .inspectCalendar(
-                feed.calendar_url
-              );
+          source: feed.source,
 
+          calendar: maskUrl(feed.calendar_url),
 
-          const finishedAt =
-            new Date();
+          event_count: inspection.event_count,
 
+          duration_ms: finishedAt.getTime() - startedAt.getTime(),
+        });
+      } catch (error) {
+        const finishedAt = new Date();
 
-          results.push({
+        results.push({
+          success: false,
 
-            success:
-              true,
+          unit_id: feed.unit_id,
 
-            unit_id:
-              feed.unit_id,
+          source: feed.source,
 
-            source:
-              feed.source,
+          calendar: maskUrl(feed.calendar_url),
 
-            calendar:
-              maskUrl(
-                feed.calendar_url
-              ),
+          event_count: 0,
 
-            event_count:
-              inspection.event_count,
+          duration_ms: finishedAt.getTime() - startedAt.getTime(),
 
-            duration_ms:
-              finishedAt.getTime() -
-              startedAt.getTime()
-
-          });
-
-        } catch (error) {
-
-          const finishedAt =
-            new Date();
-
-
-          results.push({
-
-            success:
-              false,
-
-            unit_id:
-              feed.unit_id,
-
-            source:
-              feed.source,
-
-            calendar:
-              maskUrl(
-                feed.calendar_url
-              ),
-
-            event_count:
-              0,
-
-            duration_ms:
-              finishedAt.getTime() -
-              startedAt.getTime(),
-
-            error:
-              error.message
-
-          });
-
-        }
-
+          error: error.message,
+        });
       }
-    );
-
+    });
 
     return {
+      unit_id: normalizeText(unitId),
 
-      unit_id:
-        normalizeText(
-          unitId
-        ),
+      summary: {
+        total_feeds: results.length,
 
-      summary:
-        {
+        valid_feeds: results.filter((result) => result.success).length,
 
-          total_feeds:
-            results.length,
+        invalid_feeds: results.filter((result) => !result.success).length,
+      },
 
-          valid_feeds:
-            results.filter(
-              result =>
-                result.success
-            ).length,
-
-          invalid_feeds:
-            results.filter(
-              result =>
-                !result.success
-            ).length
-
-        },
-
-      results:
-        results
-
+      results: results,
     };
-
   }
-
 
   /**
    * ==========================================================
    * LOGGING
    * ==========================================================
    */
-
 
   /**
    * ----------------------------------------------------------
@@ -1424,201 +831,74 @@ const CalendarSyncService = (() => {
    */
 
   function printReport(report) {
-
     if (!report) {
-
-      throw new Error(
-        'report is required.'
-      );
-
+      throw new Error("report is required.");
     }
 
+    console.log("============================================");
 
-    console.log(
-      '============================================'
-    );
+    console.log("EXTERNAL CALENDAR SYNC");
 
+    console.log("============================================");
 
-    console.log(
-      'EXTERNAL CALENDAR SYNC'
-    );
-
-
-    console.log(
-      '============================================'
-    );
-
-
-    if (
-      report.unit_id
-    ) {
-
-      console.log(
-        'Unit: ' +
-        report.unit_id
-      );
-
+    if (report.unit_id) {
+      console.log("Unit: " + report.unit_id);
     }
 
-
-    if (
-      report.property_id
-    ) {
-
-      console.log(
-        'Property: ' +
-        report.property_id
-      );
-
+    if (report.property_id) {
+      console.log("Property: " + report.property_id);
     }
 
-
-    if (
-      report.started_at
-    ) {
-
-      console.log(
-        'Started: ' +
-        report.started_at
-      );
-
+    if (report.started_at) {
+      console.log("Started: " + report.started_at);
     }
 
-
-    if (
-      report.completed_at
-    ) {
-
-      console.log(
-        'Completed: ' +
-        report.completed_at
-      );
-
+    if (report.completed_at) {
+      console.log("Completed: " + report.completed_at);
     }
 
+    if (report.summary) {
+      console.log("Feeds: " + (report.summary.total_feeds || 0));
 
-    if (
-      report.summary
-    ) {
+      console.log("Successful: " + (report.summary.successful_feeds || 0));
 
-      console.log(
-        'Feeds: ' +
-        (
-          report.summary.total_feeds ||
-          0
-        )
-      );
+      console.log("Failed: " + (report.summary.failed_feeds || 0));
 
+      console.log("Created: " + (report.summary.created || 0));
 
-      console.log(
-        'Successful: ' +
-        (
-          report.summary.successful_feeds ||
-          0
-        )
-      );
+      console.log("Updated: " + (report.summary.updated || 0));
 
-
-      console.log(
-        'Failed: ' +
-        (
-          report.summary.failed_feeds ||
-          0
-        )
-      );
-
-
-      console.log(
-        'Created: ' +
-        (
-          report.summary.created ||
-          0
-        )
-      );
-
-
-      console.log(
-        'Updated: ' +
-        (
-          report.summary.updated ||
-          0
-        )
-      );
-
-
-      console.log(
-        'Deactivated: ' +
-        (
-          report.summary.deactivated ||
-          0
-        )
-      );
-
+      console.log("Deactivated: " + (report.summary.deactivated || 0));
     }
 
+    console.log("--------------------------------------------");
 
-    console.log(
-      '--------------------------------------------'
-    );
+    (report.results || []).forEach((result, index) => {
+      let message = [
+        index + 1,
+        result.success ? "SUCCESS" : "FAILED",
+        result.unit_id || "",
+        result.source || "",
+        result.calendar || "",
+      ].join(" | ");
 
+      if (!result.success && result.error) {
+        message += " | " + result.error;
+      }
 
-    (
-      report.results ||
-      []
-    )
-      .forEach(
-        (result, index) => {
+      console.log(message);
+    });
 
-          let message =
-            [
-              index + 1,
-              result.success
-                ? 'SUCCESS'
-                : 'FAILED',
-              result.unit_id || '',
-              result.source || '',
-              result.calendar || ''
-            ].join(
-              ' | '
-            );
-
-
-          if (
-            !result.success &&
-            result.error
-          ) {
-
-            message +=
-              ' | ' +
-              result.error;
-
-          }
-
-
-          console.log(
-            message
-          );
-
-        }
-      );
-
-
-    console.log(
-      '============================================'
-    );
-
+    console.log("============================================");
 
     return report;
-
   }
-
 
   /**
    * ==========================================================
    * TRIGGER ENTRY POINT
    * ==========================================================
    */
-
 
   /**
    * ----------------------------------------------------------
@@ -1631,22 +911,12 @@ const CalendarSyncService = (() => {
    */
 
   function runScheduledSync() {
+    const report = syncAll("SYSTEM");
 
-    const report =
-      syncAll(
-        'SYSTEM'
-      );
-
-
-    printReport(
-      report
-    );
-
+    printReport(report);
 
     return report;
-
   }
-
 
   /**
    * ==========================================================
@@ -1655,7 +925,6 @@ const CalendarSyncService = (() => {
    */
 
   return {
-
     /*
      * Configuration
      */
@@ -1667,7 +936,6 @@ const CalendarSyncService = (() => {
     getSyncConfiguration,
 
     getUnitSyncConfiguration,
-
 
     /*
      * Synchronization
@@ -1685,7 +953,6 @@ const CalendarSyncService = (() => {
 
     runScheduledSync,
 
-
     /*
      * Diagnostics
      */
@@ -1694,8 +961,6 @@ const CalendarSyncService = (() => {
 
     summarizeResults,
 
-    printReport
-
+    printReport,
   };
-
 })();

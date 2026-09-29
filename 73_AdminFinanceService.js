@@ -17,13 +17,12 @@
  */
 
 const AdminFinanceService = (() => {
-
   function isBlank(v) {
-    return v === undefined || v === null || String(v).trim() === '';
+    return v === undefined || v === null || String(v).trim() === "";
   }
 
   function text(v) {
-    return isBlank(v) ? '' : String(v).trim();
+    return isBlank(v) ? "" : String(v).trim();
   }
 
   function actor(v) {
@@ -32,20 +31,20 @@ const AdminFinanceService = (() => {
 
   function requireProperty(propertyId) {
     propertyId = text(propertyId);
-    if (!propertyId) throw new Error('property_id is required.');
+    if (!propertyId) throw new Error("property_id is required.");
 
     const property = PropertyService.getPropertyById(propertyId);
-    if (!property) throw new Error('Property not found: ' + propertyId);
+    if (!property) throw new Error("Property not found: " + propertyId);
 
     return property;
   }
 
   function requireUnit(unitId) {
     unitId = text(unitId);
-    if (!unitId) throw new Error('unit_id is required.');
+    if (!unitId) throw new Error("unit_id is required.");
 
     const unit = UnitService.getUnitById(unitId);
-    if (!unit) throw new Error('Unit not found: ' + unitId);
+    if (!unit) throw new Error("Unit not found: " + unitId);
 
     return unit;
   }
@@ -56,8 +55,11 @@ const AdminFinanceService = (() => {
 
     if (text(unit.property_id) !== text(property.property_id)) {
       throw new Error(
-        'Unit ' + unit.unit_id +
-        ' does not belong to property ' + property.property_id + '.'
+        "Unit " +
+          unit.unit_id +
+          " does not belong to property " +
+          property.property_id +
+          ".",
       );
     }
 
@@ -81,31 +83,30 @@ const AdminFinanceService = (() => {
     const expenses = ExpenseService.getByPropertyAndDateRange(
       property.property_id,
       range.start_date,
-      range.end_date
+      range.end_date,
     );
 
     const utilityBills = UtilityService.getBillsByProperty(
-      property.property_id
-    ).filter(bill => {
+      property.property_id,
+    ).filter((bill) => {
       const d = text(bill.bill_date);
       return d >= range.start_date && d <= range.end_date;
     });
 
     const utilities = UtilityService.getUtilitiesByProperty(
-      property.property_id
+      property.property_id,
     );
 
     const internetServices = InternetService.getByProperty(
-      property.property_id
+      property.property_id,
     );
 
     const overdueBillIds = new Set(
-      UtilityService.getOverdueBills(asOfDate)
-        .map(row => text(row.bill_id))
+      UtilityService.getOverdueBills(asOfDate).map((row) => text(row.bill_id)),
     );
 
-    const propertyOverdueBills = utilityBills.filter(
-      row => overdueBillIds.has(text(row.bill_id))
+    const propertyOverdueBills = utilityBills.filter((row) =>
+      overdueBillIds.has(text(row.bill_id)),
     );
 
     return {
@@ -115,49 +116,43 @@ const AdminFinanceService = (() => {
 
       expenses: {
         rows: expenses,
-        totals_by_currency:
-          ExpenseService.summarizeByCurrency(expenses),
-        totals_by_category:
-          ExpenseService.getTotalsByCategory(
-            property.property_id,
-            range.start_date,
-            range.end_date
-          ),
-        totals_by_unit:
-          ExpenseService.getTotalsByUnit(
-            property.property_id,
-            range.start_date,
-            range.end_date
-          )
+        totals_by_currency: ExpenseService.summarizeByCurrency(expenses),
+        totals_by_category: ExpenseService.getTotalsByCategory(
+          property.property_id,
+          range.start_date,
+          range.end_date,
+        ),
+        totals_by_unit: ExpenseService.getTotalsByUnit(
+          property.property_id,
+          range.start_date,
+          range.end_date,
+        ),
       },
 
       utilities: {
         services: utilities,
         bills: utilityBills,
-        totals_by_currency:
-          UtilityService.summarizeByCurrency(utilityBills),
-        overdue_bills: propertyOverdueBills
+        totals_by_currency: UtilityService.summarizeByCurrency(utilityBills),
+        overdue_bills: propertyOverdueBills,
       },
 
       internet: {
         services: internetServices,
-        fee_summary:
-          InternetService.getFeeSummaryByProperty(
-            property.property_id,
-            false
-          ),
-        active_fee_summary:
-          InternetService.getFeeSummaryByProperty(
-            property.property_id,
-            true
-          )
+        fee_summary: InternetService.getFeeSummaryByProperty(
+          property.property_id,
+          false,
+        ),
+        active_fee_summary: InternetService.getFeeSummaryByProperty(
+          property.property_id,
+          true,
+        ),
       },
 
       accounting_boundary: {
         utility_bills_are_operating_expenses: false,
         internet_services_are_operating_expenses: false,
-        combined_grand_total_provided: false
-      }
+        combined_grand_total_provided: false,
+      },
     };
   }
 
@@ -168,12 +163,12 @@ const AdminFinanceService = (() => {
     const expenses = ExpenseService.getByUnitAndDateRange(
       context.unit.unit_id,
       range.start_date,
-      range.end_date
+      range.end_date,
     );
 
     const utilityBills = UtilityService.getBillsByUnit(
-      context.unit.unit_id
-    ).filter(bill => {
+      context.unit.unit_id,
+    ).filter((bill) => {
       const d = text(bill.bill_date);
       return d >= range.start_date && d <= range.end_date;
     });
@@ -188,31 +183,26 @@ const AdminFinanceService = (() => {
 
       expenses: {
         rows: expenses,
-        totals_by_currency:
-          ExpenseService.summarizeByCurrency(expenses)
+        totals_by_currency: ExpenseService.summarizeByCurrency(expenses),
       },
 
       utilities: {
-        services:
-          UtilityService.getUtilitiesByUnit(context.unit.unit_id),
+        services: UtilityService.getUtilitiesByUnit(context.unit.unit_id),
         bills: utilityBills,
-        totals_by_currency:
-          UtilityService.summarizeByCurrency(utilityBills)
+        totals_by_currency: UtilityService.summarizeByCurrency(utilityBills),
       },
 
       internet: {
         services: internet,
-        fee_summary:
-          InternetService.getFeeSummaryByUnit(
-            context.unit.unit_id,
-            false
-          ),
-        active_fee_summary:
-          InternetService.getFeeSummaryByUnit(
-            context.unit.unit_id,
-            true
-          )
-      }
+        fee_summary: InternetService.getFeeSummaryByUnit(
+          context.unit.unit_id,
+          false,
+        ),
+        active_fee_summary: InternetService.getFeeSummaryByUnit(
+          context.unit.unit_id,
+          true,
+        ),
+      },
     };
   }
 
@@ -226,36 +216,34 @@ const AdminFinanceService = (() => {
     if (!isBlank(filters.unit_id)) {
       const unit = requireUnit(filters.unit_id);
 
-      if (!isBlank(filters.property_id) &&
-          text(unit.property_id) !== text(filters.property_id)) {
-        throw new Error('unit_id does not belong to property_id.');
+      if (
+        !isBlank(filters.property_id) &&
+        text(unit.property_id) !== text(filters.property_id)
+      ) {
+        throw new Error("unit_id does not belong to property_id.");
       }
     }
 
     if (!isBlank(filters.start_date) || !isBlank(filters.end_date)) {
       if (isBlank(filters.start_date) || isBlank(filters.end_date)) {
-        throw new Error(
-          'start_date and end_date must both be supplied.'
-        );
+        throw new Error("start_date and end_date must both be supplied.");
       }
     }
 
     let rows;
 
-    if (!isBlank(filters.property_id) &&
-        !isBlank(filters.start_date)) {
+    if (!isBlank(filters.property_id) && !isBlank(filters.start_date)) {
       requireProperty(filters.property_id);
       rows = ExpenseService.getByPropertyAndDateRange(
         text(filters.property_id),
         filters.start_date,
-        filters.end_date
+        filters.end_date,
       );
-    } else if (!isBlank(filters.unit_id) &&
-               !isBlank(filters.start_date)) {
+    } else if (!isBlank(filters.unit_id) && !isBlank(filters.start_date)) {
       rows = ExpenseService.getByUnitAndDateRange(
         text(filters.unit_id),
         filters.start_date,
-        filters.end_date
+        filters.end_date,
       );
     } else if (!isBlank(filters.property_id)) {
       requireProperty(filters.property_id);
@@ -269,22 +257,20 @@ const AdminFinanceService = (() => {
     if (!isBlank(filters.category)) {
       const category = text(filters.category).toUpperCase();
       rows = rows.filter(
-        row => text(row.category).toUpperCase() === category
+        (row) => text(row.category).toUpperCase() === category,
       );
     }
 
     if (!isBlank(filters.currency)) {
       const currency = text(filters.currency).toUpperCase();
       rows = rows.filter(
-        row => text(row.currency).toUpperCase() === currency
+        (row) => text(row.currency).toUpperCase() === currency,
       );
     }
 
     if (!isBlank(filters.vendor)) {
       const vendor = text(filters.vendor).toUpperCase();
-      rows = rows.filter(
-        row => text(row.vendor).toUpperCase() === vendor
-      );
+      rows = rows.filter((row) => text(row.vendor).toUpperCase() === vendor);
     }
 
     return rows;
@@ -298,7 +284,7 @@ const AdminFinanceService = (() => {
     return ExpenseService.updateExpense(
       text(expenseId),
       changes,
-      actor(actorId)
+      actor(actorId),
     );
   }
 
@@ -317,7 +303,7 @@ const AdminFinanceService = (() => {
 
     if (!isBlank(startDate) || !isBlank(endDate)) {
       const range = validateRange(startDate, endDate);
-      rows = rows.filter(row => {
+      rows = rows.filter((row) => {
         const d = text(row.bill_date);
         return d >= range.start_date && d <= range.end_date;
       });
@@ -329,12 +315,14 @@ const AdminFinanceService = (() => {
   function getOverdueUtilityBills(propertyId, asOfDate) {
     const property = requireProperty(propertyId);
     const utilityIds = new Set(
-      UtilityService.getUtilitiesByProperty(property.property_id)
-        .map(row => text(row.utility_id))
+      UtilityService.getUtilitiesByProperty(property.property_id).map((row) =>
+        text(row.utility_id),
+      ),
     );
 
-    return UtilityService.getOverdueBills(asOfDate)
-      .filter(row => utilityIds.has(text(row.utility_id)));
+    return UtilityService.getOverdueBills(asOfDate).filter((row) =>
+      utilityIds.has(text(row.utility_id)),
+    );
   }
 
   function createUtility(data, actorId) {
@@ -345,7 +333,7 @@ const AdminFinanceService = (() => {
     return UtilityService.updateUtility(
       text(utilityId),
       changes,
-      actor(actorId)
+      actor(actorId),
     );
   }
 
@@ -353,7 +341,7 @@ const AdminFinanceService = (() => {
     return UtilityService.changeUtilityStatus(
       text(utilityId),
       status,
-      actor(actorId)
+      actor(actorId),
     );
   }
 
@@ -362,33 +350,19 @@ const AdminFinanceService = (() => {
   }
 
   function updateUtilityBill(billId, changes, actorId) {
-    return UtilityService.updateBill(
-      text(billId),
-      changes,
-      actor(actorId)
-    );
+    return UtilityService.updateBill(text(billId), changes, actor(actorId));
   }
 
   function markUtilityBillPaid(billId, paidDate, actorId) {
-    return UtilityService.markBillPaid(
-      text(billId),
-      paidDate,
-      actor(actorId)
-    );
+    return UtilityService.markBillPaid(text(billId), paidDate, actor(actorId));
   }
 
   function markUtilityBillPending(billId, actorId) {
-    return UtilityService.markBillPending(
-      text(billId),
-      actor(actorId)
-    );
+    return UtilityService.markBillPending(text(billId), actor(actorId));
   }
 
   function markUtilityBillRefunded(billId, actorId) {
-    return UtilityService.markBillRefunded(
-      text(billId),
-      actor(actorId)
-    );
+    return UtilityService.markBillRefunded(text(billId), actor(actorId));
   }
 
   // --------------------------------------------------------------------------
@@ -400,9 +374,7 @@ const AdminFinanceService = (() => {
     let rows = InternetService.getByProperty(property.property_id);
 
     if (activeOnly === true) {
-      rows = rows.filter(
-        row => text(row.status).toUpperCase() === 'ACTIVE'
-      );
+      rows = rows.filter((row) => text(row.status).toUpperCase() === "ACTIVE");
     }
 
     return rows;
@@ -411,45 +383,35 @@ const AdminFinanceService = (() => {
   function getExpiringInternetContracts(propertyId, daysAhead, asOfDate) {
     const property = requireProperty(propertyId);
     const ids = new Set(
-      InternetService.getByProperty(property.property_id)
-        .map(row => text(row.internet_service_id))
+      InternetService.getByProperty(property.property_id).map((row) =>
+        text(row.internet_service_id),
+      ),
     );
 
     return InternetService.getContractsExpiringWithin(
       daysAhead,
-      asOfDate
-    ).filter(
-      row => ids.has(text(row.internet_service_id))
-    );
+      asOfDate,
+    ).filter((row) => ids.has(text(row.internet_service_id)));
   }
 
   function createInternetService(data, actorId) {
-    return InternetService.createInternetService(
-      data,
-      actor(actorId)
-    );
+    return InternetService.createInternetService(data, actor(actorId));
   }
 
   function updateInternetService(serviceId, changes, actorId) {
     return InternetService.updateInternetService(
       text(serviceId),
       changes,
-      actor(actorId)
+      actor(actorId),
     );
   }
 
   function activateInternetService(serviceId, actorId) {
-    return InternetService.activate(
-      text(serviceId),
-      actor(actorId)
-    );
+    return InternetService.activate(text(serviceId), actor(actorId));
   }
 
   function deactivateInternetService(serviceId, actorId) {
-    return InternetService.deactivate(
-      text(serviceId),
-      actor(actorId)
-    );
+    return InternetService.deactivate(text(serviceId), actor(actorId));
   }
 
   return {
@@ -477,7 +439,6 @@ const AdminFinanceService = (() => {
     createInternetService,
     updateInternetService,
     activateInternetService,
-    deactivateInternetService
+    deactivateInternetService,
   };
-
 })();

@@ -43,20 +43,15 @@
  */
 
 const StaffService = (() => {
+  const ENTITY_TYPE = "STAFF";
 
-  const ENTITY_TYPE =
-    'STAFF';
-
-  const DEFAULT_STATUS =
-    CONFIG.DEFAULTS.STAFF_STATUS || 'ACTIVE';
-
+  const DEFAULT_STATUS = CONFIG.DEFAULTS.STAFF_STATUS || "ACTIVE";
 
   /**
    * ==========================================================
    * INTERNAL HELPERS
    * ==========================================================
    */
-
 
   /**
    * ----------------------------------------------------------
@@ -65,15 +60,12 @@ const StaffService = (() => {
    */
 
   function timestamp() {
-
     return Utilities.formatDate(
       new Date(),
       CONFIG.TIMEZONE,
-      CONFIG.DATE_FORMATS.DATETIME
+      CONFIG.DATE_FORMATS.DATETIME,
     );
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -82,22 +74,16 @@ const StaffService = (() => {
    */
 
   function normalizeActorId(actorId) {
-
     if (
       actorId === undefined ||
       actorId === null ||
-      String(actorId).trim() === ''
+      String(actorId).trim() === ""
     ) {
-
       return CONFIG.DEFAULTS.ACTOR_ID;
-
     }
 
-
     return String(actorId).trim();
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -106,102 +92,34 @@ const StaffService = (() => {
    */
 
   function normalizeStaff(data) {
+    const staff = Object.assign({}, data || {});
 
-    const staff =
-      Object.assign(
-        {},
-        data || {}
-      );
-
-
-    if (
-      staff.name !== undefined &&
-      staff.name !== null
-    ) {
-
-      staff.name =
-        String(
-          staff.name
-        ).trim();
-
+    if (staff.name !== undefined && staff.name !== null) {
+      staff.name = String(staff.name).trim();
     }
 
-
-    if (
-      staff.role !== undefined &&
-      staff.role !== null
-    ) {
-
-      staff.role =
-        String(
-          staff.role
-        )
-          .trim()
-          .toUpperCase();
-
+    if (staff.role !== undefined && staff.role !== null) {
+      staff.role = String(staff.role).trim().toUpperCase();
     }
 
-
-    if (
-      staff.property_id !== undefined &&
-      staff.property_id !== null
-    ) {
-
-      staff.property_id =
-        String(
-          staff.property_id
-        ).trim();
-
+    if (staff.property_id !== undefined && staff.property_id !== null) {
+      staff.property_id = String(staff.property_id).trim();
     }
 
-
-    if (
-      staff.phone !== undefined &&
-      staff.phone !== null
-    ) {
-
-      staff.phone =
-        String(
-          staff.phone
-        ).trim();
-
+    if (staff.phone !== undefined && staff.phone !== null) {
+      staff.phone = String(staff.phone).trim();
     }
 
-
-    if (
-      staff.email !== undefined &&
-      staff.email !== null
-    ) {
-
-      staff.email =
-        String(
-          staff.email
-        )
-          .trim()
-          .toLowerCase();
-
+    if (staff.email !== undefined && staff.email !== null) {
+      staff.email = String(staff.email).trim().toLowerCase();
     }
 
-
-    if (
-      staff.status !== undefined &&
-      staff.status !== null
-    ) {
-
-      staff.status =
-        String(
-          staff.status
-        )
-          .trim()
-          .toUpperCase();
-
+    if (staff.status !== undefined && staff.status !== null) {
+      staff.status = String(staff.status).trim().toUpperCase();
     }
-
 
     return staff;
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -213,48 +131,28 @@ const StaffService = (() => {
    */
 
   function requireStaff(staffId) {
-
     if (
       staffId === undefined ||
       staffId === null ||
-      String(staffId).trim() === ''
+      String(staffId).trim() === ""
     ) {
-
-      throw new Error(
-        'staffId is required.'
-      );
-
+      throw new Error("staffId is required.");
     }
 
+    const normalizedId = String(staffId).trim();
 
-    const normalizedId =
-      String(
-        staffId
-      ).trim();
-
-
-    const staff =
-      BaseRepository.findById(
-        CONFIG.SHEETS.STAFF,
-        'staff_id',
-        normalizedId
-      );
-
+    const staff = BaseRepository.findById(
+      CONFIG.SHEETS.STAFF,
+      "staff_id",
+      normalizedId,
+    );
 
     if (!staff) {
-
-      throw new Error(
-        'Staff member not found: ' +
-        normalizedId
-      );
-
+      throw new Error("Staff member not found: " + normalizedId);
     }
 
-
     return staff;
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -263,73 +161,49 @@ const StaffService = (() => {
    */
 
   function validateUpdate(staff) {
-
-    ValidationService.requireFields(
-      staff,
-      [
-        'staff_id',
-        'name',
-        'role',
-        'property_id',
-        'status'
-      ]
-    );
-
+    ValidationService.requireFields(staff, [
+      "staff_id",
+      "name",
+      "role",
+      "property_id",
+      "status",
+    ]);
 
     /*
      * Property must exist.
      */
 
-    ValidationService
-      .validatePropertyExists(
-        staff.property_id
-      );
-
+    ValidationService.validatePropertyExists(staff.property_id);
 
     /*
      * Staff role must exist in ReferenceData.
      */
 
-    ValidationService
-      .validateReference(
-        'STAFF_ROLE',
-        staff.role
-      );
-
+    ValidationService.validateReference("STAFF_ROLE", staff.role);
 
     /*
      * Staff master status.
      */
 
-    ValidationService
-      .validateActiveInactiveStatus(
-        staff.status,
-        'Staff status'
-      );
-
+    ValidationService.validateActiveInactiveStatus(
+      staff.status,
+      "Staff status",
+    );
 
     /*
      * Phone uniqueness.
      */
 
-    if (
-      !ValidationService.isBlank(
-        staff.phone
-      )
-    ) {
-
-      ValidationService
-        .validateUniqueExcept(
-          CONFIG.SHEETS.STAFF,
-          'phone',
-          staff.phone,
-          'staff_id',
-          staff.staff_id,
-          'Staff phone'
-        );
-
+    if (!ValidationService.isBlank(staff.phone)) {
+      ValidationService.validateUniqueExcept(
+        CONFIG.SHEETS.STAFF,
+        "phone",
+        staff.phone,
+        "staff_id",
+        staff.staff_id,
+        "Staff phone",
+      );
     }
-
 
     /*
      * Email validation.
@@ -337,42 +211,27 @@ const StaffService = (() => {
      * Email is optional in Phase 1.
      */
 
-    if (
-      !ValidationService.isBlank(
-        staff.email
-      )
-    ) {
+    if (!ValidationService.isBlank(staff.email)) {
+      ValidationService.validateEmail(staff.email);
 
-      ValidationService
-        .validateEmail(
-          staff.email
-        );
-
-
-      ValidationService
-        .validateUniqueExcept(
-          CONFIG.SHEETS.STAFF,
-          'email',
-          staff.email,
-          'staff_id',
-          staff.staff_id,
-          'Staff email'
-        );
-
+      ValidationService.validateUniqueExcept(
+        CONFIG.SHEETS.STAFF,
+        "email",
+        staff.email,
+        "staff_id",
+        staff.staff_id,
+        "Staff email",
+      );
     }
 
-
     return true;
-
   }
-
 
   /**
    * ==========================================================
    * CREATE
    * ==========================================================
    */
-
 
   /**
    * ----------------------------------------------------------
@@ -396,60 +255,28 @@ const StaffService = (() => {
    * Audit
    */
 
-  function createStaff(
-    data,
-    actorId
-  ) {
-
-    if (
-      !data ||
-      typeof data !== 'object'
-    ) {
-
-      throw new Error(
-        'Staff data is required.'
-      );
-
+  function createStaff(data, actorId) {
+    if (!data || typeof data !== "object") {
+      throw new Error("Staff data is required.");
     }
 
+    const normalizedActorId = normalizeActorId(actorId);
 
-    const normalizedActorId =
-      normalizeActorId(
-        actorId
-      );
-
-
-    let staff =
-      normalizeStaff(
-        data
-      );
-
+    let staff = normalizeStaff(data);
 
     /*
      * Apply default status.
      */
 
-    if (
-      ValidationService.isBlank(
-        staff.status
-      )
-    ) {
-
-      staff.status =
-        DEFAULT_STATUS;
-
+    if (ValidationService.isBlank(staff.status)) {
+      staff.status = DEFAULT_STATUS;
     }
-
 
     /*
      * Validate BEFORE generating the ID.
      */
 
-    ValidationService
-      .validateStaffCreate(
-        staff
-      );
-
+    ValidationService.validateStaffCreate(staff);
 
     /*
      * Additional email validation.
@@ -458,61 +285,34 @@ const StaffService = (() => {
      * the core Phase 1 staff fields and phone uniqueness.
      */
 
-    if (
-      !ValidationService.isBlank(
-        staff.email
-      )
-    ) {
+    if (!ValidationService.isBlank(staff.email)) {
+      ValidationService.validateEmail(staff.email);
 
-      ValidationService
-        .validateEmail(
-          staff.email
-        );
-
-
-      ValidationService
-        .validateUnique(
-          CONFIG.SHEETS.STAFF,
-          'email',
-          staff.email,
-          'Staff email'
-        );
-
+      ValidationService.validateUnique(
+        CONFIG.SHEETS.STAFF,
+        "email",
+        staff.email,
+        "Staff email",
+      );
     }
-
 
     /*
      * Generate stable ID.
      */
 
-    staff.staff_id =
-      IdService.nextId(
-        ENTITY_TYPE
-      );
+    staff.staff_id = IdService.nextId(ENTITY_TYPE);
 
+    const now = timestamp();
 
-    const now =
-      timestamp();
+    staff.created_at = staff.created_at || now;
 
-
-    staff.created_at =
-      staff.created_at || now;
-
-
-    staff.updated_at =
-      now;
-
+    staff.updated_at = now;
 
     /*
      * Persist.
      */
 
-    const inserted =
-      BaseRepository.insert(
-        CONFIG.SHEETS.STAFF,
-        staff
-      );
-
+    const inserted = BaseRepository.insert(CONFIG.SHEETS.STAFF, staff);
 
     /*
      * Audit.
@@ -522,21 +322,17 @@ const StaffService = (() => {
       ENTITY_TYPE,
       inserted.staff_id,
       inserted,
-      normalizedActorId
+      normalizedActorId,
     );
 
-
     return inserted;
-
   }
-
 
   /**
    * ==========================================================
    * READ
    * ==========================================================
    */
-
 
   /**
    * ----------------------------------------------------------
@@ -547,28 +343,20 @@ const StaffService = (() => {
    */
 
   function getStaffById(staffId) {
-
     if (
       staffId === undefined ||
       staffId === null ||
-      String(staffId).trim() === ''
+      String(staffId).trim() === ""
     ) {
-
-      throw new Error(
-        'staffId is required.'
-      );
-
+      throw new Error("staffId is required.");
     }
-
 
     return BaseRepository.findById(
       CONFIG.SHEETS.STAFF,
-      'staff_id',
-      String(staffId).trim()
+      "staff_id",
+      String(staffId).trim(),
     );
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -577,26 +365,16 @@ const StaffService = (() => {
    */
 
   function getStaffByPhone(phone) {
-
-    if (
-      phone === undefined ||
-      phone === null ||
-      String(phone).trim() === ''
-    ) {
-
+    if (phone === undefined || phone === null || String(phone).trim() === "") {
       return null;
-
     }
-
 
     return BaseRepository.findOneByField(
       CONFIG.SHEETS.STAFF,
-      'phone',
-      String(phone).trim()
+      "phone",
+      String(phone).trim(),
     );
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -605,28 +383,16 @@ const StaffService = (() => {
    */
 
   function getStaffByEmail(email) {
-
-    if (
-      email === undefined ||
-      email === null ||
-      String(email).trim() === ''
-    ) {
-
+    if (email === undefined || email === null || String(email).trim() === "") {
       return null;
-
     }
-
 
     return BaseRepository.findOneByField(
       CONFIG.SHEETS.STAFF,
-      'email',
-      String(email)
-        .trim()
-        .toLowerCase()
+      "email",
+      String(email).trim().toLowerCase(),
     );
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -635,13 +401,8 @@ const StaffService = (() => {
    */
 
   function getAllStaff() {
-
-    return BaseRepository.findAll(
-      CONFIG.SHEETS.STAFF
-    );
-
+    return BaseRepository.findAll(CONFIG.SHEETS.STAFF);
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -649,24 +410,15 @@ const StaffService = (() => {
    * ----------------------------------------------------------
    */
 
-  function getStaffByProperty(
-    propertyId
-  ) {
-
-    ValidationService
-      .validatePropertyExists(
-        propertyId
-      );
-
+  function getStaffByProperty(propertyId) {
+    ValidationService.validatePropertyExists(propertyId);
 
     return BaseRepository.findByField(
       CONFIG.SHEETS.STAFF,
-      'property_id',
-      String(propertyId).trim()
+      "property_id",
+      String(propertyId).trim(),
     );
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -675,41 +427,20 @@ const StaffService = (() => {
    */
 
   function getStaffByRole(role) {
-
-    if (
-      role === undefined ||
-      role === null ||
-      String(role).trim() === ''
-    ) {
-
-      throw new Error(
-        'role is required.'
-      );
-
+    if (role === undefined || role === null || String(role).trim() === "") {
+      throw new Error("role is required.");
     }
 
+    const normalizedRole = String(role).trim().toUpperCase();
 
-    const normalizedRole =
-      String(role)
-        .trim()
-        .toUpperCase();
-
-
-    ValidationService
-      .validateReference(
-        'STAFF_ROLE',
-        normalizedRole
-      );
-
+    ValidationService.validateReference("STAFF_ROLE", normalizedRole);
 
     return BaseRepository.findByField(
       CONFIG.SHEETS.STAFF,
-      'role',
-      normalizedRole
+      "role",
+      normalizedRole,
     );
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -717,54 +448,28 @@ const StaffService = (() => {
    * ----------------------------------------------------------
    */
 
-  function getStaffByPropertyAndRole(
-    propertyId,
-    role
-  ) {
+  function getStaffByPropertyAndRole(propertyId, role) {
+    ValidationService.validatePropertyExists(propertyId);
 
-    ValidationService
-      .validatePropertyExists(
-        propertyId
-      );
+    const normalizedRole = String(role || "")
+      .trim()
+      .toUpperCase();
 
+    ValidationService.validateReference("STAFF_ROLE", normalizedRole);
 
-    const normalizedRole =
-      String(
-        role || ''
-      )
-        .trim()
-        .toUpperCase();
-
-
-    ValidationService
-      .validateReference(
-        'STAFF_ROLE',
-        normalizedRole
-      );
-
-
-    const staff =
-      BaseRepository.findByField(
-        CONFIG.SHEETS.STAFF,
-        'property_id',
-        String(propertyId).trim()
-      );
-
-
-    return staff.filter(
-      member =>
-
-        String(
-          member.role || ''
-        )
-          .trim()
-          .toUpperCase() ===
-        normalizedRole
-
+    const staff = BaseRepository.findByField(
+      CONFIG.SHEETS.STAFF,
+      "property_id",
+      String(propertyId).trim(),
     );
 
+    return staff.filter(
+      (member) =>
+        String(member.role || "")
+          .trim()
+          .toUpperCase() === normalizedRole,
+    );
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -773,15 +478,8 @@ const StaffService = (() => {
    */
 
   function getActiveStaff() {
-
-    return BaseRepository.findByField(
-      CONFIG.SHEETS.STAFF,
-      'status',
-      'ACTIVE'
-    );
-
+    return BaseRepository.findByField(CONFIG.SHEETS.STAFF, "status", "ACTIVE");
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -790,15 +488,12 @@ const StaffService = (() => {
    */
 
   function getInactiveStaff() {
-
     return BaseRepository.findByField(
       CONFIG.SHEETS.STAFF,
-      'status',
-      'INACTIVE'
+      "status",
+      "INACTIVE",
     );
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -806,26 +501,14 @@ const StaffService = (() => {
    * ----------------------------------------------------------
    */
 
-  function getActiveStaffByProperty(
-    propertyId
-  ) {
-
-    return getStaffByProperty(
-      propertyId
-    ).filter(
-      member =>
-
-        String(
-          member.status || ''
-        )
+  function getActiveStaffByProperty(propertyId) {
+    return getStaffByProperty(propertyId).filter(
+      (member) =>
+        String(member.status || "")
           .trim()
-          .toUpperCase() ===
-        'ACTIVE'
-
+          .toUpperCase() === "ACTIVE",
     );
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -833,26 +516,14 @@ const StaffService = (() => {
    * ----------------------------------------------------------
    */
 
-  function getActiveStaffByRole(
-    role
-  ) {
-
-    return getStaffByRole(
-      role
-    ).filter(
-      member =>
-
-        String(
-          member.status || ''
-        )
+  function getActiveStaffByRole(role) {
+    return getStaffByRole(role).filter(
+      (member) =>
+        String(member.status || "")
           .trim()
-          .toUpperCase() ===
-        'ACTIVE'
-
+          .toUpperCase() === "ACTIVE",
     );
-
   }
-
 
   /**
    * ----------------------------------------------------------
@@ -861,33 +532,26 @@ const StaffService = (() => {
    */
 
   function exists(staffId) {
-
     if (
       staffId === undefined ||
       staffId === null ||
-      String(staffId).trim() === ''
+      String(staffId).trim() === ""
     ) {
-
       return false;
-
     }
-
 
     return BaseRepository.exists(
       CONFIG.SHEETS.STAFF,
-      'staff_id',
-      String(staffId).trim()
+      "staff_id",
+      String(staffId).trim(),
     );
-
   }
-
 
   /**
    * ==========================================================
    * UPDATE
    * ==========================================================
    */
-
 
   /**
    * ----------------------------------------------------------
@@ -900,95 +564,53 @@ const StaffService = (() => {
    * created_at
    */
 
-  function updateStaff(
-    staffId,
-    changes,
-    actorId
-  ) {
-
-    if (
-      !changes ||
-      typeof changes !== 'object'
-    ) {
-
-      throw new Error(
-        'Staff changes are required.'
-      );
-
+  function updateStaff(staffId, changes, actorId) {
+    if (!changes || typeof changes !== "object") {
+      throw new Error("Staff changes are required.");
     }
 
+    const existing = requireStaff(staffId);
 
-    const existing =
-      requireStaff(
-        staffId
-      );
-
-
-    const normalizedActorId =
-      normalizeActorId(
-        actorId
-      );
-
+    const normalizedActorId = normalizeActorId(actorId);
 
     /*
      * Merge existing state with requested changes.
      */
 
-    let updated =
-      Object.assign(
-        {},
-        existing,
-        changes
-      );
-
+    let updated = Object.assign({}, existing, changes);
 
     /*
      * Protect immutable fields.
      */
 
-    updated.staff_id =
-      existing.staff_id;
+    updated.staff_id = existing.staff_id;
 
-
-    updated.created_at =
-      existing.created_at;
-
+    updated.created_at = existing.created_at;
 
     /*
      * Normalize resulting record.
      */
 
-    updated =
-      normalizeStaff(
-        updated
-      );
-
+    updated = normalizeStaff(updated);
 
     /*
      * Validate complete resulting state.
      */
 
-    validateUpdate(
-      updated
-    );
+    validateUpdate(updated);
 
-
-    updated.updated_at =
-      timestamp();
-
+    updated.updated_at = timestamp();
 
     /*
      * Persist.
      */
 
-    const persisted =
-      BaseRepository.update(
-        CONFIG.SHEETS.STAFF,
-        'staff_id',
-        existing.staff_id,
-        updated
-      );
-
+    const persisted = BaseRepository.update(
+      CONFIG.SHEETS.STAFF,
+      "staff_id",
+      existing.staff_id,
+      updated,
+    );
 
     /*
      * Audit.
@@ -999,21 +621,17 @@ const StaffService = (() => {
       existing.staff_id,
       existing,
       persisted,
-      normalizedActorId
+      normalizedActorId,
     );
 
-
     return persisted;
-
   }
-
 
   /**
    * ==========================================================
    * STATUS MANAGEMENT
    * ==========================================================
    */
-
 
   /**
    * ----------------------------------------------------------
@@ -1030,94 +648,59 @@ const StaffService = (() => {
    * INACTIVE
    */
 
-  function changeStaffStatus(
-    staffId,
-    newStatus,
-    actorId
-  ) {
+  function changeStaffStatus(staffId, newStatus, actorId) {
+    const existing = requireStaff(staffId);
 
-    const existing =
-      requireStaff(
-        staffId
-      );
+    const normalizedStatus = String(newStatus || "")
+      .trim()
+      .toUpperCase();
 
-
-    const normalizedStatus =
-      String(
-        newStatus || ''
-      )
-        .trim()
-        .toUpperCase();
-
-
-    ValidationService
-      .validateActiveInactiveStatus(
-        normalizedStatus,
-        'Staff status'
-      );
-
+    ValidationService.validateActiveInactiveStatus(
+      normalizedStatus,
+      "Staff status",
+    );
 
     /*
      * No-op if already in requested state.
      */
 
     if (
-      String(
-        existing.status || ''
-      )
+      String(existing.status || "")
         .trim()
-        .toUpperCase() ===
-      normalizedStatus
+        .toUpperCase() === normalizedStatus
     ) {
-
       return existing;
-
     }
 
+    const normalizedActorId = normalizeActorId(actorId);
 
-    const normalizedActorId =
-      normalizeActorId(
-        actorId
-      );
+    const persisted = BaseRepository.update(
+      CONFIG.SHEETS.STAFF,
+      "staff_id",
+      existing.staff_id,
+      {
+        status: normalizedStatus,
 
-
-    const persisted =
-      BaseRepository.update(
-        CONFIG.SHEETS.STAFF,
-        'staff_id',
-        existing.staff_id,
-        {
-
-          status:
-            normalizedStatus,
-
-          updated_at:
-            timestamp()
-
-        }
-      );
-
+        updated_at: timestamp(),
+      },
+    );
 
     AuditService.logStatusChange(
       ENTITY_TYPE,
       existing.staff_id,
       existing.status,
       normalizedStatus,
-      normalizedActorId
+      normalizedActorId,
     );
 
-
     return persisted;
-
   }
-
 
   /**
    * ==========================================================
    * SEARCH
    * ==========================================================
    */
-
 
   /**
    * ----------------------------------------------------------
@@ -1135,72 +718,40 @@ const StaffService = (() => {
    */
 
   function searchStaff(searchText) {
-
     if (
       searchText === undefined ||
       searchText === null ||
-      String(searchText).trim() === ''
+      String(searchText).trim() === ""
     ) {
-
       return [];
-
     }
 
+    const query = String(searchText).trim().toLowerCase();
 
-    const query =
-      String(searchText)
-        .trim()
-        .toLowerCase();
+    return getAllStaff().filter((staff) => {
+      const values = [
+        staff.staff_id,
 
+        staff.name,
 
-    return getAllStaff()
-      .filter(
-        staff => {
+        staff.role,
 
-          const values = [
+        staff.email,
 
-            staff.staff_id,
+        staff.phone,
 
-            staff.name,
+        staff.property_id,
+      ];
 
-            staff.role,
-
-            staff.email,
-
-            staff.phone,
-
-            staff.property_id
-
-          ];
-
-
-          return values.some(
-            value => {
-
-              if (
-                value === undefined ||
-                value === null
-              ) {
-
-                return false;
-
-              }
-
-
-              return String(value)
-                .toLowerCase()
-                .includes(
-                  query
-                );
-
-            }
-          );
-
+      return values.some((value) => {
+        if (value === undefined || value === null) {
+          return false;
         }
-      );
 
+        return String(value).toLowerCase().includes(query);
+      });
+    });
   }
-
 
   /**
    * ==========================================================
@@ -1209,7 +760,6 @@ const StaffService = (() => {
    */
 
   return {
-
     createStaff,
 
     getStaffById,
@@ -1240,8 +790,6 @@ const StaffService = (() => {
 
     changeStaffStatus,
 
-    searchStaff
-
+    searchStaff,
   };
-
 })();
