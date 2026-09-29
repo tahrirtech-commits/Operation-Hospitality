@@ -1,4 +1,5 @@
 Product Vision and Scope
+
 The product provides a single operational control plane for managing rental properties and units from availability and reservation through guest stay, checkout, housekeeping, inspection, maintenance, inventory and
 finance. The solution is intentionally operations-first: it prevents a unit from being sold merely because its booking calendar is open when the unit is not operationally READY.
 
