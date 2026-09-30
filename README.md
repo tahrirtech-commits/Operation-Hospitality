@@ -561,4 +561,4 @@ Future capabilities can include richer OTA/channel-manager integration, public b
 
 ## License
 
-No license should be assumed from this README. Add the repository's chosen license as a separate `LICENSE` file and reference it here once committed.
+This project is licensed under the **MIT License**. See the [`LICENSE`](LICENSE) file for the full license text.
